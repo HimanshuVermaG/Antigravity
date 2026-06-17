@@ -3,6 +3,99 @@
 This guide serves as a central repository for all detailed definitions and PYQ-style numericals across the UGC NET CS syllabus.
 
 ---
+## 0. Night-Before Exam Formula Cheat Sheet
+> [!TIP]
+> This section aggregates every core mathematical formula, statistical boundary, and algorithmic complexity constraint found across all 11 subjects for rapid exam-day review.
+
+- *AVL Balance Factor*: $BF = H_{left} - H_{right}$. A strict mathematical constraint ensuring the tree's height remains absolutely balanced. A node is deemed stable if and only if $BF \in \{-1, 0, 1\}$. Any deviation triggers an immediate structural rotation.
+- *B-Tree Capacity*: For a B-Tree of order $m$, an internal node must contain exactly between $\lceil m/2 \rceil - 1$ and $m - 1$ keys.
+- *Quadratic Probing Sequence*: $H(k, i) = (h(k) + c_1 i + c_2 i^2) \pmod m$. Mathematically defines the exact index trajectory during a collision, where $i$ is the attempt number. It systematically bypasses primary clustering by mathematically ensuring the step size increases quadratically.
+- *The Master Theorem*: $T(n) = aT\left(\frac{n}{b}\right) + f(n)$. Mathematically dictates the exact upper and lower bound runtime of any divide-and-conquer recursion, evaluating the strict tension between the recursive branching cost $a$ and the merge cost $f(n)$.
+- *Edge Relaxation*: $If\ d[u] + w(u,v) < d[v] \implies d[v] = d[u] + w(u,v)$. The absolute mathematical core of all shortest-path algorithms. It continually tests if a newly discovered route via node $u$ is strictly cheaper than the currently known path to $v$.
+- *Circular Queue Element Count*: $Count = (rear - front + N) \pmod N$. A strict mathematical operation that calculates the exact physical number of data elements present in the queue, seamlessly wrapping around the array boundary.
+- *0/1 Knapsack DP State*: $K[i, w] = \max(K[i-1, w],\ K[i-1, w-w_i] + v_i)$. Mathematically evaluates the absolute optimal value state. It forces a strict choice: either entirely exclude the $i^{th}$ item, or physically include it (adding its value $v_i$ and subtracting its weight $w_i$), capturing the maximum possible optimization.
+- *Turnaround Time*: $TAT = \text{Completion Time} - \text{Arrival Time}$. The absolute total physical time a process spends within the system from inception to termination.
+- *Waiting Time*: $WT = TAT - \text{Burst Time}$. The strict mathematical sum of all physical time periods a process spends trapped in the Ready Queue.
+- *Exponential Smoothing (SJF)*: $\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$. The exact mathematical algorithm the OS utilizes to predict the physical length of the next CPU burst based on historical execution data.
+- *Effective Memory Access Time (EMAT)*: $EMAT = p \times (\text{Page Fault Service Time}) + (1-p) \times (\text{Memory Access Time})$. Mathematically bounds the strict average physical time to access data, driven primarily by the page fault probability rate $p$.
+- *TLB Access Time*: $EMAT_{TLB} = h \times (c + m) + (1-h) \times (c + 2m)$. Where $h$ is the hit ratio, $c$ is TLB cache lookup time, and $m$ is main memory access time.
+- *Page Fault Rate Calculation*: $PFR = \frac{\text{Total Page Faults}}{\text{Total Memory References}}$. A strict mathematical ratio defining the catastrophic failure rate of the system's current page replacement algorithm architecture.
+- *Banker's Need Matrix*: $Need[i, j] = Max[i, j] - Allocation[i, j]$. Mathematically calculates the absolute remaining physical resources a process strictly requires to guarantee successful termination.
+- *Banker's Safety Condition*: A process $P_i$ can strictly execute if and only if $Need_i \le Available$.
+- *Disk Access Time*: $DAT = \text{Seek Time} + \text{Rotational Latency} + \text{Transfer Time}$. The fundamental mathematical equation defining absolute hardware delay. Seek time (arm movement) dominates the equation, which is strictly why SCAN and C-LOOK algorithms are architecturally mandatory.
+- *Maximum Transmission Unit (MTU)*: $Payload_{max} = MTU - \text{Header Size}$. Dictates the strict maximum payload bytes a Layer 2 frame can encapsulate.
+- *Total Network Delay*: $D_{total} = D_{proc} + D_{queue} + D_{trans} + D_{prop}$. The absolute sum of nodal processing, router queuing, physical transmission, and cable propagation delays.
+- *Subnet Capacity*: $\text{Total IPs} = 2^H$. Where $H$ is the number of strict host bits.
+- *Usable Hosts per Subnet*: $\text{Usable Hosts} = 2^H - 2$. Two addresses are strictly reserved: the lowest (Network ID) and the highest (Broadcast ID).
+- *TCP Throughput bound*: $Throughput \le \frac{W \times MSS}{RTT}$. Where $W$ is the congestion window size.
+- *TCP Sequence Number Calculation*: $Seq_{next} = Seq_{current} + \text{Payload Bytes}$. A strict mathematical offset used to perfectly reassemble fragmented segments.
+- *Transmission Delay*: $T_t = \frac{L}{B}$. The mathematical time required to push all bits of a frame onto the physical wire.
+- *Propagation Delay*: $T_p = \frac{d}{v}$. The strict physics of the electrical signal traversing distance $d$ at propagation speed $v$.
+- *RSA Encryption*: $C = M^e \pmod n$. Mathematical transformation of Plaintext $M$ into Ciphertext $C$.
+- *RSA Decryption*: $M = C^d \pmod n$. Mathematical recovery of Plaintext $M$ using the strict private exponent $d$.
+- *Bellman-Ford Relaxation (RIP)*: $D_x(y) = \min_v \{c(x,v) + D_v(y)\}$. The absolute minimum distance from node $x$ to $y$ is strictly calculated by evaluating the cost to an immediate neighbor $v$ plus the neighbor's known path to $y$.
+- *Nyquist Bit Rate (Noiseless)*: $BitRate = 2B \log_2(L)$. The theoretical maximum data rate for a completely frictionless, noiseless channel of bandwidth $B$.
+- *Shannon Capacity (Noisy)*: $C = B \log_2(1 + S/N)$. The absolute mathematical limit of data transmission over a physical channel affected by Signal-to-Noise thermal interference.
+- **Application Layer Protocols**:
+- *DNS (Domain Name System)*:
+- Globally distributed hierarchical database on **UDP Port 53**
+- Resolves domain names → IP addresses (recursive or iterative queries)
+- *DHCP (Dynamic Host Configuration Protocol)*:
+- Operates on **UDP Ports 67/68**
+- **DORA Sequence**: Discover → Offer → Request → Acknowledge
+- Dynamically leases IP addresses, Subnet Masks, and Default Gateways
+- *A\* Evaluation Function*: $f(n) = g(n) + h(n)$. The core equation driving informed search. $g(n)$ is the exact known cost from root to node $n$, while $h(n)$ is the estimated heuristic cost from $n$ to the goal.
+- *Minimax Bounds*: At a MAX node, value = $\max(\text{children})$. At a MIN node, value = $\min(\text{children})$.
+- *Alpha-Beta Pruning Cutoff*: Cutoff occurs at a MAX node if $\alpha \ge \beta$, preventing redundant subtree evaluation.
+- *Modus Ponens*: $(P \implies Q) \land P \implies Q$. The foundational mathematical rule of deductive inference.
+- *Resolution Principle*: $(P \lor Q) \land (\neg Q \lor R) \implies (P \lor R)$. Used by automated theorem provers to cancel complementary literals.
+- *Sigmoid Activation*: $\sigma(z) = \frac{1}{1 + e^{-z}}$. Mathematical function mapping any real value $z$ perfectly into the range $(0, 1)$, widely used in binary classification.
+- *Bellman Equation (Q-Learning)*: $Q^{new}(s,a) = Q(s,a) + \alpha [R(s,a) + \gamma \max Q(s', a') - Q(s,a)]$. The recursive mathematical update rule balancing immediate reward $R$ with discounted future utility.
+- *Fuzzy Cartesian Product*: $\mu_{A \times B}(x, y) = \min(\mu_A(x), \mu_B(y))$. Mathematical construction of a multi-dimensional fuzzy space.
+- *Relational Division ($\div$)*: $R \div S = \{t \mid \forall s \in S, \exists r \in R \text{ such that } r[S] = s \text{ and } r[R-S] = t\}$. Mathematically isolates tuples in $R$ that are flawlessly paired with every single tuple in $S$.
+- *Attribute Closure ($X^+$)*: $X^+ = X \cup \{Y \mid X \to Y \text{ is inferable from } F\}$. The absolute mathematical boundary of all attributes functionally determined by $X$ under the strict rules of Armstrong's Axioms.
+- *Armstrong's Transitivity*: $If\ X \to Y \text{ and } Y \to Z, \text{ then } X \to Z$. The mathematical backbone used to rigorously derive implied functional dependencies.
+- *Lossless Join Decomposition*: $R_1 \bowtie R_2 = R$. A strict mathematical guarantee. Furthermore, either $(R_1 \cap R_2) \to R_1$ or $(R_1 \cap R_2) \to R_2$ must absolutely hold true for the decomposition to be perfectly lossless.
+- *Timestamp Ordering Protocol*: If $TS(T_i) < TS(T_j)$ (meaning $T_i$ is older), then $T_i$ must mathematically execute before $T_j$. A strict rule preventing Read/Write conflicts without utilizing standard blocking locks.
+- *B+ Tree Order Calculation ($m$)*: $m \times P + (m-1) \times (K + D) \le B_{size}$. Where $P$ is block pointer size, $K$ is key size, $D$ is data pointer size, and $B_{size}$ is the strict physical disk block size. Mathematically guarantees the node fits perfectly into one physical disk I/O sector.
+- *Chomsky Normal Form (CNF)*: Every production rule must mathematically adhere strictly to either $A \to BC$ or $A \to a$. Crucial for bounding parse tree height.
+- *CYK Algorithm Complexity*: $O(n^3 \cdot |G|)$. The mathematical time complexity required to definitively parse a string of length $n$ against a grammar $G$ in strict CNF.
+- *Rice's Theorem*: Let $P$ be any non-trivial property of partial mathematically computable functions. The problem of determining whether a Turing Machine computes a function with property $P$ is absolutely undecidable.
+- *FIRST(X)*: The strict mathematical set of terminal symbols that begin the strings derived from grammar symbol $X$. Essential for constructing predictive parsing tables.
+- *FOLLOW(A)*: The set of terminals that can mathematically appear immediately to the right of non-terminal $A$ in some sentential form. Required for resolving LL(1) empty productions.
+- *Strength Reduction*: Replacing computationally expensive operators with cheaper ones, e.g., $X \times 2 \to X \ll 1$ (Bitwise Left Shift).
+- *Context-Free Pumping Lemma*: Partition $s = uvxyz$ where $|vxy| \le p$ and $|vy| > 0$. The string $uv^ixy^iz \in L$ for all $i \ge 0$. Mathematically tests dual-pumping capabilities.
+- *Liveness Analysis*: $In[n] = Use[n] \cup (Out[n] - Def[n])$. A strict data-flow equation mathematically calculating which variable registers are currently holding active values vs dead data.
+- *Logical Implication*: $P \to Q \equiv \neg P \lor Q$. A strict mathematical equivalence used to eliminate implication arrows in formal proofs.
+- *Quantifier Negation*: $\neg(\forall x P(x)) \equiv \exists x \neg P(x)$. Pushing negation mathematically flips universal quantifiers to existential, and vice versa.
+- *Boolean Algebra Distributivity*: $a \lor (b \land c) = (a \lor b) \land (a \lor c)$. Essential property for digital circuit simplification.
+- *Handshaking Lemma*: $\sum \text{deg}(v) = 2|E|$. The absolute sum of all vertex degrees must perfectly equal twice the total number of edges.
+- *Planar Graph Edge Bound*: $E \le 3V - 6$. For any simple connected planar graph with $V \ge 3$, violating this bound mathematically proves the graph is non-planar (must intersect).
+- *Inclusion-Exclusion Principle*: $|A \cup B| = |A| + |B| - |A \cap B|$. Strict arithmetic used to calculate union sizes without physically double-counting intersections.
+- *Binomial Distribution*: $P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}$. Calculates exact probability of $k$ successes in $n$ independent boolean trials.
+- *LPP Standard Duality*: Maximize $Z = c^T x$ subject to $Ax \le b$ mathematically maps directly to its strict Dual: Minimize $W = b^T y$ subject to $A^T y \ge c$. If one optimal bound is found, the other is instantly solved.
+- *Traffic Intensity ($\rho$)*: $\rho = \frac{\lambda}{\mu}$. The core mathematical ratio of arrival rate $\lambda$ to service rate $\mu$. The system strictly collapses into infinite backlog if $\rho \ge 1$.
+- *Shannon's Expansion Theorem*: $F(x_1, \dots, x_n) = x_1 \cdot F(1, \dots, x_n) + \neg x_1 \cdot F(0, \dots, x_n)$. The mathematical foundation for implementing massive boolean functions using multiplexers.
+- *Maximum Clock Frequency (Synchronous)*: $f_{max} = \frac{1}{t_{pd} + t_{setup}}$. The absolute mathematical speed limit of a synchronous circuit bounded by flip-flop propagation delay and setup time requirements.
+- *Effective Memory Access Time (EMAT)*: $EMAT = H_c \times T_c + (1 - H_c) \times (T_c + T_m)$. The core statistical average of memory access duration utilizing Cache Hit Ratio ($H_c$), Cache Time ($T_c$), and Main Memory Time ($T_m$).
+- *CPU Execution Time*: $T = IC \times CPI \times \tau$. The absolute time required to execute a program, calculated via Instruction Count ($IC$), Cycles Per Instruction ($CPI$), and strict Clock Cycle Time ($\tau$).
+- *Pipeline Speedup ($S$)*: $S = \frac{n \times k}{k + n - 1}$. The theoretical mathematical acceleration of a $k$-stage pipeline executing $n$ instructions, which asymptotically approaches $k$ as $n \to \infty$.
+- *Amdahl's Law*: $S_{max} = \frac{1}{(1-P) + \frac{P}{N}}$. The rigid mathematical ceiling on speedup using $N$ parallel processors, severely bottlenecked by the strict sequential fraction $(1-P)$.
+- *Total Disk Access Time*: $T_{access} = T_{seek} + T_{rotational} + T_{transfer}$. The physical mathematical delay summing the read-head arm movement, the platter rotation to the sector, and the sheer magnetic data transfer.
+- *RAID 5 Capacity*: $C_{usable} = (N - 1) \times S_{min}$. The strict usable disk space spanning $N$ drives, sacrificing exactly one drive's capacity mathematically for distributed XOR parity.
+- *Array-to-Pointer Decay*: `arr[i] = *(arr + i)`. The strict mathematical equivalence executed by the compiler to physically resolve array indexing using raw pointer arithmetic.
+- *Recursive Time Complexity Master Theorem*: $T(n) = aT(n/b) + f(n)$. The core recurrence relation mathematically evaluating the exact time complexity of tree-based recursive divide-and-conquer algorithms.
+- *Object Size Calculation*: $\text{sizeof(Object)} = \sum \text{sizeof(attributes)} + \text{Padding}$. Physically calculates RAM footprint, strictly ignoring standard methods but including the hidden `vptr` if virtual functions are present.
+- *Dynamic V-Table Binding*: $\text{Method Address} = \text{VTable Base Address} + (\text{Method Index} \times \text{Pointer Size})$. The exact physical memory jump executed by the CPU at runtime to achieve late binding polymorphism.
+- *Template Expansion Complexity*: $S_{binary} \approx S_{base} \times N_{types}$. A rough mathematical estimate of compiler code bloat, where the binary size scales strictly with the total number of unique data types invoked through the generic template.
+- *Frame Buffer Size*: $\text{Size (Bits)} = \text{Resolution}_x \times \text{Resolution}_y \times \text{Color Depth (Bits per Pixel)}$. The absolute hardware VRAM footprint physically required to render a single static frame.
+- *Bresenham's Initial Decision Parameter*: $P_0 = 2\Delta y - \Delta x$. The core mathematical seed used to recursively evaluate integer proximity to the true geometric line without relying on costly floating-point divisions.
+- *2D Rotation Matrix*: $\begin{bmatrix} \cos \theta & -\sin \theta \\ \sin \theta & \cos \theta \end{bmatrix}$. The strict trigonometric linear algebra transformation rotating points mathematically counter-clockwise strictly around the absolute origin.
+- *Parametric Line Intersection*: $x = x_1 + t(x_2 - x_1)$ and $y = y_1 + t(y_2 - y_1)$ for $0 \le t \le 1$. The strict mathematical equations used by clipping algorithms to calculate the exact physical pixel where an off-screen line visibly breaches the window boundary.
+- *Perspective Projection Transformation*: $x_p = \frac{x \cdot d}{z}$ and $y_p = \frac{y \cdot d}{z}$. The profound physical transformation physically dividing Euclidean coordinates by depth ($z$) to mathematically simulate the violent optical convergence of the human eye.
+
+---
+
 
 ## 1. Data Structures & Algorithms
 
@@ -33,13 +126,16 @@ This guide serves as a central repository for all detailed definitions and PYQ-s
     - Internal nodes act purely as routing indices
     - Leaf nodes are linked sequentially via lateral pointers
     - Enables lightning-fast $O(1)$ sequential range scans without tree traversal
+  - **Core Mathematical Formulas**:
+    - *AVL Balance Factor*: $BF = H_{left} - H_{right}$. A strict mathematical constraint ensuring the tree's height remains absolutely balanced. A node is deemed stable if and only if $BF \in \{-1, 0, 1\}$. Any deviation triggers an immediate structural rotation.
+    - *B-Tree Capacity*: For a B-Tree of order $m$, an internal node must contain exactly between $\lceil m/2 \rceil - 1$ and $m - 1$ keys.
 
 ```mermaid
 graph TD
     subgraph "B+ Tree Structure (Order 4)"
-        R["Internal Node<br/>[30 | 60]"] --> L1["Leaf [10|20]"]
+        R["Internal Node<br/>[30 | 60]"] --> L3["Leaf [10|20]"]
         R --> L2["Leaf [30|40|50]"]
-        R --> L3["Leaf [60|70|80]"]
+        R --> L1["Leaf [60|70|80]"]
         L1 -- "→" --> L2
         L2 -- "→" --> L3
     end
@@ -54,6 +150,7 @@ graph TD
 *Explanation*:
 Order $m = 4$ mathematically dictates the absolute maximum children per node is 4, and maximum keys is 3. The mathematical formula for minimum children in any internal node is strictly $\lceil m/2 \rceil = 2$.
 To maximize the physical height of the tree, we must construct the architecture as sparsely as mathematically possible, forcing the tree to grow vertically by placing the absolute minimum number of keys in each node.
+
 1. Minimum keys in the root node = 1.
 2. Minimum keys in any standard internal node = $\lceil m/2 \rceil - 1 = 1$.
 Level 0 (Root): Contains exactly 1 node holding 1 key, branching to 2 children.
@@ -85,6 +182,8 @@ We are mathematically forced to insert 10 total keys. Since 7 are placed, 3 keys
     - On bucket overflow:
       - If $d' < d$ → bucket independently splits
       - If $d' = d$ → entire Directory doubles in size (Global Depth increments), then bucket splits
+  - **Core Mathematical Formulas**:
+    - *Quadratic Probing Sequence*: $H(k, i) = (h(k) + c_1 i + c_2 i^2) \pmod m$. Mathematically defines the exact index trajectory during a collision, where $i$ is the attempt number. It systematically bypasses primary clustering by mathematically ensuring the step size increases quadratically.
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A hash table contains exactly 10 physical buckets (indices 0 to 9) and utilizes strict Linear Probing. The keys `43, 36, 92, 87, 11, 4, 71, 13, 14` are sequentially inserted. The hash function is strictly $h(x) = x \pmod{10}$. What is the exact final memory index location of the key `14`?
@@ -118,6 +217,8 @@ The insertions are strictly mathematical modulo operations:
       - **Case 1**: $f(n)$ polynomially lighter → recursive leaves dominate → $T(n) = \Theta(n^{\log_b a})$
       - **Case 2**: $f(n)$ and critical value match → cost uniformly distributed → $T(n) = \Theta(n^{\log_b a} \log n)$
       - **Case 3**: $f(n)$ polynomially heavier → root dominates → $T(n) = \Theta(f(n))$
+  - **Core Mathematical Formulas**:
+    - *The Master Theorem*: $T(n) = aT\left(\frac{n}{b}\right) + f(n)$. Mathematically dictates the exact upper and lower bound runtime of any divide-and-conquer recursion, evaluating the strict tension between the recursive branching cost $a$ and the merge cost $f(n)$.
 
 **PYQ Numerical Example (Difficulty: Easy)**:
 *Question*: Utilizing the Master Theorem, strictly solve the exact recurrence relation: $T(n) = 8T(n/2) + n^2$.
@@ -147,6 +248,8 @@ Therefore, Case 1 of the Master Theorem strictly applies, mathematically proving
   - *Minimum Spanning Trees (MST)*:
     - **Kruskal's**: Sort all edges globally by weight → greedily accept if no cycle forms (use Disjoint Set / Union-Find)
     - **Prim's**: Grow a single contiguous tree boundary → consume the cheapest connecting edge at each step
+  - **Core Mathematical Formulas**:
+    - *Edge Relaxation*: $If\ d[u] + w(u,v) < d[v] \implies d[v] = d[u] + w(u,v)$. The absolute mathematical core of all shortest-path algorithms. It continually tests if a newly discovered route via node $u$ is strictly cheaper than the currently known path to $v$.
 
 ```mermaid
 flowchart TD
@@ -198,6 +301,8 @@ Initialization phase strictly sets source distance $A=0$, and all other nodes $B
     - Standard linear queue suffers from "False Full" states (dequeued slots become unusable dead memory)
     - Circular Queue fuses array ends using Modulo Arithmetic: $Index = (Index + 1) \pmod N$
     - **Critical Rule**: One physical array slot must be permanently sacrificed (left blank) to distinguish between empty and full states
+  - **Core Mathematical Formulas**:
+    - *Circular Queue Element Count*: $Count = (rear - front + N) \pmod N$. A strict mathematical operation that calculates the exact physical number of data elements present in the queue, seamlessly wrapping around the array boundary.
 
 **PYQ Numerical Example (Difficulty: Easy)**:
 *Question*: A circular queue has a physical array size of exactly 5 (indices 0 to 4). The internal queue variables are actively set to `front = 3` and `rear = 1` (where rear strictly points to the next available physical insertion slot). Exactly how many elements are physically present in the queue?
@@ -233,6 +338,8 @@ Mathematically, the strict formula evaluates as: Elements count = $(rear - front
     - Example: Dynamic array resize — doubles capacity when full
     - Because resize occurs so rarely, the average guaranteed cost per operation remains $O(1)$
     - Methods: Aggregate Method, Accounting Method, Potential Method
+  - **Core Mathematical Formulas**:
+    - *0/1 Knapsack DP State*: $K[i, w] = \max(K[i-1, w],\ K[i-1, w-w_i] + v_i)$. Mathematically evaluates the absolute optimal value state. It forces a strict choice: either entirely exclude the $i^{th}$ item, or physically include it (adding its value $v_i$ and subtracting its weight $w_i$), capturing the maximum possible optimization.
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: Why does the classical 0/1 Knapsack problem physically necessitate a massive Dynamic Programming state matrix, whereas the Fractional Knapsack problem can be optimally solved using a blindingly fast, simple Greedy algorithm?
@@ -255,7 +362,7 @@ In the strict 0/1 Knapsack model, an item must be taken whole or entirely reject
 - **Key Properties & Mechanisms**:
   - *SJF (Shortest Job First)*:
     - Mathematically proven to generate the absolute optimal (lowest) average waiting time
-    - Eliminates the "Convoy Effect" found in FCFS by servicing shortest bursts first
+    - Eliminates the **"Convoy Effect"** found in FCFS by servicing shortest bursts first
     - **Problem**: OS cannot know the exact next CPU burst length in advance
     - **Solution**: Estimates using Exponential Averaging: $\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$
     - **Fatal Flaw**: Catastrophically starves long-running processes if unchecked
@@ -265,6 +372,19 @@ In the strict 0/1 Knapsack model, an item must be taken whole or entirely reject
     - **Running** → **Waiting (Blocked)**: Process needs I/O (e.g., disk read) → Context Switch occurs
     - **Waiting** → **Ready**: Hardware interrupt fires (I/O complete) → process returns to Ready Queue
     - **Running** → **Terminated**: Process completes execution
+  - *Process vs. Thread Architecture*:
+
+| Feature | Process (Heavyweight) | Thread (Lightweight) |
+| :--- | :--- | :--- |
+| **Memory Space** | Strictly isolated; separate address space | Shared memory space within the parent process |
+| **Context Switch Time** | Very high (requires TLB flush, saving CPU state) | Very low (only saves Thread Control Block, PC, registers) |
+| **Communication** | IPC (Inter-Process Communication) required | Instant access to shared global variables and heap |
+| **Failure Isolation** | Failure of one process rarely affects others | Failure of one thread can instantly crash the entire process |
+
+  - **Core Mathematical Formulas**:
+    - *Turnaround Time*: $TAT = \text{Completion Time} - \text{Arrival Time}$. The absolute total physical time a process spends within the system from inception to termination.
+    - *Waiting Time*: $WT = TAT - \text{Burst Time}$. The strict mathematical sum of all physical time periods a process spends trapped in the Ready Queue.
+    - *Exponential Smoothing (SJF)*: $\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$. The exact mathematical algorithm the OS utilizes to predict the physical length of the next CPU burst based on historical execution data.
 
 ```mermaid
 stateDiagram-v2
@@ -310,6 +430,18 @@ stateDiagram-v2
   - *Fragmentation Paradigms*:
     - **External Fragmentation**: ❌ Eliminated — any free Frame can house any Page
     - **Internal Fragmentation**: ✅ Still exists — if process needs 5 KB and Page Size = 4 KB → OS allocates 2 Pages (8 KB) → 3 KB permanently wasted
+  - *Paging vs. Segmentation Architecture*:
+
+| Feature | Paging | Segmentation |
+| :--- | :--- | :--- |
+| **Division Logic** | Fixed-size blocks (hardware dictated) | Variable-size blocks (user/logical architecture dictated) |
+| **Fragmentation** | Suffers strictly from Internal Fragmentation | Suffers strictly from External Fragmentation |
+| **Memory Map Hardware** | Requires Page Table and physical TLB | Requires Segment Table (Base Address & Limit) |
+| **Protection Granularity** | Hard to protect isolated functions (pages cut blindly) | Easy to protect (a segment can perfectly encapsulate a function) |
+
+  - **Core Mathematical Formulas**:
+    - *Effective Memory Access Time (EMAT)*: $EMAT = p \times (\text{Page Fault Service Time}) + (1-p) \times (\text{Memory Access Time})$. Mathematically bounds the strict average physical time to access data, driven primarily by the page fault probability rate $p$.
+    - *TLB Access Time*: $EMAT_{TLB} = h \times (c + m) + (1-h) \times (c + 2m)$. Where $h$ is the hit ratio, $c$ is TLB cache lookup time, and $m$ is main memory access time.
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A 32-bit architectural system operates with a strict page size of exactly 4 KB ($2^{12}$ bytes). A single Page Table Entry (PTE) requires exactly 4 bytes of physical RAM. What is the absolute total size of the Page Table required for a single process?
@@ -344,6 +476,8 @@ stateDiagram-v2
     - Evicts the page that will not be used for the longest time into the future
     - Requires clairvoyance → physically impossible to implement
     - Exists strictly as a mathematical benchmark for evaluating real algorithms
+  - **Core Mathematical Formulas**:
+    - *Page Fault Rate Calculation*: $PFR = \frac{\text{Total Page Faults}}{\text{Total Memory References}}$. A strict mathematical ratio defining the catastrophic failure rate of the system's current page replacement algorithm architecture.
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: Given a strict memory reference string: `1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5` and exactly 3 physical page frames (initially completely empty). Exactly how many page faults mathematically occur using the basic FIFO replacement algorithm?
@@ -390,6 +524,9 @@ Total Mathematical Faults = $1 + 1 + 1 + 1 + 1 + 1 + 1 + 0 + 0 + 1 + 1 + 1 = 10$
     - Simulates every resource request before granting it
     - If granting leaves system in an **Unsafe State** (no possible completion sequence) → request denied
     - Requires advance knowledge of maximum resource needs
+  - **Core Mathematical Formulas**:
+    - *Banker's Need Matrix*: $Need[i, j] = Max[i, j] - Allocation[i, j]$. Mathematically calculates the absolute remaining physical resources a process strictly requires to guarantee successful termination.
+    - *Banker's Safety Condition*: A process $P_i$ can strictly execute if and only if $Need_i \le Available$.
 
 ```mermaid
 graph LR
@@ -442,6 +579,8 @@ graph LR
     - **`/etc/shadow`**: Stores actual password hashes and cryptographic aging data
       - Restricted strictly to `root` access only
       - Isolates hashes from the world-readable passwd file to prevent brute-force attacks
+  - **Core Mathematical Formulas**:
+    - *Disk Access Time*: $DAT = \text{Seek Time} + \text{Rotational Latency} + \text{Transfer Time}$. The fundamental mathematical equation defining absolute hardware delay. Seek time (arm movement) dominates the equation, which is strictly why SCAN and C-LOOK algorithms are architecturally mandatory.
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A mechanical disk contains exactly 200 physical cylinders (0 to 199). The head is currently positioned at cylinder 50 and is physically moving towards higher cylinder numbers. The exact queue of requests is: `82, 170, 43, 140, 24, 16, 190`. Using the strict SCAN algorithm, what is the absolute total head movement mathematically calculated in cylinders?
@@ -483,6 +622,18 @@ graph LR
     - Guarantees **Process-to-Process** delivery
     - Uses 16-bit **Port Numbers** to identify destination application
     - Port 80 = HTTP, Port 443 = HTTPS, Port 53 = DNS
+  - *OSI Model vs. TCP/IP Architecture*:
+
+| Feature | OSI Model | TCP/IP Model |
+| :--- | :--- | :--- |
+| **Nature** | Theoretical reference model | Practical implementation model |
+| **Layers** | 7 strict layers | 4 condensed layers |
+| **Connection Type** | Network layer supports both connection-oriented and connectionless | Network layer (Internet) strictly connectionless (IP) |
+| **Development** | Model defined *before* the protocols | Protocols defined *before* the model |
+
+  - **Core Mathematical Formulas**:
+    - *Maximum Transmission Unit (MTU)*: $Payload_{max} = MTU - \text{Header Size}$. Dictates the strict maximum payload bytes a Layer 2 frame can encapsulate.
+    - *Total Network Delay*: $D_{total} = D_{proc} + D_{queue} + D_{trans} + D_{prop}$. The absolute sum of nodal processing, router queuing, physical transmission, and cable propagation delays.
 
 ```mermaid
 graph LR
@@ -538,6 +689,18 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
     - Fuse multiple contiguous subnets into a single condensed entry
     - Example: 4 contiguous `/24` subnets → 1 Supernet `/22` entry
     - Drastically reduces RAM required in global backbone routers
+  - *IPv4 vs. IPv6 Architecture*:
+
+| Feature | IPv4 | IPv6 |
+| :--- | :--- | :--- |
+| **Address Length** | 32-bit (approx. 4.3 billion IPs) | 128-bit (virtually infinite IPs) |
+| **Header Size** | Variable (20-60 bytes); requires Header Checksum | Fixed (40 bytes); completely eliminates Header Checksum for routing speed |
+| **Fragmentation** | Performed by both sender and intermediate routers | Performed strictly by the sender (routers drop oversized packets) |
+| **Security** | IPsec is strictly optional | IPsec is fundamentally built-in |
+
+  - **Core Mathematical Formulas**:
+    - *Subnet Capacity*: $\text{Total IPs} = 2^H$. Where $H$ is the number of strict host bits.
+    - *Usable Hosts per Subnet*: $\text{Usable Hosts} = 2^H - 2$. Two addresses are strictly reserved: the lowest (Network ID) and the highest (Broadcast ID).
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: An organization is assigned the exact CIDR block `192.168.144.0/20`. The network administrator mathematically subnets this massive block into 8 equal-sized smaller subnets. What is the exact valid IP address range (from Network ID to Broadcast ID) of the 3rd newly created subnet?
@@ -551,6 +714,9 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
    - Subnet 1: `192.168.146.0` to `192.168.147.255`
    - Subnet 2 (The 3rd Subnet): `192.168.148.0` to `192.168.149.255`
    *Answer*: The exact range for the 3rd subnet is strictly `192.168.148.0` to `192.168.149.255`.
+
+> [!WARNING]
+> **Common Exam Trap**: When asked for the "Usable Host Range", students often forget to mathematically subtract 2. The first address (all 0s in host portion) is the Network ID, and the last address (all 1s in host portion) is the Broadcast ID. Neither can be physically assigned to a computer.
 
 ### 3.3 TCP & UDP Transport Protocols
 **Deep-Dive Definitions & Properties:**
@@ -568,6 +734,18 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
     - **Fast Retransmit**: 3 Duplicate ACKs detected → instantly halve window
     - **Timeout Event**: Catastrophic reset → window reverts to 1 MSS, restart Slow Start
     - New Threshold = half of current window at time of loss
+  - *TCP vs. UDP Architecture*:
+
+| Feature | TCP (Transmission Control Protocol) | UDP (User Datagram Protocol) |
+| :--- | :--- | :--- |
+| **Connection State** | Connection-oriented (requires 3-way handshake) | Connectionless (fire and forget) |
+| **Reliability** | 100% Reliable (Sequence numbers, ACKs, Retransmissions) | Unreliable (No ACKs, data can be permanently lost) |
+| **Header Overhead** | Massive (20-60 bytes) | Minimal (exactly 8 bytes) |
+| **Use Case** | Web browsing (HTTP), Email (SMTP), File Transfer (FTP) | Live Video Streaming, VoIP, DNS queries |
+
+  - **Core Mathematical Formulas**:
+    - *TCP Throughput bound*: $Throughput \le \frac{W \times MSS}{RTT}$. Where $W$ is the congestion window size.
+    - *TCP Sequence Number Calculation*: $Seq_{next} = Seq_{current} + \text{Payload Bytes}$. A strict mathematical offset used to perfectly reassemble fragmented segments.
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A TCP connection is actively transmitting data and the current Congestion Threshold is strictly set to 16 KB. The connection suffers a catastrophic Timeout event when its Congestion Window mathematically reaches exactly 24 KB. Assuming a Maximum Segment Size (MSS) of exactly 2 KB, what will be the exact size of the Congestion Window after 3 successful, completely error-free Round Trip Times (RTTs)?
@@ -601,6 +779,9 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
     - Transmission Time ($T_x$) MUST $\ge$ Round Trip Propagation Time ($2 \times T_p$)
     - If frame too small → sender finishes before collision signal returns → collision goes undetected
     - Formula: $L_{min} = B \times 2T_p$ (where $B$ = bandwidth, $L$ = frame size in bits)
+  - **Core Mathematical Formulas**:
+    - *Transmission Delay*: $T_t = \frac{L}{B}$. The mathematical time required to push all bits of a frame onto the physical wire.
+    - *Propagation Delay*: $T_p = \frac{d}{v}$. The strict physics of the electrical signal traversing distance $d$ at propagation speed $v$.
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A 10 Mbps standard baseband Ethernet LAN strictly has a physical wire length of exactly 2.5 kilometers. The absolute propagation speed of the electrical signal through the copper wire is $2 \times 10^8$ meters/second. What is the absolute minimum valid Frame Size required to mathematically guarantee collision detection?
@@ -641,6 +822,9 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
     4. Choose Public Key $e$: must be coprime to $\phi(n)$
     5. Compute Private Key $d$: modular multiplicative inverse of $e \pmod{\phi(n)}$
     6. Security relies on extreme difficulty of **Prime Factorization** of $n$
+  - **Core Mathematical Formulas**:
+    - *RSA Encryption*: $C = M^e \pmod n$. Mathematical transformation of Plaintext $M$ into Ciphertext $C$.
+    - *RSA Decryption*: $M = C^d \pmod n$. Mathematical recovery of Plaintext $M$ using the strict private exponent $d$.
 
 ```mermaid
 flowchart LR
@@ -691,6 +875,8 @@ flowchart LR
     - Core **Exterior Gateway Protocol** of the global Internet
     - Tracks exact AS path sequence (e.g., AS100 → AS200 → AS300)
     - **Loop Prevention**: If update contains own AS number → instantly drop the route
+  - **Core Mathematical Formulas**:
+    - *Bellman-Ford Relaxation (RIP)*: $D_x(y) = \min_v \{c(x,v) + D_v(y)\}$. The absolute minimum distance from node $x$ to $y$ is strictly calculated by evaluating the cost to an immediate neighbor $v$ plus the neighbor's known path to $y$.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In RIP architecture, explain the exact mathematical mechanism that causes the "count-to-infinity" problem, and detail how "Split Horizon with Poison Reverse" explicitly solves it.
@@ -745,6 +931,9 @@ HTTP is a massive, highly verbose request-response protocol burdened with huge A
     - **Bit Rate**: Raw binary bits transmitted per second (bps)
     - **Baud Rate**: Number of distinct signal state changes per second
     - **Formula**: $\text{Bit Rate} = \text{Baud Rate} \times \log_2(L)$, where $L$ = number of distinct signal levels
+  - **Core Mathematical Formulas**:
+    - *Nyquist Bit Rate (Noiseless)*: $BitRate = 2B \log_2(L)$. The theoretical maximum data rate for a completely frictionless, noiseless channel of bandwidth $B$.
+    - *Shannon Capacity (Noisy)*: $C = B \log_2(1 + S/N)$. The absolute mathematical limit of data transmission over a physical channel affected by Signal-to-Noise thermal interference.
 - **Application Layer Protocols**:
   - *DNS (Domain Name System)*:
     - Globally distributed hierarchical database on **UDP Port 53**
@@ -799,6 +988,8 @@ HTTP is a massive, highly verbose request-response protocol burdened with huge A
   - *IDA\* (Iterative Deepening A\*)*:
     - Operates identical to A*, but uses DFS iterations bounded by $f(n)$ cost cutoff
     - Strictly bounds memory usage to $O(bd)$ instead of maintaining massive priority queue
+  - **Core Mathematical Formulas**:
+    - *A\* Evaluation Function*: $f(n) = g(n) + h(n)$. The core equation driving informed search. $g(n)$ is the exact known cost from root to node $n$, while $h(n)$ is the estimated heuristic cost from $n$ to the goal.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Under what specific mathematical condition does an A* search algorithm guarantee an optimal solution when utilizing a tree-search structure, and how does this differ when utilizing a graph-search structure?
@@ -824,6 +1015,9 @@ However, if the algorithm is upgraded to a graph-search (which maintains a "clos
     - $\alpha$: Value of the best choice guaranteed so far for MAX (initialized to $-\infty$)
     - $\beta$: Value of the best choice guaranteed so far for MIN (initialized to $+\infty$)
     - **Pruning Condition**: Branch is permanently pruned the exact moment $\alpha \ge \beta$
+  - **Core Mathematical Formulas**:
+    - *Minimax Bounds*: At a MAX node, value = $\max(\text{children})$. At a MIN node, value = $\min(\text{children})$.
+    - *Alpha-Beta Pruning Cutoff*: Cutoff occurs at a MAX node if $\alpha \ge \beta$, preventing redundant subtree evaluation.
 
 ```mermaid
 graph TD
@@ -872,6 +1066,9 @@ graph TD
     - Goal-driven inference: starts strictly with query to prove
     - Searches for rules whose consequent matches goal → turns premises into sub-goals
     - Recursively works backward until hitting known base facts
+  - **Core Mathematical Formulas**:
+    - *Modus Ponens*: $(P \implies Q) \land P \implies Q$. The foundational mathematical rule of deductive inference.
+    - *Resolution Principle*: $(P \lor Q) \land (\neg Q \lor R) \implies (P \lor R)$. Used by automated theorem provers to cancel complementary literals.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Convert the following complex English sentence into strictly quantified First-Order Logic, ensuring proper scope of quantifiers: "Every student who takes an AI course passes the final exam."
@@ -912,6 +1109,9 @@ graph TD
     - Model-free framework where agent interacts with environment to learn optimal policy
     - $Q(s, a)$ function estimates cumulative discounted reward for taking action $a$ in state $s$
     - Dynamically updates via the **Bellman Equation**
+  - **Core Mathematical Formulas**:
+    - *Sigmoid Activation*: $\sigma(z) = \frac{1}{1 + e^{-z}}$. Mathematical function mapping any real value $z$ perfectly into the range $(0, 1)$, widely used in binary classification.
+    - *Bellman Equation (Q-Learning)*: $Q^{new}(s,a) = Q(s,a) + \alpha [R(s,a) + \gamma \max Q(s', a') - Q(s,a)]$. The recursive mathematical update rule balancing immediate reward $R$ with discounted future utility.
 
 ```mermaid
 graph LR
@@ -963,6 +1163,8 @@ graph LR
     - **Selection**: Statistically favoring higher fitness scores to become parents (Roulette/Tournament)
     - **Crossover (Recombination)**: Swapping bit-string segments between parents to mix traits
     - **Mutation**: Randomly flipping tiny percentage of bits → injects diversity to physically prevent premature convergence to local optima
+  - **Core Mathematical Formulas**:
+    - *Fuzzy Cartesian Product*: $\mu_{A \times B}(x, y) = \min(\mu_A(x), \mu_B(y))$. Mathematical construction of a multi-dimensional fuzzy space.
 
 **PYQ Numerical Example (Difficulty: Easy)**:
 *Question*: Given two distinct fuzzy sets $A$ and $B$, an element $x$ has been evaluated to have the following continuous membership values: $\mu_A(x) = 0.7$ and $\mu_B(x) = 0.4$. Calculate the exact membership value of $x$ in both the algebraic product space and the standard fuzzy union space of $A$ and $B$.
@@ -1206,6 +1408,8 @@ They must strictly and unequivocally use a **Type 1 (Bare-Metal)** hypervisor. A
   - *Data Definition vs Manipulation*:
     - **DDL**: Alters physical schema structure (`CREATE`, `ALTER`, `DROP`, `TRUNCATE`)
     - **DML**: Queries/modifies actual data rows (`SELECT`, `INSERT`, `UPDATE`, `DELETE`)
+  - **Core Mathematical Formulas**:
+    - *Relational Division ($\div$)*: $R \div S = \{t \mid \forall s \in S, \exists r \in R \text{ such that } r[S] = s \text{ and } r[R-S] = t\}$. Mathematically isolates tuples in $R$ that are flawlessly paired with every single tuple in $S$.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Translate the following complex business requirement into standard, mathematically pure Relational Algebra using the Division operator: "Retrieve the exact `driver_id` of the veteran drivers who have successfully driven absolutely every single bus model currently owned by the transport company." You are given two relations: `Drives(driver_id, bus_model)` and `Fleet(bus_model)`.
@@ -1229,6 +1433,9 @@ The requirement explicitly asks for entities in one primary set (the drivers) th
   - *Prime vs Non-Prime Attributes*:
     - **Prime**: Physical part of *any* Candidate key
     - **Non-Prime**: Does not belong to *any* Candidate key
+  - **Core Mathematical Formulas**:
+    - *Attribute Closure ($X^+$)*: $X^+ = X \cup \{Y \mid X \to Y \text{ is inferable from } F\}$. The absolute mathematical boundary of all attributes functionally determined by $X$ under the strict rules of Armstrong's Axioms.
+    - *Armstrong's Transitivity*: $If\ X \to Y \text{ and } Y \to Z, \text{ then } X \to Z$. The mathematical backbone used to rigorously derive implied functional dependencies.
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: You are given a complex relation $R(A, B, C, D)$ and the exact set of Functional Dependencies $F = \{A \to B, B \to C, C \to D\}$. Using mathematical attribute closures, find absolutely all Candidate keys for the relation $R$.
@@ -1253,6 +1460,8 @@ The requirement explicitly asks for entities in one primary set (the drivers) th
   - *BCNF (Boyce-Codd)*: Stricter 3NF. For every $X \to Y$, $X$ MUST be a Super key. Closes the overlapping keys loophole
   - *4NF*: Must be BCNF. Bans **Multi-valued Dependencies** ($X \twoheadrightarrow Y$)
   - *5NF*: Deals with **Join Dependencies**. Cannot be losslessly decomposed without generating spurious tuples
+  - **Core Mathematical Formulas**:
+    - *Lossless Join Decomposition*: $R_1 \bowtie R_2 = R$. A strict mathematical guarantee. Furthermore, either $(R_1 \cap R_2) \to R_1$ or $(R_1 \cap R_2) \to R_2$ must absolutely hold true for the decomposition to be perfectly lossless.
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: In deep database theory, why is BCNF considered mathematically stricter than 3NF, and what specific, highly dangerous type of dependency anomaly does it aggressively eliminate that the standard 3NF explicitly tolerates?
@@ -1278,6 +1487,8 @@ The formal definition of 3NF allows a functional dependency $X \to Y$ to exist e
     - **Phase 1 (Growing)**: Acquire locks, release none
     - **Phase 2 (Shrinking)**: Release locks, acquire none
     - *Limitation*: Mathematically proven to generate Deadlocks
+  - **Core Mathematical Formulas**:
+    - *Timestamp Ordering Protocol*: If $TS(T_i) < TS(T_j)$ (meaning $T_i$ is older), then $T_i$ must mathematically execute before $T_j$. A strict rule preventing Read/Write conflicts without utilizing standard blocking locks.
 
 ```mermaid
 graph TD
@@ -1312,6 +1523,8 @@ graph TD
   - *Extendible Hashing*:
     - Dynamic hashing technique utilizing pointer directory
     - Uses "Global Depth" and "Local Depth" to split overflowing buckets flawlessly without full DB rehashing
+  - **Core Mathematical Formulas**:
+    - *B+ Tree Order Calculation ($m$)*: $m \times P + (m-1) \times (K + D) \le B_{size}$. Where $P$ is block pointer size, $K$ is key size, $D$ is data pointer size, and $B_{size}$ is the strict physical disk block size. Mathematically guarantees the node fits perfectly into one physical disk I/O sector.
 
 ```mermaid
 graph TD
@@ -1360,6 +1573,9 @@ In a standard B-Tree, actual data pointers are scattered wildly throughout the i
     - Recognized by unconstrained Turing Machines with infinite tape
     - Represents all mathematically computable functions
     - **Not closed** under Complementation
+  - **Core Mathematical Formulas**:
+    - *Chomsky Normal Form (CNF)*: Every production rule must mathematically adhere strictly to either $A \to BC$ or $A \to a$. Crucial for bounding parse tree height.
+    - *CYK Algorithm Complexity*: $O(n^3 \cdot |G|)$. The mathematical time complexity required to definitively parse a string of length $n$ against a grammar $G$ in strict CNF.
 
 ```mermaid
 graph TD
@@ -1396,6 +1612,8 @@ No, CFLs are strictly **not closed under intersection**. A standard Pushdown Aut
   - *The Halting Problem*:
     - Most famous undecidable problem (Turing)
     - Mathematically impossible to write a master program to determine if an arbitrary program will halt or loop infinitely
+  - **Core Mathematical Formulas**:
+    - *Rice's Theorem*: Let $P$ be any non-trivial property of partial mathematically computable functions. The problem of determining whether a Turing Machine computes a function with property $P$ is absolutely undecidable.
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: State the decidability status of the following two problems: (1) Does a given Deterministic Finite Automaton (DFA) accept the empty string? (2) Does a given Turing Machine accept the empty string?
@@ -1422,6 +1640,9 @@ The computational power of the underlying automaton directly dictates the decida
     - **Parsing Power Hierarchy**: $LR(0) < SLR(1) < LALR(1) < CLR(1)$
     - **CLR(1)**: Absolute most powerful. Attaches distinct lookahead tokens to prevent Reduce-Reduce conflicts. High memory usage
     - **LALR(1)**: Industry standard. Mathematically merges CLR(1) states with same core but different lookaheads. Retains power with drastically reduced RAM footprint
+  - **Core Mathematical Formulas**:
+    - *FIRST(X)*: The strict mathematical set of terminal symbols that begin the strings derived from grammar symbol $X$. Essential for constructing predictive parsing tables.
+    - *FOLLOW(A)*: The set of terminals that can mathematically appear immediately to the right of non-terminal $A$ in some sentential form. Required for resolving LL(1) empty productions.
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: During the execution of a bottom-up Shift-Reduce parser, define the exact mathematical conditions that cause a "Shift-Reduce Conflict" and a "Reduce-Reduce Conflict".
@@ -1441,6 +1662,8 @@ A Shift-Reduce parser operates using a stack and an input buffer.
   - *Loop Invariant Code Motion*: Extracting calculations from inside loops that produce exact same result every iteration, hoisting them outside/above the loop
   - *Common Subexpression Elimination*: Replacing redundant re-calculation of identical mathematical expressions with previously saved temporary results
   - *Peephole Optimization*: Final phase examining sliding window of machine code instructions. Looks for local inefficiencies (e.g., redundant load/store, replacing multiplication with bitwise shifts)
+  - **Core Mathematical Formulas**:
+    - *Strength Reduction*: Replacing computationally expensive operators with cheaper ones, e.g., $X \times 2 \to X \ll 1$ (Bitwise Left Shift).
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Identify the exact compiler optimization techniques applied to transform Code Block A into Code Block B.
@@ -1465,6 +1688,9 @@ A Shift-Reduce parser operates using a stack and an input buffer.
     2. Length of repeating section: $|y| > 0$
     3. Combined length constraint: $|xy| \le p$
   - *Adversarial Proof Process*: Assume $L$ regular $\to$ adversary picks $p$ $\to$ you pick valid string $\to$ adversary partitions $\to$ you demonstrate "pumping" $y$ violates language properties
+  - **Core Mathematical Formulas**:
+    - *Context-Free Pumping Lemma*: Partition $s = uvxyz$ where $|vxy| \le p$ and $|vy| > 0$. The string $uv^ixy^iz \in L$ for all $i \ge 0$. Mathematically tests dual-pumping capabilities.
+
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: Why does the mathematical language $L = \{0^n 1^n \mid n \ge 0\}$ fundamentally fail the Regular Pumping Lemma constraints, making it impossible to parse with a standard DFA?
@@ -1486,6 +1712,8 @@ If a DFA attempts to parse this language, it must strictly "remember" the exact 
     - **Basic Block**: Straight-line code sequence with no branching/halts inside. Single entry, single exit.
     - **Directed Flow Graph**: Mapped Basic Blocks for complex loop analysis
   - *Dominator Trees*: Node $D$ *dominates* node $N$ if every execution path to $N$ must strictly pass through $D$. Essential for loop optimization
+  - **Core Mathematical Formulas**:
+    - *Liveness Analysis*: $In[n] = Use[n] \cup (Out[n] - Def[n])$. A strict data-flow equation mathematically calculating which variable registers are currently holding active values vs dead data.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In Compiler Design, what is the exact structural difference between a Quadruple and a Triple when representing Three-Address Code (TAC), and why does a Triple mathematically require an "Indirect Triple" mapping array to optimize code motion?
@@ -1518,6 +1746,9 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
   - *Predicate Quantifiers*:
     - **Universal Quantifier ($\forall x$)**: Property $P(x)$ holds for every element $x$ in the domain
     - **Existential Quantifier ($\exists x$)**: Exists at least one element $x$ for which $P(x)$ holds true
+  - **Core Mathematical Formulas**:
+    - *Logical Implication*: $P \to Q \equiv \neg P \lor Q$. A strict mathematical equivalence used to eliminate implication arrows in formal proofs.
+    - *Quantifier Negation*: $\neg(\forall x P(x)) \equiv \exists x \neg P(x)$. Pushing negation mathematically flips universal quantifiers to existential, and vice versa.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Translate the following complex English statement into pure First-Order Predicate Logic: "Every student who takes Artificial Intelligence will pass the exam, but there exists at least one student who did not take Artificial Intelligence and still passed the exam." Use the predicates $S(x)$ for "x is a student", $AI(x)$ for "x takes AI", and $P(x)$ for "x passes the exam".
@@ -1543,6 +1774,21 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
     - Defines a hierarchy but allows incomparable elements
   - *Lattices*:
     - Highly structured POSet where every pair of elements possesses both a unique **Least Upper Bound (LUB / Supremum / Join)** and a unique **Greatest Lower Bound (GLB / Infimum / Meet)**
+  - **Core Mathematical Formulas**:
+    - *Boolean Algebra Distributivity*: $a \lor (b \land c) = (a \lor b) \land (a \lor c)$. Essential property for digital circuit simplification.
+
+```mermaid
+graph TD
+    12["12 (LUB)"] --> 4["4"]
+    12 --> 6["6"]
+    4 --> 2["2"]
+    6 --> 2
+    6 --> 3["3"]
+    2 --> 1["1 (GLB)"]
+    3 --> 1
+    style 12 fill:#e74c3c,color:#fff
+    style 1 fill:#2ecc71,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: Let the set $S = \{1, 2, 3, 4, 6, 12\}$. Let the relation $R$ be "x divides y" (denoted $x | y$). Prove mathematically if $(S, R)$ forms a valid Lattice, and specifically find the LUB and GLB for the subset $\{4, 6\}$.
@@ -1553,6 +1799,9 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
    - The **Greatest Lower Bound (GLB)** of 4 and 6 is defined mathematically as their Greatest Common Divisor (GCD). The divisors of 4 are $\{1, 2, 4\}$. The divisors of 6 are $\{1, 2, 3, 6\}$. The largest common divisor is 2.
 3. Because every pair in this divisibility set possesses a valid LCM and GCD that are physically present within the set $S$, it is a perfectly valid Lattice.
 *Answer*: Yes, it is a valid Lattice. For the subset $\{4, 6\}$, the LUB (Join) is 12, and the GLB (Meet) is 2.
+
+> [!WARNING]
+> **Common Exam Trap**: When determining if a POSet is a Lattice, examiners frequently provide a set where the mathematical LUB (LCM) of two elements falls *outside* the boundaries of the set $S$. If the LCM or GCD does not explicitly exist inside $S$, it strictly fails to be a Lattice.
 
 ### 8.3 Advanced Graph Theory
 **Deep-Dive Definitions & Properties:**
@@ -1570,6 +1819,9 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
   - *Planar Graphs*:
     - Can be drawn on a 2D plane with zero intersecting edges
     - Governed by Euler's Formula: $V - E + F = 2$ ($V$=vertices, $E$=edges, $F$=distinct bounded faces, including the infinite exterior face)
+  - **Core Mathematical Formulas**:
+    - *Handshaking Lemma*: $\sum \text{deg}(v) = 2|E|$. The absolute sum of all vertex degrees must perfectly equal twice the total number of edges.
+    - *Planar Graph Edge Bound*: $E \le 3V - 6$. For any simple connected planar graph with $V \ge 3$, violating this bound mathematically proves the graph is non-planar (must intersect).
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: A connected planar graph consists of exactly 6 vertices. What is the absolute strict mathematical maximum number of edges this graph can possibly contain while remaining planar?
@@ -1597,6 +1849,9 @@ Therefore, a planar graph with 6 vertices can have an absolute maximum of 12 edg
     - Bedrock of modern probabilistic machine learning
     - Calculates "posterior probability" based on prior knowledge
     - **Formula**: $P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}$
+  - **Core Mathematical Formulas**:
+    - *Inclusion-Exclusion Principle*: $|A \cup B| = |A| + |B| - |A \cap B|$. Strict arithmetic used to calculate union sizes without physically double-counting intersections.
+    - *Binomial Distribution*: $P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}$. Calculates exact probability of $k$ successes in $n$ independent boolean trials.
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A highly contagious virus test has a strict mathematical accuracy of 99% (it correctly identifies 99% of sick people, and correctly identifies 99% of healthy people). However, only exactly 1% of the total population actually has the virus. If a random person's test returns positive, what is the exact mathematical probability that they actually have the virus?
@@ -1631,6 +1886,8 @@ We are looking for $P(V|Pos)$ (Probability of having virus GIVEN a positive test
   - *Special LPPs*:
     - **Transportation Problem**: Minimizes cost of shipping goods from multiple sources to multiple destinations
     - **Assignment Problem**: Assigns $N$ tasks to $N$ workers on a 1-to-1 basis to minimize execution time. Solved using the Hungarian Algorithm
+  - **Core Mathematical Formulas**:
+    - *LPP Standard Duality*: Maximize $Z = c^T x$ subject to $Ax \le b$ mathematically maps directly to its strict Dual: Minimize $W = b^T y$ subject to $A^T y \ge c$. If one optimal bound is found, the other is instantly solved.
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: In solving a massive Linear Programming problem with 5 variables using the algebraic Simplex Method, what mathematical geometric feature of the multi-dimensional feasible region does the algorithm physically traverse to find the optimal solution?
@@ -1652,6 +1909,20 @@ The system of linear constraints in an LPP mathematically forms a convex geometr
   - *Little's Law ($L = \lambda W$)*:
     - Powerful mathematical theorem asserting that under steady-state conditions, average number of items in system ($L$) equals average arrival rate ($\lambda$) multiplied by average time an item spends in system ($W$)
     - **Universality**: Completely agnostic to internal scheduling algorithm (FCFS, LIFO, Priority)
+  - **Core Mathematical Formulas**:
+    - *Traffic Intensity ($\rho$)*: $\rho = \frac{\lambda}{\mu}$. The core mathematical ratio of arrival rate $\lambda$ to service rate $\mu$. The system strictly collapses into infinite backlog if $\rho \ge 1$.
+
+```mermaid
+graph LR
+    A["Arrival Process<br>(λ)"] --> B{"Wait Queue<br>(Buffer)"}
+    B --> C["Service Node 1<br>(μ)"]
+    B --> D["Service Node N<br>(μ)"]
+    C --> E["Departure"]
+    D --> E
+    style A fill:#3498db,color:#fff
+    style B fill:#f39c12,color:#fff
+    style E fill:#2ecc71,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A high-performance database server cluster receives an average of precisely 50 SQL query requests per second. Monitoring software verifies that, on average, there are exactly 15 queries actively waiting or being processed within the cluster at any given microsecond. Using Little's Law, what is the exact average mathematical response time (in milliseconds) for a single SQL query traversing the cluster?
@@ -1694,6 +1965,8 @@ The system of linear constraints in an LPP mathematically forms a convex geometr
   - *Don't Care Conditions ($X$)*:
     - Impossible binary input combinations
     - Treated as either 1 or 0 to enable the largest possible groupings for optimal circuit minimization
+  - **Core Mathematical Formulas**:
+    - *Shannon's Expansion Theorem*: $F(x_1, \dots, x_n) = x_1 \cdot F(1, \dots, x_n) + \neg x_1 \cdot F(0, \dots, x_n)$. The mathematical foundation for implementing massive boolean functions using multiplexers.
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: Why do the axes of a Karnaugh Map strictly utilize the non-weighted Gray Code sequence ($00, 01, 11, 10$) instead of standard binary sequence ($00, 01, 10, 11$)?
@@ -1718,6 +1991,8 @@ The entire mathematical principle of K-Map minimization relies entirely on the B
   - *Counters & Registers*:
     - **Synchronous counters**: Trigger all flip-flops simultaneously via master clock (high speed)
     - **Asynchronous (Ripple) counters**: Trigger subsequent flip-flops using output of previous (slower due to compounded propagation delay)
+  - **Core Mathematical Formulas**:
+    - *Maximum Clock Frequency (Synchronous)*: $f_{max} = \frac{1}{t_{pd} + t_{setup}}$. The absolute mathematical speed limit of a synchronous circuit bounded by flip-flop propagation delay and setup time requirements.
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: You are architecting an asynchronous Ripple Down-Counter that must accurately count backwards from exactly 127 down to 0, and then reset. Exactly how many individual Flip-Flops must be physically wired in series to achieve this, and what is the Modulus (MOD) of this counter?
@@ -1733,12 +2008,35 @@ The entire mathematical principle of K-Map minimization relies entirely on the B
   - Physical hardware pyramid bridging speed gap between ultra-fast CPU and slow storage
   - Relies entirely on **Principle of Locality** (Temporal and Spatial)
 - **Key Properties & Mechanisms**:
+  - *SRAM vs. DRAM Architecture*:
+
+| Feature | SRAM (Static RAM) | DRAM (Dynamic RAM) |
+| :--- | :--- | :--- |
+| **Physical Component** | Flip-flops (6 Transistors per bit) | Capacitors (1 Transistor + 1 Capacitor per bit) |
+| **Refresh Required** | No (Retains data as long as power is supplied) | Yes (Capacitors leak charge, must be refreshed continuously) |
+| **Speed & Density** | Ultra-fast but low density (takes more physical space) | Slower but high density (packs massive gigabytes into small chips) |
+| **Primary Use Case** | L1/L2/L3 CPU Cache | Main Memory (System RAM) |
+
   - *Cache Mapping Techniques*:
-    - **Direct Mapping**: $L = B \pmod C$. Highly rigid, lowest-latency. Susceptible to catastrophic "Thrashing"
+    - **Direct Mapping**: $L = B \pmod C$. Highly rigid, lowest-latency. Susceptible to catastrophic **"Thrashing"**
     - **Fully Associative Mapping**: Block can be placed anywhere. Most flexible, highest-latency due to massive comparator array
     - **Set-Associative Mapping**: Industry standard compromise. Cache divided into Sets of $K$ lines. Block maps to specific Set ($S = B \pmod N$), but can be placed in any line within that Set
   - *Cache Coherence*:
     - Hardware protocols (e.g., MESI - Modified, Exclusive, Shared, Invalid) mathematically guarantee all multi-core CPU caches read the most recently written value
+  - **Core Mathematical Formulas**:
+    - *Effective Memory Access Time (EMAT)*: $EMAT = H_c \times T_c + (1 - H_c) \times (T_c + T_m)$. The core statistical average of memory access duration utilizing Cache Hit Ratio ($H_c$), Cache Time ($T_c$), and Main Memory Time ($T_m$).
+
+```mermaid
+graph TD
+    CPU["CPU Registers<br>(< 1ns)"] --> L1["L1/L2 Cache (SRAM)<br>(1-10ns)"]
+    L1 --> RAM["Main Memory (DRAM)<br>(50-100ns)"]
+    RAM --> Disk["Magnetic Disk / SSD<br>(> 1,000,000ns)"]
+    
+    style CPU fill:#e74c3c,color:#fff
+    style L1 fill:#e67e22,color:#fff
+    style RAM fill:#f1c40f,color:#333
+    style Disk fill:#3498db,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: A computer system possesses a 64 KB Direct-Mapped Cache, strictly divided into 32-Byte physical cache blocks. The Main Memory (RAM) capacity is a massive 16 MB. The CPU generates a physical memory address. Mathematically dissect this physical address, stating the exact number of bits strictly required for the TAG, LINE, and WORD offset fields.
@@ -1748,7 +2046,11 @@ The entire mathematical principle of K-Map minimization relies entirely on the B
 3. **Calculate LINE (Index) Bits**: Total Cache Size = 64 KB ($2^{16}$ bytes). Number of lines in cache = (Total Cache) / (Block Size) = $\frac{2^{16}}{2^5} = 2^{11}$ lines. To address exactly $2^{11}$ distinct lines, we mathematically need exactly **11 bits**.
 4. **Calculate TAG Bits**: The TAG physically identifies which specific RAM block is currently occupying the cache line. TAG = (Total Address Bits) - (LINE bits) - (WORD bits).
    TAG = $24 - 11 - 5 = 8$ bits.
-*Answer*: The 24-bit physical address is strictly partitioned into: TAG = 8 bits, LINE = 11 bits, WORD = 5 bits.
+   *Answer*: The 24-bit physical address is strictly partitioned into: TAG = 8 bits, LINE = 11 bits, WORD = 5 bits.
+
+> [!WARNING]
+> **Common Exam Trap**: Carefully verify whether the question explicitly states the memory is **Byte-Addressable** or **Word-Addressable**. If it is Word-Addressable (and a word is 2 bytes), a 16 MB memory only contains $8 \text{ M}$ words ($2^{23}$ unique addresses), meaning the physical address would mathematically be 23 bits, not 24.
+
 
 ### 9.4 Microprocessor Architecture & Addressing Modes
 **Deep-Dive Definitions & Properties:**
@@ -1762,9 +2064,16 @@ The entire mathematical principle of K-Map minimization relies entirely on the B
     - **Indirect**: Instruction contains RAM address pointing to another address holding operand
     - **Register / Register Indirect**: Operand or pointer stored securely inside CPU register
     - **Indexed / Base Register**: Effective Address (EA) calculated by adding offset to Base Register
-  - *RISC vs CISC*:
-    - **RISC (Reduced Instruction Set Computer)**: Executes simple, uniform-length instructions in exactly one clock cycle. Uses explicit `LOAD`/`STORE`. Allows massive pipelining (e.g., ARM)
-    - **CISC (Complex Instruction Set Computer)**: Executes highly complex, multi-cycle instructions performing math and memory reads simultaneously (e.g., x86)
+  - *RISC vs. CISC Architecture*:
+
+| Feature | RISC (Reduced Instruction Set Computer) | CISC (Complex Instruction Set Computer) |
+| :--- | :--- | :--- |
+| **Instruction Size** | Uniform, fixed-length instructions (e.g., exactly 32-bit) | Variable-length instructions |
+| **Execution Speed** | Exactly one instruction per clock cycle | Multi-cycle instructions (can take multiple clocks to finish) |
+| **Memory Access** | Highly restricted; only `LOAD` and `STORE` access RAM | Instructions can directly perform math on RAM addresses |
+| **Pipelining** | Extremely easy and highly efficient | Extremely difficult due to variable execution times |
+  - **Core Mathematical Formulas**:
+    - *CPU Execution Time*: $T = IC \times CPI \times \tau$. The absolute time required to execute a program, calculated via Instruction Count ($IC$), Cycles Per Instruction ($CPI$), and strict Clock Cycle Time ($\tau$).
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In modern Operating Systems, when an entirely compiled software program is physically loaded into RAM at an unpredictable, random memory location, which specific hardware Addressing Mode is absolutely mathematically required to guarantee the program executes without crashing?
@@ -1789,6 +2098,28 @@ When a compiler generates machine code, it often assumes the program will start 
     - **SISD**: Standard single-core PC
     - **SIMD**: GPUs and Vector Processors. Single instruction manipulates massive array of data
     - **MIMD**: Multi-Core Supercomputers. Multiple instructions manipulate multiple data streams concurrently
+  - **Core Mathematical Formulas**:
+    - *Pipeline Speedup ($S$)*: $S = \frac{n \times k}{k + n - 1}$. The theoretical mathematical acceleration of a $k$-stage pipeline executing $n$ instructions, which asymptotically approaches $k$ as $n \to \infty$.
+    - *Amdahl's Law*: $S_{max} = \frac{1}{(1-P) + \frac{P}{N}}$. The rigid mathematical ceiling on speedup using $N$ parallel processors, severely bottlenecked by the strict sequential fraction $(1-P)$.
+
+```mermaid
+gantt
+    title 5-Stage Instruction Pipeline
+    dateFormat  X
+    axisFormat %s
+    section Instruction 1
+    Fetch (IF)    :a1, 0, 1
+    Decode (ID)   :a2, 1, 2
+    Execute (EX)  :a3, 2, 3
+    Memory (MEM)  :a4, 3, 4
+    Write (WB)    :a5, 4, 5
+    section Instruction 2
+    Fetch (IF)    :b1, 1, 2
+    Decode (ID)   :b2, 2, 3
+    Execute (EX)  :b3, 3, 4
+    Memory (MEM)  :b4, 4, 5
+    Write (WB)    :b5, 5, 6
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A non-pipelined CPU architecture requires exactly 10ns to complete one instruction. We physically upgrade it to a deeply pipelined CPU possessing exactly 5 distinct stages. Due to latch overhead, each stage takes 2.5ns. Calculate the exact theoretical Speedup of the pipeline when executing a massive workload of 1000 instructions, assuming absolutely zero hazards.
@@ -1813,6 +2144,9 @@ When a compiler generates machine code, it often assumes the program will start 
   - *RAID 4 (Block-Level Striping, Dedicated Parity)*: Creates severe bottleneck since every random write forces update to the identical dedicated parity disk
   - *RAID 5 (Block-Level Striping, Distributed Parity)*: Enterprise standard. Solves RAID 4 bottleneck by evenly distributing parity bits. Tolerates single drive failure
   - *RAID 6 (Double Distributed Parity)*: Calculates and stripes two separate sets of parity. Tolerates two simultaneous drive failures
+  - **Core Mathematical Formulas**:
+    - *Total Disk Access Time*: $T_{access} = T_{seek} + T_{rotational} + T_{transfer}$. The physical mathematical delay summing the read-head arm movement, the platter rotation to the sector, and the sheer magnetic data transfer.
+    - *RAID 5 Capacity*: $C_{usable} = (N - 1) \times S_{min}$. The strict usable disk space spanning $N$ drives, sacrificing exactly one drive's capacity mathematically for distributed XOR parity.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In a massive enterprise storage array utilizing RAID 5, if exactly one physical disk suffers a catastrophic hardware failure, what is the exact mathematical operation the RAID controller executes on the remaining surviving disks to perfectly reconstruct the lost data?
@@ -1844,6 +2178,30 @@ When a drive dies in RAID 5, the system enters a "degraded" state. Every time th
   - *Double Pointers (`**ptr`)*:
     - Stores memory address of another pointer
     - Mandatory for modifying a pointer passed as an argument or allocating 2D matrices on the Heap
+  - **Core Mathematical Formulas**:
+    - *Array-to-Pointer Decay*: `arr[i] = *(arr + i)`. The strict mathematical equivalence executed by the compiler to physically resolve array indexing using raw pointer arithmetic.
+
+```mermaid
+graph TD
+    High["High Memory Addresses"]
+    subgraph RAM [Physical RAM Layout]
+    Stack["Stack (Grows Downward ↓)<br>Local Variables, Returns"]
+    Empty["Free Memory"]
+    Heap["Heap (Grows Upward ↑)<br>Dynamic Malloc/New"]
+    Data["Data Segment<br>Globals & Statics"]
+    Code["Code Segment<br>Compiled Machine Instructions"]
+    end
+    Low["Low Memory Addresses"]
+    
+    High --- RAM
+    RAM --- Low
+    Stack --> Empty
+    Heap --> Empty
+    
+    style Stack fill:#e74c3c,color:#fff
+    style Heap fill:#2ecc71,color:#fff
+    style Code fill:#34495e,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: Assume a 32-bit architecture where `int` takes strictly 4 bytes and all pointers take strictly 4 bytes. An integer array `arr[5]` is physically stored starting at memory address 1000. What are the exact integer values printed by the following C code snippet?
@@ -1873,6 +2231,8 @@ When a drive dies in RAID 5, the system enters a "degraded" state. Every time th
     - Pushed onto Call Stack upon function call
     - Contains: Local variables, incoming parameters, physical Return Address, and previous Frame Pointer
     - Excessive recursion exhausts RAM, causing Stack Overflow
+  - **Core Mathematical Formulas**:
+    - *Recursive Time Complexity Master Theorem*: $T(n) = aT(n/b) + f(n)$. The core recurrence relation mathematically evaluating the exact time complexity of tree-based recursive divide-and-conquer algorithms.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: A recursive function mathematically calculates the factorial of $N$. If this function is executed with $N=10$, exactly how many independent Activation Records will be physically pushed onto the Call Stack simultaneously at the deepest absolute point of execution, before any records are popped?
@@ -1900,6 +2260,8 @@ At the exact microsecond $f(0)$ executes, it has not returned yet. Therefore, th
   - *Polymorphism*:
     - Single interface exhibiting entirely different behaviors based on received data types
     - **Compile-Time (Static)**: Function Overloading and Operator Overloading. Compiler rigorously analyzes signatures at compile-time and permanently binds memory address. Zero runtime overhead
+  - **Core Mathematical Formulas**:
+    - *Object Size Calculation*: $\text{sizeof(Object)} = \sum \text{sizeof(attributes)} + \text{Padding}$. Physically calculates RAM footprint, strictly ignoring standard methods but including the hidden `vptr` if virtual functions are present.
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: In C++, if a developer attempts to compile a class that contains two distinct methods with the exact same name `calculate()`, under what absolute strict mathematical conditions will the C++ compiler successfully allow this through Function Overloading?
@@ -1917,10 +2279,26 @@ Function Overloading is a strict form of Compile-Time Polymorphism. To prevent f
     - Catastrophic paradox in Multiple Inheritance ($D$ inherits from $B$ and $C$, both inheriting from $A$)
     - Object $D$ physically contains two duplicated copies of Base Class $A$ in RAM, causing ambiguity
     - Solved by virtual inheritance (`virtual public A`)
+
+```mermaid
+graph TD
+    A["Base Class A<br>(int data)"]
+    B["Derived Class B : public A"]
+    C["Derived Class C : public A"]
+    D["Derived Class D : public B, public C"]
+    A --> B
+    A --> C
+    B --> D
+    C --> D
+    style D fill:#e74c3c,color:#fff
+```
+
   - *Virtual Functions & V-Tables (Dynamic Binding)*:
     - Base class method declared `virtual` forces compiler to construct Virtual Table (V-Table) array of function pointers
     - Objects receive hidden pointer (vptr) to this table
     - CPU uses vptr to dynamically look up method memory address at runtime, incurring slight performance penalty
+  - **Core Mathematical Formulas**:
+    - *Dynamic V-Table Binding*: $\text{Method Address} = \text{VTable Base Address} + (\text{Method Index} \times \text{Pointer Size})$. The exact physical memory jump executed by the CPU at runtime to achieve late binding polymorphism.
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: A C++ program declares a Base class pointer that physically points to a dynamically allocated Derived class object on the Heap. The developer calls a method through this pointer, but the Base class method is executed instead of the overridden Derived class method. What specific architectural keyword did the developer fail to use, and exactly how did the compiler mathematically handle the binding?
@@ -1941,6 +2319,8 @@ Because a Base pointer was used, the C++ compiler strictly defaults to **Early B
     - **try**: Protected code block physically monitored for fatal anomalies
     - **throw**: Keyword creating Exception Object, halting execution, and "unwinding" Call Stack
     - **catch**: Specific error-handling block preventing program termination by matching object data type
+  - **Core Mathematical Formulas**:
+    - *Template Expansion Complexity*: $S_{binary} \approx S_{base} \times N_{types}$. A rough mathematical estimate of compiler code bloat, where the binary size scales strictly with the total number of unique data types invoked through the generic template.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In a massive C++ software system utilizing deep nested function calls, an exception is `thrown` exactly 5 levels deep in the Call Stack. No `try-catch` blocks exist in the immediate function. Exactly what rigorous physical mechanism does the C++ runtime environment execute to locate a handler, and what happens to local objects?
@@ -1965,12 +2345,19 @@ If it entirely unwinds the massive stack all the way to `main()` without finding
   - Computer Graphics is the mathematical synthesis of 2D and 3D visual data onto a physical 2D pixel grid
   - **Frame Buffer**: Dedicated Video RAM (VRAM) storing the exact RGB color value for every single physical pixel on the monitor
 - **Key Properties & Mechanisms**:
-  - *Raster vs Random Scan*:
-    - **Random Scan (Vector Display)**: Electron beam mathematically directed to draw strict lines of an object, ignoring empty space. Produces perfect, smooth lines with no pixelation, but cannot draw solid polygons or shading
-    - **Raster Scan**: The industry standard. Screen is divided into a rigid pixel matrix. Electron beam sweeps row by row. Supports shading and solid polygons, but suffers from "Aliasing" (jagged edges)
+  - *Raster vs. Vector (Random) Scan*:
+
+| Feature | Raster Scan | Vector (Random) Scan |
+| :--- | :--- | :--- |
+| **Drawing Logic** | Electron beam strictly sweeps entire screen row by row | Electron beam strictly directed only to the mathematical lines of the object |
+| **Image Quality** | Suffers from "Aliasing" (jagged, staircase edges) | Produces perfect, mathematically smooth lines |
+| **Capabilities** | Easily renders solid polygons, shading, and complex gradients | Only renders wireframes (cannot shade polygons) |
+| **Hardware Standard** | Modern industry standard (LCDs, OLEDs) | Obsolete legacy hardware (Cathode Ray Oscilloscopes) |
   - *Resolution & Aspect Ratio*:
     - **Resolution**: Defines physical matrix size (e.g., $1920 \times 1080$)
     - **Aspect Ratio**: Mathematical ratio of screen width to height (e.g., 16:9). Monitor ratio must match resolution ratio to prevent geometric distortion
+  - **Core Mathematical Formulas**:
+    - *Frame Buffer Size*: $\text{Size (Bits)} = \text{Resolution}_x \times \text{Resolution}_y \times \text{Color Depth (Bits per Pixel)}$. The absolute hardware VRAM footprint physically required to render a single static frame.
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A high-end raster graphics system features a physical resolution of $1024 \times 1024$ pixels. It supports True Color, meaning exactly 24 bits are mathematically allocated per pixel (8 bits each for Red, Green, and Blue). Calculate the absolute minimum size of the physical Frame Buffer (VRAM) required strictly in Megabytes (MB).
@@ -1988,18 +2375,20 @@ If it entirely unwinds the massive stack all the way to `main()` without finding
   - Mathematical lines have infinite precision; raster monitors have discrete pixels
   - Drawing algorithms calculate which physical pixels most accurately approximate ideal lines using integer arithmetic for speed
 - **Key Properties & Mechanisms**:
-  - *Digital Differential Analyzer (DDA)*:
-    - Calculates exact mathematical slope ($m = \frac{\Delta y}{\Delta x}$)
-    - Increments primary axis by 1 pixel, adds fractional slope to other axis
-    - Uses slow floating-point arithmetic; susceptible to truncation errors
-  - *Bresenham’s Line Algorithm*:
-    - Industry standard eliminating floating-point arithmetic
-    - Relies on "Integer Decision Parameter" ($P_k$) to choose between top or bottom pixel
-    - Blindingly fast and implemented in GPU silicon
+  - *DDA vs. Bresenham's Line Algorithm*:
+
+| Feature | DDA (Digital Differential Analyzer) | Bresenham's Algorithm |
+| :--- | :--- | :--- |
+| **Mathematics** | Uses floating-point arithmetic and division | Uses strictly integer arithmetic (addition/subtraction) |
+| **Speed** | Slower (due to expensive floating-point operations) | Blindingly fast (hardware-optimized) |
+| **Accuracy** | Prone to rounding/truncation errors (staircase drift) | Mathematically precise and perfectly accurate |
+| **Decision Logic** | Adds fractional slope ($m$) iteratively | Uses an Integer Decision Parameter ($P_k$) |
   - *Midpoint Circle Algorithm*:
     - Utilizes 8-way mathematical symmetry
     - Calculates pixels for one $45^\circ$ octant and mirrors across axes
     - Slashes computational load by 87.5%
+  - **Core Mathematical Formulas**:
+    - *Bresenham's Initial Decision Parameter*: $P_0 = 2\Delta y - \Delta x$. The core mathematical seed used to recursively evaluate integer proximity to the true geometric line without relying on costly floating-point divisions.
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: In Bresenham’s Line Drawing algorithm for a line strictly within the first octant (slope $0 < m < 1$), the decision parameter $P_k$ determines the next pixel. If the current pixel is $(x_k, y_k)$ and the mathematically calculated $P_k$ is strictly greater than zero ($P_k > 0$), what are the exact coordinates of the very next plotted pixel, and why?
@@ -2026,6 +2415,8 @@ The Decision Parameter $P_k$ mathematically measures the distance from the true 
       1. Translate object so $P$ sits exactly on Origin
       2. Execute pure Rotation matrix
       3. Execute inverse Translation back to original location
+  - **Core Mathematical Formulas**:
+    - *2D Rotation Matrix*: $\begin{bmatrix} \cos \theta & -\sin \theta \\ \sin \theta & \cos \theta \end{bmatrix}$. The strict trigonometric linear algebra transformation rotating points mathematically counter-clockwise strictly around the absolute origin.
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: A graphics engine must mathematically scale a 2D polygon uniformly by a factor of 3, but the scaling must strictly occur relative to a fixed point $(h, k)$, not the origin. Provide the exact mathematical sequence of Homogeneous Transformation Matrices that must be multiplied together to generate the Composite Transformation Matrix.
@@ -2050,6 +2441,18 @@ In strict matrix multiplication (which is applied right-to-left against the vert
   - *Sutherland-Hodgman Polygon Clipping*:
     - Pipelined algorithm sequentially clipping against Left, Right, Bottom, Top edges
     - Dynamically generates new vertices at physical edge intersections
+  - **Core Mathematical Formulas**:
+    - *Parametric Line Intersection*: $x = x_1 + t(x_2 - x_1)$ and $y = y_1 + t(y_2 - y_1)$ for $0 \le t \le 1$. The strict mathematical equations used by clipping algorithms to calculate the exact physical pixel where an off-screen line visibly breaches the window boundary.
+
+```mermaid
+graph TD
+    subgraph Cohen-Sutherland Outcodes
+    TL["1001"] --- T["1000"] --- TR["1010"]
+    L["0001"] --- C["0000<br>(Viewport)"] --- R["0010"]
+    BL["0101"] --- B["0100"] --- BR["0110"]
+    end
+    style C fill:#2ecc71,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In the Cohen-Sutherland line clipping algorithm, Line segment $AB$ has the following endpoint Outcodes: $A = 1001$ and $B = 0101$. Without calculating exact intersections, what is the immediate mathematical conclusion the algorithm reaches regarding this line?
@@ -2075,6 +2478,21 @@ Because the final result is strictly NOT `0000`, it mathematically proves that b
     - Foundation of modern 3D GPU hardware utilizing two VRAM arrays: Frame Buffer (RGB) and Z-Buffer (floating-point Z-depth)
     - Mathematically calculates Z-depth of each new pixel
     - Pixel is drawn *if and only if* its Z-depth is physically closer to camera than old pixel
+  - **Core Mathematical Formulas**:
+    - *Perspective Projection Transformation*: $x_p = \frac{x \cdot d}{z}$ and $y_p = \frac{y \cdot d}{z}$. The profound physical transformation physically dividing Euclidean coordinates by depth ($z$) to mathematically simulate the violent optical convergence of the human eye.
+
+```mermaid
+graph LR
+    subgraph Parallel Orthographic
+    A1["Object 3D"] --> |"Parallel Rays"| P1["2D Projection Plane"]
+    end
+    
+    subgraph Perspective
+    A2["Object 3D"] --> |"Converging Rays"| P2["2D Projection Plane"]
+    P2 --> |"Converging Rays"| C["Camera Eye<br>(Center of Projection)"]
+    end
+    style C fill:#e74c3c,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: Two opaque 3D triangles physically intersect each other in deep 3D space. One triangle is red, the other is blue. If the graphics engine strictly relies on the "Painter's Algorithm" (Depth-Sort Algorithm) for Hidden Surface Removal, why will the visual output be mathematically catastrophic, and why is the Z-Buffer algorithm completely immune to this physical failure?
