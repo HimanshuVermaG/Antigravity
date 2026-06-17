@@ -8,10 +8,46 @@ This guide serves as a central repository for all detailed definitions and PYQ-s
 
 ### 1.1 Trees (AVL, BST, 2-3-4, Red-Black, B/B+ Trees)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Hierarchical node-based memory models designed to drastically optimize search times from linear $O(n)$ down to logarithmic $O(\log n)$. A Binary Search Tree (BST) mathematically enforces a strict left-right bounding condition on every single node, guaranteeing that in-order traversal intrinsically yields a perfectly sorted array sequence.
+- **Core Definition**:
+  - Hierarchical node-based memory models
+  - Optimize search times from linear $O(n)$ → logarithmic $O(\log n)$
+  - A BST enforces a strict left-right bounding condition on every node
+  - In-order traversal of a BST intrinsically yields a perfectly sorted sequence
 - **Key Properties & Mechanisms**:
-  - *AVL vs Red-Black Trees*: Both are self-balancing architectures strictly preventing catastrophic degradation into $O(n)$ Linked Lists. AVL trees enforce an absolute height balance factor constraint of $\{-1, 0, 1\}$, triggering rigid LL/RR/LR/RL structural rotations immediately upon violation. Because AVL trees are perfectly balanced, search operations are blindingly fast. Red-Black trees completely abandon perfect height matching; instead, they enforce rigorous color-coding rules (e.g., Red nodes physically cannot have Red children) ensuring the longest path is strictly no more than twice the shortest path. This slight imbalance significantly reduces the rotational overhead during aggressive memory write operations.
-  - *B-Trees and B+ Trees*: Massive multi-way disk architectures explicitly engineered for mechanical Hard Drives and relational databases. Unlike binary trees where nodes hold a single key, a B-Tree node (of order $m$) is a massive memory block holding $m-1$ keys and $m$ pointers. B+ Trees are the absolute industry standard because they forcefully evict all data pointers from internal routing nodes, pushing data strictly to the leaf level. Furthermore, the leaf nodes physically contain lateral pointers connecting them sequentially, allowing the database engine to execute lightning-fast $O(1)$ sequential range scans without ever traversing back up the tree hierarchy.
+  - *AVL Trees*:
+    - Self-balancing BST preventing degradation into $O(n)$ linked lists
+    - Enforce strict height balance factor: $\{-1, 0, 1\}$ at every node
+    - Trigger LL / RR / LR / RL rotations immediately upon violation
+    - More rigidly balanced → faster search operations
+  - *Red-Black Trees*:
+    - Self-balancing BST with relaxed balancing rules
+    - Enforce color-coding rules (Red nodes cannot have Red children)
+    - Longest path $\le$ 2× shortest path
+    - Less balanced than AVL → fewer rotations → faster insertions/deletions
+  - *B-Trees*:
+    - Multi-way disk-optimized tree for Hard Drives and relational databases
+    - A node of order $m$ holds up to $m-1$ keys and $m$ child pointers
+    - Minimum children in any internal node: $\lceil m/2 \rceil$
+  - *B+ Trees (Industry Standard)*:
+    - All data pointers are evicted from internal nodes → pushed strictly to leaf level
+    - Internal nodes act purely as routing indices
+    - Leaf nodes are linked sequentially via lateral pointers
+    - Enables lightning-fast $O(1)$ sequential range scans without tree traversal
+
+```mermaid
+graph TD
+    subgraph "B+ Tree Structure (Order 4)"
+        R["Internal Node<br/>[30 | 60]"] --> L1["Leaf [10|20]"]
+        R --> L2["Leaf [30|40|50]"]
+        R --> L3["Leaf [60|70|80]"]
+        L1 -- "→" --> L2
+        L2 -- "→" --> L3
+    end
+    style R fill:#4a90d9,color:#fff
+    style L1 fill:#50c878,color:#fff
+    style L2 fill:#50c878,color:#fff
+    style L3 fill:#50c878,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A B-tree of order 4 is mathematically constructed from scratch by exactly 10 successive independent key insertions. What is the absolute maximum possible height of the resulting B-tree? (Assume the root strictly resides at height 0).
@@ -29,10 +65,26 @@ We are mathematically forced to insert 10 total keys. Since 7 are placed, 3 keys
 
 ### 1.2 Hashing (Probing, Chaining, Extendible)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Hashing completely bypasses traversal and searching algorithms by mathematically converting a search key directly into a physical array index memory address via a Hash Function $h(k)$. Because the target domain is strictly smaller than the infinite key space, mathematical "collisions" are physically inevitable and must be resolved by strict architectural protocols.
+- **Core Definition**:
+  - Bypasses traversal by converting a key directly into a physical array index via Hash Function $h(k)$
+  - Target domain is strictly smaller than infinite key space → collisions are inevitable
+  - Collisions must be resolved by strict architectural protocols
 - **Key Properties & Mechanisms**:
-  - *Open Addressing (Closed Hashing)*: Collisions are resolved purely by mathematically searching for the next empty array slot using sequence generators. Linear Probing simply steps forward by 1, but catastrophically suffers from Primary Clustering (massive contiguous blocks of occupied slots that dramatically degrade performance). Quadratic Probing skips by squares ($1, 4, 9$) eliminating primary clustering, but suffers from Secondary Clustering (keys hashing to the same initial index follow the exact same mathematical trajectory). Double Hashing completely eliminates all clustering by deploying a second, entirely independent hash function to calculate unique step sizes for every distinct key.
-  - *Extendible Hashing (Dynamic Hashing)*: A massive architectural framework specifically designed for database systems that cannot afford to halt execution to resize a massive contiguous array. It relies strictly on an expanding Directory of pointers dictated by a "Global Depth" ($d$) and physical data buckets dictated by a "Local Depth" ($d'$). When a bucket physically overflows, if its local depth is strictly less than the global depth, the bucket independently splits. If the local depth perfectly equals the global depth, the entire central Directory physically doubles in size (Global Depth increments), and then the bucket is safely split.
+  - *Open Addressing (Closed Hashing)* — resolve collisions by probing for empty slots:
+    - **Linear Probing**: Steps forward by 1
+      - Suffers from **Primary Clustering** (massive contiguous occupied blocks degrade performance)
+    - **Quadratic Probing**: Steps by squares ($1, 4, 9, ...$)
+      - Eliminates primary clustering
+      - Suffers from **Secondary Clustering** (same-hash keys follow identical trajectory)
+    - **Double Hashing**: Uses a second independent hash function for step sizes
+      - Completely eliminates all forms of clustering
+  - *Extendible Hashing (Dynamic Hashing)*:
+    - Designed for database systems that cannot halt execution to resize arrays
+    - Uses an expanding **Directory** of pointers controlled by **Global Depth** ($d$)
+    - Physical data stored in **Buckets** controlled by **Local Depth** ($d'$)
+    - On bucket overflow:
+      - If $d' < d$ → bucket independently splits
+      - If $d' = d$ → entire Directory doubles in size (Global Depth increments), then bucket splits
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A hash table contains exactly 10 physical buckets (indices 0 to 9) and utilizes strict Linear Probing. The keys `43, 36, 92, 87, 11, 4, 71, 13, 14` are sequentially inserted. The hash function is strictly $h(x) = x \pmod{10}$. What is the exact final memory index location of the key `14`?
@@ -51,10 +103,21 @@ The insertions are strictly mathematical modulo operations:
 
 ### 1.3 Complexity Analysis & Master Theorem
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Algorithmic complexity is not measured in physical seconds, but strictly as a mathematical function representing the absolute growth rate of operations as the input dataset $N$ approaches infinity.
+- **Core Definition**:
+  - Complexity is measured as a mathematical growth-rate function, not physical seconds
+  - Describes how operations scale as input $N \to \infty$
 - **Key Properties & Mechanisms**:
-  - *Asymptotic Bounds*: Big-O ($O$) is the absolute mathematical ceiling, defining the worst-case time complexity. Big-Omega ($\Omega$) is the absolute mathematical floor, defining the best-case complexity. Theta ($\Theta$) strictly dictates that the upper and lower bounds perfectly match, proving the algorithm grows exactly at that calculated rate across all cases.
-  - *The Master Theorem*: A rigorous mathematical framework utilized exclusively to instantly solve Divide-and-Conquer recurrence relations of the strict form $T(n) = aT(n/b) + f(n)$. By calculating the "Critical Polynomial Value" $n^{\log_b a}$ and mathematically comparing it against the merge cost $f(n)$, the theorem instantly categorizes the algorithm. If the critical value is polynomially heavier, the recursive leaves absolutely dominate the time (Case 1). If they perfectly match, the cost is uniformly distributed across all tree levels (Case 2). If the merge cost is polynomially heavier, the root strictly dominates (Case 3).
+  - *Asymptotic Bounds*:
+    - **Big-O ($O$)**: Mathematical ceiling — worst-case time complexity
+    - **Big-Omega ($\Omega$)**: Mathematical floor — best-case complexity
+    - **Theta ($\Theta$)**: Upper and lower bounds perfectly match — tight bound across all cases
+  - *The Master Theorem*:
+    - Solves Divide-and-Conquer recurrences of the form: $T(n) = aT(n/b) + f(n)$
+    - Compute Critical Polynomial Value: $n^{\log_b a}$
+    - Compare $f(n)$ against $n^{\log_b a}$:
+      - **Case 1**: $f(n)$ polynomially lighter → recursive leaves dominate → $T(n) = \Theta(n^{\log_b a})$
+      - **Case 2**: $f(n)$ and critical value match → cost uniformly distributed → $T(n) = \Theta(n^{\log_b a} \log n)$
+      - **Case 3**: $f(n)$ polynomially heavier → root dominates → $T(n) = \Theta(f(n))$
 
 **PYQ Numerical Example (Difficulty: Easy)**:
 *Question*: Utilizing the Master Theorem, strictly solve the exact recurrence relation: $T(n) = 8T(n/2) + n^2$.
@@ -67,10 +130,38 @@ Therefore, Case 1 of the Master Theorem strictly applies, mathematically proving
 
 ### 1.4 Graph Algorithms
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Graph structures mathematically model pairwise relationships between objects. Shortest Path and Minimum Spanning Tree (MST) algorithms are rigorous optimization engines designed to traverse these networks with absolute mathematical minimum cost.
+- **Core Definition**:
+  - Graph structures mathematically model pairwise relationships between objects
+  - Shortest Path and MST algorithms are optimization engines for minimum-cost traversal
 - **Key Properties & Mechanisms**:
-  - *Shortest Path Limitations*: Dijkstra’s Algorithm relies on a strict Greedy paradigm, assuming that once a node is mathematically marked as "visited," its minimum distance is permanently guaranteed. This logic catastrophically fails if a graph contains negative-weight edges, as a hidden negative path could retroactively lower the cost of a "permanent" node. Bellman-Ford specifically solves this by completely abandoning the Greedy approach; it relies strictly on Dynamic Programming, systematically relaxing every single edge in the network exactly $V-1$ times to guarantee the absolute mathematical minimum, simultaneously allowing it to detect fatal negative-weight cycles.
-  - *Minimum Spanning Trees*: Kruskal's algorithm strictly sorts all physical edges globally by weight and greedily accepts them provided they do not form a mathematical cycle (verified via a Disjoint Set architecture). Prim's algorithm operates locally, growing a single contiguous tree boundary by aggressively consuming the cheapest connecting edge.
+  - *Dijkstra's Algorithm*:
+    - Uses a strict Greedy paradigm with a Priority Queue (Min-Heap)
+    - Once a node is marked "visited," its minimum distance is permanently guaranteed
+    - **Fatal Limitation**: Catastrophically fails on graphs with negative-weight edges
+    - Reason: A hidden negative path can retroactively lower the cost of a "permanent" node
+  - *Bellman-Ford Algorithm*:
+    - Abandons the Greedy approach; uses Dynamic Programming
+    - Systematically relaxes every single edge exactly $V-1$ times
+    - Guarantees the absolute mathematical minimum even with negative edges
+    - Can detect fatal negative-weight cycles (if relaxation still reduces cost after $V-1$ passes)
+  - *Minimum Spanning Trees (MST)*:
+    - **Kruskal's**: Sort all edges globally by weight → greedily accept if no cycle forms (use Disjoint Set / Union-Find)
+    - **Prim's**: Grow a single contiguous tree boundary → consume the cheapest connecting edge at each step
+
+```mermaid
+flowchart TD
+    A["Initialize: Source = 0, All others = ∞"] --> B["Extract node with minimum distance from Priority Queue"]
+    B --> C{"All nodes visited?"}
+    C -- "Yes" --> D["DONE: All shortest paths found"]
+    C -- "No" --> E["For each neighbor of extracted node"]
+    E --> F{"New path cost < Current distance?"}
+    F -- "Yes" --> G["Update distance, mark predecessor"]
+    F -- "No" --> H["Skip — current path is already better"]
+    G --> B
+    H --> B
+    style A fill:#4a90d9,color:#fff
+    style D fill:#50c878,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A graph has vertices $A, B, C, D$ and weighted edges $A \to B=1, A \to C=4, B \to C=2, B \to D=6, C \to D=3$. Apply Dijkstra's rigorous algorithm strictly from source $A$. What is the absolute shortest path cost to $D$?
@@ -89,10 +180,24 @@ Initialization phase strictly sets source distance $A=0$, and all other nodes $B
 
 ### 1.5 Sorting & Queues
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Sorting engines manipulate raw array memory to establish perfect sequential data alignment. Queues are rigorous memory buffers strictly enforcing chronological data execution.
+- **Core Definition**:
+  - Sorting engines manipulate raw array memory to establish perfect sequential data alignment
+  - Queues are rigorous memory buffers enforcing chronological data execution
 - **Key Properties & Mechanisms**:
-  - *Sorting Stability & In-Place Limits*: A sorting algorithm is mathematically defined as "Stable" if duplicate elements strictly retain their original relative positions after sorting (vital for multi-key database sorts). Algorithms like Merge Sort achieve this, but catastrophically fail the "In-Place" requirement, meaning they physically require an entire secondary $O(n)$ array duplicated in RAM. Heap Sort is an absolute masterpiece of in-place architecture; it mathematically models a contiguous 1D array as a 2D Complete Binary Tree and sorts it using exactly $O(1)$ auxiliary RAM.
-  - *Circular Queue Architecture*: A standard linear array queue suffers from "False Full" states, where physical dequeue operations leave dead, unusable memory at the front of the array. A Circular Queue mathematically fuses the array ends using Modulo Arithmetic ($Index = (Index + 1) \pmod N$). To mathematically differentiate between a completely empty queue and a completely full queue, one physical array slot must be permanently sacrificed and left blank.
+  - *Sorting Stability & In-Place*:
+    - **Stable Sort**: Duplicate elements retain their original relative positions after sorting
+      - Vital for multi-key database sorts
+      - Examples: Merge Sort, Insertion Sort, Bubble Sort
+    - **In-Place Sort**: Uses $O(1)$ auxiliary memory (no secondary array)
+      - Examples: Heap Sort, Quick Sort
+    - **Merge Sort**: Stable ✅ but NOT in-place ❌ (requires $O(n)$ extra RAM)
+    - **Heap Sort**: In-place ✅ but NOT stable ❌
+      - Models a contiguous 1D array as a Complete Binary Tree
+      - Sorts using exactly $O(1)$ auxiliary RAM
+  - *Circular Queue Architecture*:
+    - Standard linear queue suffers from "False Full" states (dequeued slots become unusable dead memory)
+    - Circular Queue fuses array ends using Modulo Arithmetic: $Index = (Index + 1) \pmod N$
+    - **Critical Rule**: One physical array slot must be permanently sacrificed (left blank) to distinguish between empty and full states
 
 **PYQ Numerical Example (Difficulty: Easy)**:
 *Question*: A circular queue has a physical array size of exactly 5 (indices 0 to 4). The internal queue variables are actively set to `front = 3` and `rear = 1` (where rear strictly points to the next available physical insertion slot). Exactly how many elements are physically present in the queue?
@@ -109,11 +214,25 @@ Mathematically, the strict formula evaluates as: Elements count = $(rear - front
 
 ### 1.6 Advanced Algorithms (DP, Topological Sort, Amortized)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Advanced algorithms tackle massive computational complexity by deploying highly specialized mathematical optimizations, state-space memoization, or topological dependency tracking.
+- **Core Definition**:
+  - Tackle massive computational complexity via specialized mathematical optimizations
+  - Key techniques: state-space memoization, topological dependency tracking, cost averaging
 - **Key Properties & Mechanisms**:
-  - *Dynamic Programming (0/1 Knapsack)*: A rigorous mathematical paradigm that completely destroys the exponential $O(2^n)$ complexity of recursive branching by caching state results in a massive 2D matrix. The 0/1 Knapsack formula $K[i, w] = \max(K[i-1, w], K[i-1, w-w_i] + v_i)$ mathematically forces the CPU to evaluate exactly whether including the $i^{th}$ item yields a higher total physical value than excluding it, bounded strictly by capacity $w$.
-  - *Topological Sorting*: A highly specialized linear ordering of vertices strictly reserved for Directed Acyclic Graphs (DAGs). It mathematically guarantees that for every single directed edge $U \to V$, task $U$ physically executes before task $V$. If a mathematical cycle exists within the graph, the sort catastrophically fails, as circular dependencies physically prevent execution.
-  - *Amortized Analysis*: A sophisticated mathematical accounting technique used to evaluate algorithms where one specific operation might trigger a massive $O(n)$ physical restructuring (like a dynamic array resizing its memory block), but because that operation mathematically occurs so rarely, the "average" guaranteed cost per operation remains strictly $O(1)$.
+  - *Dynamic Programming (0/1 Knapsack)*:
+    - Destroys exponential $O(2^n)$ recursive branching by caching state results in a 2D matrix
+    - Formula: $K[i, w] = \max(K[i-1, w],\ K[i-1, w-w_i] + v_i)$
+    - Evaluates whether including the $i^{th}$ item yields higher value than excluding it, bounded by capacity $w$
+    - Builds solutions bottom-up from smallest subproblems
+  - *Topological Sorting*:
+    - Linear ordering of vertices strictly for Directed Acyclic Graphs (DAGs)
+    - Guarantees: for every directed edge $U \to V$, task $U$ executes before $V$
+    - If a cycle exists → sort catastrophically fails (circular dependency)
+    - Implementation: Kahn's Algorithm (BFS with in-degree tracking) or DFS-based reverse finish order
+  - *Amortized Analysis*:
+    - Evaluates algorithms where rare operations trigger massive $O(n)$ restructuring
+    - Example: Dynamic array resize — doubles capacity when full
+    - Because resize occurs so rarely, the average guaranteed cost per operation remains $O(1)$
+    - Methods: Aggregate Method, Accounting Method, Potential Method
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: Why does the classical 0/1 Knapsack problem physically necessitate a massive Dynamic Programming state matrix, whereas the Fractional Knapsack problem can be optimally solved using a blindingly fast, simple Greedy algorithm?
@@ -129,10 +248,35 @@ In the strict 0/1 Knapsack model, an item must be taken whole or entirely reject
 
 ### 2.1 CPU Scheduling & Process Lifecycle
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The CPU Scheduler is the absolute brain of the Operating System, tasked with maximizing CPU utilization by mathematically dictating exactly which process from the Ready Queue gains physical access to the processor cores. The Process Lifecycle strictly manages the state of a program from New to Terminated, orchestrating complex transitions when a process is blocked waiting for physical hardware interrupts.
+- **Core Definition**:
+  - The CPU Scheduler maximizes CPU utilization by dictating which process from the Ready Queue gains access to processor cores
+  - The Process Lifecycle manages program state from New → Terminated
+  - Orchestrates complex transitions when a process is blocked for hardware interrupts
 - **Key Properties & Mechanisms**:
-  - *SJF (Shortest Job First)*: SJF is mathematically proven to generate the absolute optimal (lowest) average waiting time across all scheduling algorithms. It achieves this by aggressively servicing the shortest burst times first, completely eliminating the "Convoy Effect" found in FCFS. However, because the OS cannot foresee the future, it cannot physically know the exact length of the next CPU burst. It mathematically estimates it using Exponential Averaging ($\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$), blending historical burst data with recent performance. If left unchecked, SJF catastrophically starves massive, long-running processes.
-  - *Process State Transitions & Queues*: When an executing process requires data from a wildly slow mechanical hard drive, the OS physically forces a Context Switch. The process transitions from the **Running** state directly to the **Waiting (Blocked)** state, relinquishing the CPU. It is placed into a specific Device Queue. Only when the physical disk controller fires a hardware interrupt signaling data retrieval completion does the OS violently yank the process from the Waiting state and place it back into the **Ready** queue.
+  - *SJF (Shortest Job First)*:
+    - Mathematically proven to generate the absolute optimal (lowest) average waiting time
+    - Eliminates the "Convoy Effect" found in FCFS by servicing shortest bursts first
+    - **Problem**: OS cannot know the exact next CPU burst length in advance
+    - **Solution**: Estimates using Exponential Averaging: $\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$
+    - **Fatal Flaw**: Catastrophically starves long-running processes if unchecked
+  - *Process State Transitions*:
+    - **New** → **Ready**: Process admitted to system
+    - **Ready** → **Running**: Scheduler dispatches process to CPU
+    - **Running** → **Waiting (Blocked)**: Process needs I/O (e.g., disk read) → Context Switch occurs
+    - **Waiting** → **Ready**: Hardware interrupt fires (I/O complete) → process returns to Ready Queue
+    - **Running** → **Terminated**: Process completes execution
+
+```mermaid
+stateDiagram-v2
+    [*] --> New
+    New --> Ready : Admitted
+    Ready --> Running : Scheduler Dispatch
+    Running --> Ready : Preempted / Time Quantum Expired
+    Running --> Waiting : I/O or Event Wait
+    Waiting --> Ready : I/O Complete (Interrupt)
+    Running --> Terminated : Exit
+    Terminated --> [*]
+```
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: Four processes arrive strictly at $T=0$ with the following CPU burst times (in ms): $P_1 = 8, P_2 = 4, P_3 = 9, P_4 = 5$. If the non-preemptive Shortest Job First (SJF) scheduling algorithm is utilized, what is the exact average waiting time?
@@ -150,10 +294,22 @@ In the strict 0/1 Knapsack model, an item must be taken whole or entirely reject
 
 ### 2.2 Memory Management & Paging
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Paging completely shatters the restrictive requirement of contiguous memory allocation. By dividing logical process memory into strict fixed-size Pages and physical RAM into identically sized Frames, the OS can mathematically scatter a single process across completely random, disconnected sectors of physical memory.
+- **Core Definition**:
+  - Paging shatters the restrictive requirement of contiguous memory allocation
+  - Logical memory → divided into fixed-size **Pages**
+  - Physical RAM → divided into identically sized **Frames**
+  - A single process can be scattered across random, disconnected sectors of physical memory
 - **Key Properties & Mechanisms**:
-  - *Address Translation & TLB*: Every single memory access generated by the CPU is a Logical Address, split strictly into a Page Number ($p$) and a Page Offset ($d$). The Memory Management Unit (MMU) uses $p$ as a direct index into the Page Table (residing in RAM) to mathematically look up the corresponding Physical Frame Number ($f$). Because reading the Page Table from RAM takes massive time, modern architectures deploy a Translation Lookaside Buffer (TLB)—an ultra-fast associative hardware cache. If the translation is found in the TLB (a "TLB Hit"), the OS completely bypasses the RAM lookup, directly fusing the Frame Number $f$ with the unaltered Offset $d$ to access the data instantly.
-  - *Fragmentation Paradigms*: Paging mathematically eliminates External Fragmentation because any free Frame can perfectly house any Page without leaving gaps. However, it intrinsically suffers from Internal Fragmentation; if a process requires 5 KB of memory and the rigid Page Size is 4 KB, the OS is mathematically forced to allocate exactly 2 Pages (8 KB), leaving 3 KB permanently wasted inside the second Frame.
+  - *Address Translation & TLB*:
+    - Every CPU memory access generates a **Logical Address** = Page Number ($p$) + Page Offset ($d$)
+    - MMU uses $p$ as index into Page Table (in RAM) → looks up Physical Frame Number ($f$)
+    - **Problem**: Reading Page Table from RAM is slow (double memory access)
+    - **Solution**: Translation Lookaside Buffer (TLB) — ultra-fast associative hardware cache
+    - **TLB Hit**: Bypass RAM lookup entirely → fuse Frame $f$ with Offset $d$ → instant data access
+    - **TLB Miss**: Fall back to Page Table in RAM → update TLB for future hits
+  - *Fragmentation Paradigms*:
+    - **External Fragmentation**: ❌ Eliminated — any free Frame can house any Page
+    - **Internal Fragmentation**: ✅ Still exists — if process needs 5 KB and Page Size = 4 KB → OS allocates 2 Pages (8 KB) → 3 KB permanently wasted
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A 32-bit architectural system operates with a strict page size of exactly 4 KB ($2^{12}$ bytes). A single Page Table Entry (PTE) requires exactly 4 bytes of physical RAM. What is the absolute total size of the Page Table required for a single process?
@@ -172,10 +328,22 @@ In the strict 0/1 Knapsack model, an item must be taken whole or entirely reject
 
 ### 2.3 Page Replacement Algorithms
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: When the physical RAM is completely exhausted and a process requests a Page not currently loaded, the MMU triggers a catastrophic "Page Fault". The OS must halt the CPU, spin up the mechanical disk, and mathematically select an existing RAM Frame to permanently evict to swap space to make room for the incoming data.
+- **Core Definition**:
+  - When physical RAM is exhausted and a process requests an unloaded Page → **Page Fault** triggers
+  - OS must evict an existing RAM Frame to swap space to make room
 - **Key Properties & Mechanisms**:
-  - *LRU vs FIFO*: First-In-First-Out (FIFO) blindly evicts the oldest page, treating memory strictly as a queue. This simplistic approach mathematically triggers Belady's Anomaly—a bizarre physical paradox where increasing the total physical RAM size actually *increases* the number of Page Faults for specific access patterns. Least Recently Used (LRU) completely solves this by tracking the exact timestamp of every memory access, evicting the page that has been dormant the longest. LRU is a "Stack Algorithm," mathematically guaranteeing immunity from Belady's Anomaly.
-  - *Optimal Algorithm (OPT)*: Evicts the page that will mathematically not be used for the longest time into the future. Because it requires absolute clairvoyance regarding future process execution, it is physically impossible to implement in silicon. It exists strictly as a mathematical benchmark to evaluate the efficiency of real-world algorithms like LRU.
+  - *FIFO (First-In-First-Out)*:
+    - Blindly evicts the oldest page (treats memory as a queue)
+    - **Belady's Anomaly**: Increasing RAM size can paradoxically *increase* page faults for specific access patterns
+    - Not a Stack Algorithm
+  - *LRU (Least Recently Used)*:
+    - Tracks the exact timestamp of every memory access
+    - Evicts the page that has been dormant the longest
+    - **Stack Algorithm** → mathematically immune to Belady's Anomaly
+  - *Optimal Algorithm (OPT)*:
+    - Evicts the page that will not be used for the longest time into the future
+    - Requires clairvoyance → physically impossible to implement
+    - Exists strictly as a mathematical benchmark for evaluating real algorithms
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: Given a strict memory reference string: `1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5` and exactly 3 physical page frames (initially completely empty). Exactly how many page faults mathematically occur using the basic FIFO replacement algorithm?
@@ -198,10 +366,43 @@ Total Mathematical Faults = $1 + 1 + 1 + 1 + 1 + 1 + 1 + 0 + 0 + 1 + 1 + 1 = 10$
 ### 2.4 Concurrency, Synchronization & Deadlocks
 
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: When massive multi-threaded processes attempt to simultaneously write data to the exact same shared memory block (the Critical Section), it triggers catastrophic "Race Conditions", physically corrupting the data. Synchronization mechanisms mathematically enforce Mutual Exclusion, ensuring only one thread can ever access the block at a given microsecond.
+- **Core Definition**:
+  - Multiple threads writing to the same shared memory (Critical Section) → triggers **Race Conditions**
+  - Synchronization mechanisms enforce **Mutual Exclusion** (only one thread accesses at a time)
 - **Key Properties & Mechanisms**:
-  - *Semaphores & Spinlocks*: A Semaphore is a rigorous mathematical integer variable strictly accessed via atomic hardware instructions: `wait()` (decrements the integer, violently blocking the thread if the result is negative) and `signal()` (increments the integer, instantly waking up a blocked thread). A Spinlock completely abandons blocking; instead, it forces the CPU to enter an infinite, aggressive `while` loop, continuously pinging the lock. While it wastes massive CPU cycles, it is incredibly efficient in multiprocessor arrays for extremely short critical sections because it entirely bypasses the catastrophic overhead of OS Context Switching.
-  - *Deadlock Avoidance (Banker's Algorithm)*: A dynamic simulation engine that mathematically models every single resource request. A Deadlock occurs when processes wait indefinitely for resources held by each other in a circular chain. The Banker's algorithm mathematically prevents this by analyzing a potential allocation. If granting the resource leaves the system in an "Unsafe State" (meaning there is no mathematically possible sequence where all processes can finish), the request is strictly denied.
+  - *Semaphores*:
+    - Rigorous integer variable accessed via atomic operations
+    - **`wait()` (P)**: Decrements integer → blocks thread if result < 0
+    - **`signal()` (V)**: Increments integer → wakes up a blocked thread
+    - **Binary Semaphore**: Acts as a mutex (values 0 or 1)
+    - **Counting Semaphore**: Controls access to a pool of $N$ identical resources
+  - *Spinlocks*:
+    - Abandons blocking entirely
+    - CPU enters an infinite `while` loop, continuously polling the lock
+    - Wastes CPU cycles but avoids Context Switch overhead
+    - Efficient for multiprocessor systems with extremely short critical sections
+  - *Deadlock — 4 Necessary Conditions (ALL must hold simultaneously)*:
+    1. **Mutual Exclusion**: At least one resource is non-sharable
+    2. **Hold and Wait**: A process holds resources while waiting for others
+    3. **No Preemption**: Resources cannot be forcibly taken away
+    4. **Circular Wait**: A circular chain of processes exists, each waiting for the next
+  - *Banker's Algorithm (Deadlock Avoidance)*:
+    - Simulates every resource request before granting it
+    - If granting leaves system in an **Unsafe State** (no possible completion sequence) → request denied
+    - Requires advance knowledge of maximum resource needs
+
+```mermaid
+graph LR
+    A["Mutual Exclusion"] --> D["DEADLOCK"]
+    B["Hold and Wait"] --> D
+    C["No Preemption"] --> D
+    E["Circular Wait"] --> D
+    style D fill:#e74c3c,color:#fff,stroke:#c0392b
+    style A fill:#3498db,color:#fff
+    style B fill:#3498db,color:#fff
+    style C fill:#3498db,color:#fff
+    style E fill:#3498db,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A system mathematically manages 3 processes ($P_1, P_2, P_3$) and 3 resource types ($A, B, C$) with total absolute instances $(10, 5, 7)$. The current `Allocation` matrix is strictly $P_1(2,1,1), P_2(3,1,1), P_3(2,1,1)$ and the `Max` requirement matrix is $P_1(5,3,2), P_2(4,2,2), P_3(9,3,3)$. Is the architectural system currently in a safe state, and what is the exact available resource vector?
@@ -223,10 +424,24 @@ Total Mathematical Faults = $1 + 1 + 1 + 1 + 1 + 1 + 1 + 0 + 0 + 1 + 1 + 1 = 10$
 
 ### 2.5 Disk Scheduling & Linux Architecture
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Mechanical Hard Drives suffer from massive physical latency. Disk Scheduling algorithms rigorously mathematically sequence the read/write queue to absolutely minimize the physical movement of the mechanical disk arm (Seek Time).
+- **Core Definition**:
+  - Mechanical Hard Drives suffer from massive physical latency
+  - Disk Scheduling algorithms sequence the read/write queue to minimize mechanical arm movement (Seek Time)
 - **Key Properties & Mechanisms**:
-  - *SCAN vs C-LOOK Algorithms*: The simplistic SCAN (Elevator) algorithm forces the massive disk arm to physically sweep from one absolute edge of the platter to the other, servicing requests, before violently reversing direction. C-LOOK (Circular LOOK) is a highly specialized variant; the arm sweeps outward, but instantly stops exactly at the outermost requested cylinder without wasting time reaching the physical edge. Furthermore, instead of servicing requests on the way back, it violently snaps back to the lowest cylinder, resetting its position to guarantee perfectly uniform wait times for all incoming data blocks.
-  - *Linux Security Files*: The core architectural file `/etc/passwd` mathematically maps User IDs to Usernames and home directories. To allow internal OS functions to read IDs, it is deliberately world-readable. However, storing actual password hashes in a world-readable file invites catastrophic offline brute-force attacks. Therefore, Linux mathematically isolates all password hashes and cryptographic aging data into `/etc/shadow`, a heavily fortified file strictly restricted to absolute `root` access only.
+  - *SCAN (Elevator) Algorithm*:
+    - Disk arm sweeps from one absolute edge to the other, servicing requests en route
+    - Reverses direction upon reaching the physical edge
+    - Services requests in both sweep directions
+  - *C-LOOK (Circular LOOK)*:
+    - Arm sweeps outward but stops at the outermost *requested* cylinder (not the physical edge)
+    - Does NOT service requests on the return sweep
+    - Snaps back to the lowest requested cylinder → guarantees uniform wait times
+  - *Linux Security Files*:
+    - **`/etc/passwd`**: Maps User IDs → Usernames and home directories
+      - World-readable (needed by internal OS functions)
+    - **`/etc/shadow`**: Stores actual password hashes and cryptographic aging data
+      - Restricted strictly to `root` access only
+      - Isolates hashes from the world-readable passwd file to prevent brute-force attacks
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A mechanical disk contains exactly 200 physical cylinders (0 to 199). The head is currently positioned at cylinder 50 and is physically moving towards higher cylinder numbers. The exact queue of requests is: `82, 170, 43, 140, 24, 16, 190`. Using the strict SCAN algorithm, what is the absolute total head movement mathematically calculated in cylinders?
@@ -250,11 +465,55 @@ Total Mathematical Faults = $1 + 1 + 1 + 1 + 1 + 1 + 1 + 0 + 0 + 1 + 1 + 1 = 10$
 
 ### 3.1 OSI & TCP/IP Layer Architectures
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The Open Systems Interconnection (OSI) model is a highly theoretical 7-layer architectural framework standardizing global telecommunication. The TCP/IP model is a practically implemented 4-layer suite that forms the absolute backbone of the modern Internet. Both models rely entirely on strict mathematical Encapsulation; as raw data travels down the stack, each lower layer physically appends a highly structured Header (and sometimes a Trailer) to the payload, completely abstracting the complexity of the layers above.
+- **Core Definition**:
+  - **OSI Model**: Theoretical 7-layer framework standardizing global telecommunication
+  - **TCP/IP Model**: Practically implemented 4-layer suite — backbone of the modern Internet
+  - Both rely on strict **Encapsulation**: each lower layer appends Headers (and sometimes Trailers) to the payload
 - **Key Properties & Mechanisms**:
-  - *Data Link Layer (Layer 2)*: This layer explicitly manages Node-to-Node delivery within a single Local Area Network (LAN). It mathematically frames raw bits, detects physical corruption via Cyclic Redundancy Checks (CRC), and uses permanent, hardcoded 48-bit Media Access Control (MAC) addresses to route frames through Layer 2 Switches.
-  - *Network Layer (Layer 3)*: This layer is strictly responsible for Host-to-Host delivery across global, interconnected networks. It utilizes highly dynamic 32-bit (IPv4) or 128-bit (IPv6) Logical IP Addresses. The absolute core device here is the Router, which completely ignores MAC addresses and mathematically calculates optimal paths using Routing Tables to hop packets across different subnets.
-  - *Transport Layer (Layer 4)*: This layer explicitly guarantees Process-to-Process delivery. Even if the Network Layer successfully routes a packet to the correct physical server, the Transport Layer must use 16-bit Port Numbers to strictly identify exactly which internal application process (e.g., Port 80 for HTTP, Port 443 for HTTPS) is destined to receive the data segment.
+  - *Data Link Layer (Layer 2)*:
+    - Manages **Node-to-Node** delivery within a single LAN
+    - Frames raw bits, detects corruption via **CRC (Cyclic Redundancy Check)**
+    - Uses hardcoded 48-bit **MAC Addresses**
+    - Core device: **Layer 2 Switch**
+  - *Network Layer (Layer 3)*:
+    - Responsible for **Host-to-Host** delivery across interconnected networks
+    - Uses dynamic 32-bit (IPv4) or 128-bit (IPv6) **Logical IP Addresses**
+    - Core device: **Router** (ignores MAC, uses Routing Tables)
+  - *Transport Layer (Layer 4)*:
+    - Guarantees **Process-to-Process** delivery
+    - Uses 16-bit **Port Numbers** to identify destination application
+    - Port 80 = HTTP, Port 443 = HTTPS, Port 53 = DNS
+
+```mermaid
+graph LR
+    subgraph "OSI 7-Layer Model"
+        O7["7. Application"]
+        O6["6. Presentation"]
+        O5["5. Session"]
+        O4["4. Transport"]
+        O3["3. Network"]
+        O2["2. Data Link"]
+        O1["1. Physical"]
+    end
+    subgraph "TCP/IP 4-Layer Model"
+        T4["Application"]
+        T3["Transport"]
+        T2["Internet"]
+        T1["Network Access"]
+    end
+    O7 --- T4
+    O4 --- T3
+    O3 --- T2
+    O2 --- T1
+    style O7 fill:#9b59b6,color:#fff
+    style O4 fill:#3498db,color:#fff
+    style O3 fill:#2ecc71,color:#fff
+    style O2 fill:#e67e22,color:#fff
+    style T4 fill:#9b59b6,color:#fff
+    style T3 fill:#3498db,color:#fff
+    style T2 fill:#2ecc71,color:#fff
+    style T1 fill:#e67e22,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: During data transmission, at exactly which OSI layer is a physical IP address translated into a hardware MAC address, and what protocol mathematically executes this translation?
@@ -264,10 +523,21 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
 
 ### 3.2 IP Addressing & Subnetting (CIDR)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: IPv4 architecture utilizes a strict 32-bit mathematical space, yielding exactly $2^{32}$ theoretically possible addresses. Because the legacy Classful system (Classes A, B, C) catastrophically wasted millions of addresses due to rigid octet boundaries, the Internet Engineering Task Force (IETF) completely replaced it with Classless Inter-Domain Routing (CIDR).
+- **Core Definition**:
+  - IPv4 uses a strict 32-bit address space → $2^{32}$ possible addresses
+  - Legacy Classful system (Classes A, B, C) wasted millions of addresses due to rigid octet boundaries
+  - Replaced entirely by **CIDR (Classless Inter-Domain Routing)**
 - **Key Properties & Mechanisms**:
-  - *CIDR Architecture*: CIDR completely abandons strict octet boundaries, allowing the Network ID (prefix) to be explicitly defined by a mathematical slash notation (e.g., `/21`). The Subnet Mask is constructed by physically setting exactly $n$ continuous bits to 1, and the remaining $32-n$ bits to 0. A router calculates the exact Network Address by executing a strict bitwise logical AND operation between the incoming IP address and the Subnet Mask.
-  - *Route Aggregation (Supernetting)*: The absolute opposite of Subnetting. If an ISP owns 4 contiguous `/24` subnets, instead of broadcasting 4 independent, massive routing entries to the global internet backbone, it can mathematically fuse them into a single, condensed `/22` Supernet entry. This drastically reduces the physical RAM required in global backbone routers.
+  - *CIDR Architecture*:
+    - Abandons strict octet boundaries
+    - Network prefix defined by slash notation (e.g., `/21`)
+    - Subnet Mask: set exactly $n$ bits to 1, remaining $32-n$ bits to 0
+    - Network Address = IP AND Subnet Mask (bitwise logical AND)
+  - *Route Aggregation (Supernetting)*:
+    - Opposite of Subnetting
+    - Fuse multiple contiguous subnets into a single condensed entry
+    - Example: 4 contiguous `/24` subnets → 1 Supernet `/22` entry
+    - Drastically reduces RAM required in global backbone routers
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: An organization is assigned the exact CIDR block `192.168.144.0/20`. The network administrator mathematically subnets this massive block into 8 equal-sized smaller subnets. What is the exact valid IP address range (from Network ID to Broadcast ID) of the 3rd newly created subnet?
@@ -284,10 +554,20 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
 
 ### 3.3 TCP & UDP Transport Protocols
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The absolute core Transport protocols of the internet. User Datagram Protocol (UDP) is a connectionless, blindly aggressive protocol that strictly focuses on massive speed over reliability (used heavily in VoIP and live video streaming). Transmission Control Protocol (TCP) is a highly reliable, connection-oriented architecture that mathematically guarantees perfectly ordered data delivery.
+- **Core Definition**:
+  - **UDP**: Connectionless, fast, unreliable — used in VoIP, live video streaming
+  - **TCP**: Connection-oriented, reliable — guarantees perfectly ordered data delivery
 - **Key Properties & Mechanisms**:
-  - *TCP Connection Establishment*: TCP strictly requires a 3-Way Handshake (`SYN`, `SYN-ACK`, `ACK`) to mathematically synchronize Initial Sequence Numbers (ISN) and allocate massive RAM buffers on both the client and server before a single byte of actual data is allowed to transmit.
-  - *Congestion Control Algorithms*: TCP is mathematically designed to prevent catastrophic network collapse. It initiates transmission using the "Slow Start" algorithm, physically doubling its Congestion Window (cwnd) every Round Trip Time (RTT), resulting in exponential growth. Once the window hits a strictly defined Threshold, TCP violently switches to "Congestion Avoidance", transitioning to sluggish Additive Increase ($+1$ MSS per RTT). If a Packet Loss is detected via 3 Duplicate ACKs (Fast Retransmit), TCP instantly halves the window. If loss is detected via a Timeout, TCP brutally resets the entire window back to exactly 1 MSS, reverting completely to Slow Start.
+  - *TCP Connection Establishment (3-Way Handshake)*:
+    - `SYN` → `SYN-ACK` → `ACK`
+    - Synchronizes Initial Sequence Numbers (ISN) on both sides
+    - Allocates RAM buffers on client and server before any data transmits
+  - *TCP Congestion Control*:
+    - **Slow Start**: Window doubles every RTT (exponential growth)
+    - **Congestion Avoidance**: After hitting Threshold → additive increase ($+1$ MSS per RTT)
+    - **Fast Retransmit**: 3 Duplicate ACKs detected → instantly halve window
+    - **Timeout Event**: Catastrophic reset → window reverts to 1 MSS, restart Slow Start
+    - New Threshold = half of current window at time of loss
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A TCP connection is actively transmitting data and the current Congestion Threshold is strictly set to 16 KB. The connection suffers a catastrophic Timeout event when its Congestion Window mathematically reaches exactly 24 KB. Assuming a Maximum Segment Size (MSS) of exactly 2 KB, what will be the exact size of the Congestion Window after 3 successful, completely error-free Round Trip Times (RTTs)?
@@ -303,11 +583,24 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
 
 ### 3.4 Data Link Protocols (CSMA/CD)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: In a shared Ethernet bus architecture, multiple physical stations attempt to broadcast electrical signals simultaneously onto a single copper wire. Without a strict mathematical access control protocol, the electrical signals will catastrophically collide, destroying all data.
+- **Core Definition**:
+  - In shared Ethernet bus architecture, multiple stations broadcast simultaneously onto a single wire
+  - Without access control → electrical signals collide and destroy all data
 - **Key Properties & Mechanisms**:
-  - *CSMA/CD (Carrier Sense Multiple Access with Collision Detection)*: This is the foundational physical protocol of standard Ethernet. Before transmitting, a station physically "listens" to the wire voltage (Carrier Sense). If the voltage is zero, it begins transmitting. While transmitting, it continuously monitors the wire. If it detects an unexpected voltage spike, a "Collision" has physically occurred. It instantly aborts transmission, broadcasts a massive Jam Signal to warn all other stations, and enters a mathematical Backoff Phase.
-  - *Binary Exponential Backoff*: To prevent the exact same stations from instantly re-colliding, they wait a random amount of time. After $c$ collisions, the station randomly chooses a wait slot from the interval $[0, 2^c - 1]$. The maximum bound is strictly capped at $c=10$ (1023 slots). If 16 collisions occur, the hardware assumes catastrophic network failure and completely drops the frame.
-  - *Minimum Frame Size Limit*: For CSMA/CD to mathematically work, the transmission time of the frame MUST be strictly greater than or equal to the Round Trip Propagation Time ($2 \times T_p$). If a frame is physically too small, the sender will finish transmitting and shut off its collision detector before the signal even reaches the far end of the wire. If a collision happens there, the sender will never know.
+  - *CSMA/CD (Carrier Sense Multiple Access with Collision Detection)*:
+    - Foundational protocol of standard Ethernet
+    - **Step 1 — Carrier Sense**: Station listens to wire voltage before transmitting
+    - **Step 2 — Transmit**: If voltage is zero → begin transmission
+    - **Step 3 — Collision Detection**: While transmitting, continuously monitor wire
+    - **Step 4 — If collision detected**: Abort transmission → broadcast **Jam Signal** → enter Backoff
+  - *Binary Exponential Backoff*:
+    - After $c$ collisions, wait random slot from interval $[0, 2^c - 1]$
+    - Maximum bound: capped at $c = 10$ (1023 slots)
+    - After 16 collisions → assume catastrophic failure → drop the frame
+  - *Minimum Frame Size Constraint*:
+    - Transmission Time ($T_x$) MUST $\ge$ Round Trip Propagation Time ($2 \times T_p$)
+    - If frame too small → sender finishes before collision signal returns → collision goes undetected
+    - Formula: $L_{min} = B \times 2T_p$ (where $B$ = bandwidth, $L$ = frame size in bits)
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A 10 Mbps standard baseband Ethernet LAN strictly has a physical wire length of exactly 2.5 kilometers. The absolute propagation speed of the electrical signal through the copper wire is $2 \times 10^8$ meters/second. What is the absolute minimum valid Frame Size required to mathematically guarantee collision detection?
@@ -328,10 +621,38 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
 
 ### 3.5 Cryptography & Network Security
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Cryptography mathematically scrambles plaintext data into unreadable ciphertext to physically guarantee Confidentiality (preventing eavesdropping), Integrity (preventing undetected tampering), and Authentication (mathematically proving identity).
+- **Core Definition**:
+  - Cryptography scrambles plaintext → unreadable ciphertext
+  - Guarantees: **Confidentiality** (no eavesdropping), **Integrity** (no undetected tampering), **Authentication** (proof of identity)
 - **Key Properties & Mechanisms**:
-  - *Symmetric vs Asymmetric Key Cryptography*: Symmetric architecture (e.g., AES, DES) strictly utilizes the exact same highly secret mathematical key for both encryption and decryption. It is blindingly fast but suffers a catastrophic "Key Distribution Problem" (how do you safely transmit the secret key to a remote party without encryption?). Asymmetric architecture (e.g., RSA) completely solves this by deploying a mathematical Public/Private key pair. Data encrypted with the Public Key can ONLY physically be decrypted by the strictly hidden Private Key. It is mathematically secure but computationally massive.
-  - *The RSA Algorithm*: The absolute foundation of modern Internet security. It mathematically relies entirely on the extreme computational difficulty of Prime Factorization. The algorithm generates two massive, distinct prime numbers ($p$ and $q$). It calculates the modulus $n = p \times q$ and Euler's Totient $\phi(n) = (p-1)(q-1)$. The Public Key ($e$) is chosen such that it is mathematically coprime to $\phi(n)$. The Private Key ($d$) is strictly calculated as the modular multiplicative inverse of $e \pmod{\phi(n)}$.
+  - *Symmetric Key Cryptography (AES, DES)*:
+    - Same secret key used for both encryption and decryption
+    - Extremely fast computationally
+    - **Fatal Flaw**: Key Distribution Problem — how to securely share the key?
+  - *Asymmetric Key Cryptography (RSA)*:
+    - Uses a mathematical **Public/Private key pair**
+    - Data encrypted with Public Key → ONLY decryptable by Private Key
+    - Solves key distribution problem completely
+    - Computationally expensive (much slower than symmetric)
+  - *RSA Algorithm Steps*:
+    1. Choose two large distinct primes: $p$ and $q$
+    2. Compute modulus: $n = p \times q$
+    3. Compute Euler's Totient: $\phi(n) = (p-1)(q-1)$
+    4. Choose Public Key $e$: must be coprime to $\phi(n)$
+    5. Compute Private Key $d$: modular multiplicative inverse of $e \pmod{\phi(n)}$
+    6. Security relies on extreme difficulty of **Prime Factorization** of $n$
+
+```mermaid
+flowchart LR
+    A["Choose primes p, q"] --> B["n = p * q"]
+    B --> C["phi = (p-1)(q-1)"]
+    C --> D["Choose e coprime to phi"]
+    D --> E["Compute d = e inv mod phi"]
+    E --> F["Public Key = (e, n)"]
+    E --> G["Private Key = (d, n)"]
+    style F fill:#2ecc71,color:#fff
+    style G fill:#e74c3c,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: In a strictly isolated RSA cryptographic setup, the two chosen prime numbers are explicitly $p = 5$ and $q = 11$. The public encryption key is selected as $e = 7$. What is the exact mathematical value of the Private Key $d$?
@@ -353,13 +674,23 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
 
 ### 3.6 Routing Algorithms (RIP, OSPF, BGP)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The absolute mathematical protocols that determine the optimal global path for IP datagrams to travel from a source subnetwork across massive, interconnected Autonomous Systems (AS) to a remote destination.
+- **Core Definition**:
+  - Protocols that determine the optimal path for IP datagrams across interconnected Autonomous Systems (AS)
 - **Key Properties & Mechanisms**:
-  - *Distance Vector (RIP)*: Nodes mathematically share their entire global routing table, but strictly only with their immediate, physically connected neighbors periodically. It executes the Bellman-Ford algorithm, utilizing a simplistic Hop Count metric.
-    - **Count-to-Infinity Problem**: A catastrophic routing loop where a failed link causes adjacent routers to bounce outdated metrics back and forth in an infinite loop, slowly incrementing the hop count to infinity (defined strictly as 16 in RIP).
-    - **Split Horizon with Poison Reverse**: A strict mathematical mitigation technique. Split Horizon dictates a router will *never* advertise a route back out the exact interface from which it mathematically learned it. Poison Reverse aggressively modifies this: it *does* advertise the route back, but forces the metric to absolute mathematical infinity (16), instantly shattering the loop.
-  - *Link State (OSPF)*: Nodes mathematically share highly specific information about *only* their direct physical links, but they aggressively broadcast this state to absolutely *all* nodes in the network via LSA flooding. Every router independently executes Dijkstra's Shortest Path algorithm to build a complete topological map of the internetwork. It converges massively faster than RIP.
-  - *Path Vector (BGP)*: The absolute core exterior gateway protocol of the global Internet. To mathematically prevent loops across massive Autonomous Systems, it tracks the exact AS sequence a packet traverses (e.g., AS100 $\to$ AS200 $\to$ AS300). If a BGP router receives an update containing its own AS number in the path, it instantly drops the route to prevent a catastrophic global loop.
+  - *Distance Vector — RIP (Routing Information Protocol)*:
+    - Nodes share entire routing table with immediate neighbors only (periodically)
+    - Uses **Bellman-Ford** algorithm with simplistic **Hop Count** metric
+    - **Count-to-Infinity Problem**: Failed link → adjacent routers bounce outdated metrics infinitely (hop count → 16 = infinity in RIP)
+    - **Split Horizon**: Never advertise a route back out the interface it was learned from
+    - **Poison Reverse**: Do advertise it back, but with metric = infinity (16) → instantly kills the loop
+  - *Link State — OSPF (Open Shortest Path First)*:
+    - Nodes share info about only direct links → broadcast to ALL nodes via **LSA Flooding**
+    - Every router independently runs **Dijkstra's Algorithm** → builds complete topological map
+    - Converges much faster than RIP
+  - *Path Vector — BGP (Border Gateway Protocol)*:
+    - Core **Exterior Gateway Protocol** of the global Internet
+    - Tracks exact AS path sequence (e.g., AS100 → AS200 → AS300)
+    - **Loop Prevention**: If update contains own AS number → instantly drop the route
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In RIP architecture, explain the exact mathematical mechanism that causes the "count-to-infinity" problem, and detail how "Split Horizon with Poison Reverse" explicitly solves it.
@@ -370,14 +701,28 @@ Split Horizon with Poison Reverse solves this mathematically. Standard Split Hor
 
 ### 3.7 Emerging Networking & IoT Protocols
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Highly specialized modern protocols mathematically designed to handle wireless spectrum transmission, massive cloud scaling, and ultra-lightweight, constrained communication for the Internet of Things (IoT).
+- **Core Definition**:
+  - Specialized modern protocols for wireless transmission, cloud scaling, and constrained IoT communication
 - **Key Properties & Mechanisms**:
-  - *IEEE 802.11 (Wi-Fi)*: Operates completely differently from wired Ethernet. Because wireless nodes cannot reliably "listen" to the spectrum while simultaneously transmitting, they cannot use CSMA/CD. They mathematically must use CSMA/CA (Collision Avoidance). It relies heavily on strict RTS/CTS (Request to Send / Clear to Send) control frame handshakes to physically reserve the electromagnetic spectrum and solve the catastrophic "Hidden Terminal Problem".
-  - *IEEE 802.15 (Bluetooth)*: A short-range WPAN architecture utilizing a master-slave mathematical topology (Piconets and Scatternets).
-  - *IEEE 802.16 (WiMAX)*: A long-range broadband wireless architecture mathematically designed for massive metropolitan area networks (MAN).
+  - *IEEE 802.11 (Wi-Fi)*:
+    - Cannot use CSMA/CD (wireless nodes can't listen while transmitting)
+    - Uses **CSMA/CA (Collision Avoidance)** instead
+    - **RTS/CTS Handshake**: Reserve the spectrum before transmitting
+    - Solves the **Hidden Terminal Problem**
+  - *IEEE 802.15 (Bluetooth)*:
+    - Short-range WPAN architecture
+    - Master-slave topology (Piconets and Scatternets)
+  - *IEEE 802.16 (WiMAX)*:
+    - Long-range broadband wireless for Metropolitan Area Networks (MAN)
   - *IoT Application Protocols*:
-    - **MQTT (Message Queuing Telemetry Transport)**: An extremely lightweight, publish-subscribe network protocol mathematically optimized for constrained IoT environments. While HTTP requires massive headers and heavy request-response polling, MQTT uses a central broker to "publish" state changes. Its absolute minimum binary header is mathematically tiny (exactly 2 bytes), drastically minimizing network overhead on unstable, low-bandwidth satellite or edge connections.
-    - **CoAP (Constrained Application Protocol)**: A highly specialized web transfer protocol designed for constrained nodes. It mathematically maps the heavy HTTP request/response model onto the lightweight, connectionless UDP protocol to drastically strip away overhead.
+    - **MQTT (Message Queuing Telemetry Transport)**:
+      - Lightweight, **publish-subscribe** model via central broker
+      - Minimum binary header: exactly **2 bytes** (vs. massive HTTP headers)
+      - Sensor publishes data only when state changes (event-driven)
+      - Ideal for low-bandwidth, unstable connections
+    - **CoAP (Constrained Application Protocol)**:
+      - Maps HTTP request/response model onto lightweight **UDP**
+      - Designed for constrained nodes with minimal overhead
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: In an IoT architecture deployed over an extremely unstable, low-bandwidth orbital satellite connection, why would an architect mathematically prefer MQTT over traditional HTTP for sending sensor telemetry?
@@ -387,13 +732,27 @@ HTTP is a massive, highly verbose request-response protocol burdened with huge A
 
 ### 3.8 Signal Encoding & Application Protocols
 **Deep-Dive Definitions & Properties:**
-- **Signal Encoding Schemes**: The strict mathematical and physical translation of digital bits (0s and 1s) into continuous physical voltage spikes or light pulses over a transmission medium.
-  - *NRZ (Non-Return-to-Zero)*: The physical voltage strictly remains constant for the entire bit duration (e.g., 1 = High, 0 = Low). Because there are no transitions, a long sequence of identical bits causes a catastrophic loss of inherent clock synchronization (clock drift).
-  - *Manchester Encoding*: The absolute strict rule of Manchester encoding is that it forces a physical voltage transition exactly in the mathematical center of *every single bit period* (e.g., 0 = High-to-Low transition, 1 = Low-to-High). These constant physical transitions allow the receiver hardware to perfectly synchronize its internal clock, completely solving the NRZ drift problem, but it mathematically halves the effective bandwidth utilization of the cable.
-  - *Baud Rate vs Bit Rate*: **Bit Rate** is strictly the raw number of binary bits transmitted per second (bps). **Baud Rate** is the physical number of distinct analog signal state changes per second. The mathematical relationship is: $\text{Bit Rate} = \text{Baud Rate} \times \log_2(L)$, where $L$ is strictly the total number of distinct analog signal levels available.
+- **Signal Encoding Schemes** — translating digital bits into physical signals:
+  - *NRZ (Non-Return-to-Zero)*:
+    - Voltage remains constant for entire bit duration (1 = High, 0 = Low)
+    - **Problem**: Long identical bit sequences → loss of clock synchronization (clock drift)
+  - *Manchester Encoding*:
+    - Forces a voltage transition in the exact center of every bit period
+    - 0 = High-to-Low transition, 1 = Low-to-High transition
+    - Constant transitions → perfect clock synchronization
+    - **Tradeoff**: Halves effective bandwidth utilization
+  - *Baud Rate vs Bit Rate*:
+    - **Bit Rate**: Raw binary bits transmitted per second (bps)
+    - **Baud Rate**: Number of distinct signal state changes per second
+    - **Formula**: $\text{Bit Rate} = \text{Baud Rate} \times \log_2(L)$, where $L$ = number of distinct signal levels
 - **Application Layer Protocols**:
-  - *DNS (Domain Name System)*: A globally distributed, mathematically hierarchical database running strictly over UDP Port 53. It resolves human-readable string domain names to 32-bit/128-bit IP addresses using recursive or iterative mathematical query structures.
-  - *DHCP (Dynamic Host Configuration Protocol)*: Operates over UDP Ports 67/68. It executes the mathematically sequential **DORA** sequence (Discover, Offer, Request, Acknowledge) to dynamically mathematically lease and assign IP addresses, Subnet masks, and Default Gateways to newly connected clients.
+  - *DNS (Domain Name System)*:
+    - Globally distributed hierarchical database on **UDP Port 53**
+    - Resolves domain names → IP addresses (recursive or iterative queries)
+  - *DHCP (Dynamic Host Configuration Protocol)*:
+    - Operates on **UDP Ports 67/68**
+    - **DORA Sequence**: Discover → Offer → Request → Acknowledge
+    - Dynamically leases IP addresses, Subnet Masks, and Default Gateways
 
 **PYQ Numerical Example (Difficulty: Easy)**:
 *Question*: A high-speed network cable physically transmits an analog signal using an advanced encoding scheme that utilizes exactly 16 distinct voltage levels. If the physically measured baud rate of the transmission is exactly 2000 baud, what is the mathematically exact bit rate?
@@ -411,22 +770,35 @@ HTTP is a massive, highly verbose request-response protocol burdened with huge A
 
 ### 4.1 Uninformed & Informed Search Algorithms
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: State-space search is a mathematical framework where a problem is represented as a directed graph of states, and the goal is to traverse from an initial state to a goal state using a sequence of valid operators.
+- **Core Definition**:
+  - State-space search is a mathematical framework representing a problem as a directed graph of states
+  - Goal: traverse from initial state to goal state using valid operators
 - **Key Properties & Mechanisms**:
-  - *Breadth-First Search (BFS)*: Explores the state space strictly level-by-level. It is implemented using a FIFO queue. 
-    - **Completeness**: Guaranteed to find a solution if one exists, provided the branching factor $b$ is finite.
-    - **Optimality**: Only optimal if all step costs are exactly identical (e.g., all edges cost 1).
-    - **Complexity**: Time and Space complexity are both severely exponential: $O(b^d)$, where $d$ is the depth of the shallowest goal. Memory exhaustion is the primary failure mode of BFS.
-  - *Depth-First Search (DFS)*: Explores paths strictly to their maximum depth before backtracking. It is implemented using a LIFO stack.
-    - **Completeness**: Not complete. It can get trapped in infinite loops in cyclic state spaces.
-    - **Optimality**: Never guaranteed to be optimal.
-    - **Complexity**: Time complexity is $O(b^m)$ where $m$ is the maximum depth of any path. However, its Space complexity is highly efficient at strictly $O(bm)$, making it preferable for deep trees where memory is constrained.
-  - *Uniform Cost Search (UCS)*: A variant of Dijkstra's algorithm that expands the node $n$ with the absolute lowest path cost from the root, denoted as $g(n)$. It uses a Priority Queue. UCS is complete and optimal as long as every step cost is strictly greater than some small positive constant $\epsilon$.
-  - *Greedy Best-First Search*: An informed search that ignores the past path cost $g(n)$ entirely. It expands the node that appears closest to the goal, evaluating nodes strictly by a heuristic function $f(n) = h(n)$. It is not optimal and can easily get trapped in dead ends.
-  - *A\* Search*: The mathematical gold standard of informed search. It evaluates nodes by combining UCS and Greedy: $f(n) = g(n) + h(n)$.
-    - **Admissibility Constraint**: A* is strictly optimal only if the heuristic $h(n)$ never overestimates the true mathematical cost to reach the goal ($0 \le h(n) \le h^*(n)$). 
-    - **Consistency Constraint**: For graph-search applications (where closed lists prevent revisiting states), $h(n)$ must also be consistent (monotonic). A heuristic is consistent if, for every node $N$ and successor $P$ generated by action $a$, $h(N) \le \text{cost}(N, P) + h(P)$. This is a form of the triangle inequality.
-  - *IDA\* (Iterative Deepening A\*)*: Operates identical to A*, but instead of maintaining a massive memory-consuming priority queue, it uses DFS iterations where the depth cutoff is defined by the $f(n)$ cost, strictly bounding memory usage to $O(bd)$.
+  - *Breadth-First Search (BFS)*:
+    - Explores state space strictly level-by-level using a FIFO queue
+    - **Completeness**: Guaranteed to find a solution if branching factor $b$ is finite
+    - **Optimality**: Only optimal if all step costs are identical
+    - **Complexity**: Time and Space = $O(b^d)$ (Memory exhaustion is the primary failure mode)
+  - *Depth-First Search (DFS)*:
+    - Explores paths strictly to maximum depth before backtracking using a LIFO stack
+    - **Completeness**: Not complete (can get trapped in infinite loops in cyclic spaces)
+    - **Optimality**: Never guaranteed to be optimal
+    - **Complexity**: Time = $O(b^m)$, Space = strictly $O(bm)$ (highly efficient memory-wise)
+  - *Uniform Cost Search (UCS)*:
+    - Variant of Dijkstra's algorithm using a Priority Queue
+    - Expands node with absolute lowest path cost $g(n)$ from root
+    - Complete and optimal if every step cost $> \epsilon$
+  - *Greedy Best-First Search*:
+    - Informed search that ignores past path cost $g(n)$ entirely
+    - Expands node appearing closest to goal based strictly on heuristic $f(n) = h(n)$
+    - Not optimal; can get trapped in dead ends
+  - *A\* Search*:
+    - The mathematical gold standard combining UCS and Greedy: $f(n) = g(n) + h(n)$
+    - **Admissibility Constraint**: For tree-search, optimal only if $h(n)$ never overestimates true cost ($0 \le h(n) \le h^*(n)$)
+    - **Consistency Constraint**: For graph-search, $h(n)$ must be monotonic: $h(N) \le \text{cost}(N, P) + h(P)$
+  - *IDA\* (Iterative Deepening A\*)*:
+    - Operates identical to A*, but uses DFS iterations bounded by $f(n)$ cost cutoff
+    - Strictly bounds memory usage to $O(bd)$ instead of maintaining massive priority queue
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Under what specific mathematical condition does an A* search algorithm guarantee an optimal solution when utilizing a tree-search structure, and how does this differ when utilizing a graph-search structure?
@@ -437,17 +809,32 @@ However, if the algorithm is upgraded to a graph-search (which maintains a "clos
 
 ### 4.2 Game Trees (Minimax & Alpha-Beta Pruning)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Adversarial search strategies model decision-making in environments where two or more rational agents have strictly opposing utility functions (zero-sum games like Chess).
+- **Core Definition**:
+  - Adversarial search strategies model decision-making in environments with strictly opposing utility functions (zero-sum games)
 - **Key Properties & Mechanisms**:
-  - *Minimax Algorithm*: Computes the exact, mathematically perfect decision from the current state assuming the opponent plays optimally. 
-    - The MAX player attempts to traverse to a leaf node that maximizes the heuristic utility score.
-    - The MIN player attempts to traverse to a leaf node that minimizes the score.
-    - Time complexity is $O(b^m)$, which means evaluating a game like Chess ($b \approx 35, m \approx 80$) requires $35^{80}$ operations, making pure Minimax entirely computationally intractable for non-trivial games.
-  - *Alpha-Beta Pruning*: A rigorous mathematical optimization for Minimax that returns the exact same final move, but safely prunes massive subtrees that are mathematically proven to have no potential influence on the final root decision.
+  - *Minimax Algorithm*:
+    - Computes exact mathematical perfect decision assuming opponent plays optimally
+    - **MAX player**: attempts to maximize heuristic utility score
+    - **MIN player**: attempts to minimize heuristic utility score
+    - Time complexity is $O(b^m)$ → computationally intractable for non-trivial games (e.g., Chess $\approx 35^{80}$)
+  - *Alpha-Beta Pruning*:
+    - Rigorous mathematical optimization for Minimax returning the exact same final move
+    - Safely prunes massive subtrees proven to have no influence on the final root decision
   - *$\alpha$ and $\beta$ Parameters*:
-    - $\alpha$: The value of the best (highest-value) choice mathematically guaranteed so far at any choice point along the path for MAX. It is initialized to $-\infty$.
-    - $\beta$: The value of the best (lowest-value) choice mathematically guaranteed so far at any choice point along the path for MIN. It is initialized to $+\infty$.
-  - *Pruning Condition*: A branch is permanently pruned from the search space the exact moment $\alpha \ge \beta$.
+    - $\alpha$: Value of the best choice guaranteed so far for MAX (initialized to $-\infty$)
+    - $\beta$: Value of the best choice guaranteed so far for MIN (initialized to $+\infty$)
+    - **Pruning Condition**: Branch is permanently pruned the exact moment $\alpha \ge \beta$
+
+```mermaid
+graph TD
+    MAX1["MAX (Root)<br/>α=5"] --> MIN1["MIN Node<br/>β=4"]
+    MIN1 --> L1["Leaf: 4"]
+    MIN1 --> L2["Leaf: 8<br/>(Pruned)"]
+    MIN1 --> L3["Leaf: x<br/>(Pruned)"]
+    style MIN1 fill:#e74c3c,color:#fff
+    style L2 stroke-dasharray: 5 5,opacity:0.5
+    style L3 stroke-dasharray: 5 5,opacity:0.5
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: In a standard Minimax tree, a MIN node has three children with terminal utility values 4, 8, and $x$. An ancestor MAX node currently has an established $\alpha$ value of 5. Detail the step-by-step logic of under what condition the branch leading to $x$ will be pruned via Alpha-Beta pruning, and explain why the actual value of $x$ is mathematically irrelevant.
@@ -465,16 +852,26 @@ However, if the algorithm is upgraded to a graph-search (which maintains a "clos
 
 ### 4.3 Knowledge Representation & Logic
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The formalization of human knowledge, facts, and rules into strict mathematical logic schemas, allowing an AI agent to perform automated reasoning, deduce new facts, and prove theorems.
+- **Core Definition**:
+  - Formalization of human knowledge into strict mathematical logic schemas
+  - Allows AI agent to perform automated reasoning, deduce new facts, and prove theorems
 - **Key Properties & Mechanisms**:
-  - *Propositional Logic*: A simplistic boolean logic system using symbols (P, Q) and logical connectives ($\land, \lor, \neg, \implies, \iff$). 
-    - **Limitations**: It lacks expressive power. It cannot represent relationships between dynamic objects or properties shared by classes of objects (e.g., expressing "All humans are mortal" requires writing an infinite number of separate boolean propositions for every individual human).
-  - *First-Order Logic (FOL)*: A highly expressive extension of propositional logic. It introduces:
-    - **Predicates**: Functions that return true/false based on arguments (e.g., `IsMortal(Socrates)`).
-    - **Universal Quantifier ($\forall$)**: Asserts that a condition holds true for absolutely every object in the domain.
-    - **Existential Quantifier ($\exists$)**: Asserts that a condition holds true for at least one object in the domain.
-  - *Forward Chaining*: A data-driven inference mechanism. The algorithm starts with a database of known base facts. It repeatedly scans its rule base, and whenever the premises of a rule are satisfied by the known facts, it fires the rule, inferring a new fact and adding it to the database. This loop continues blindly until the target goal fact is generated.
-  - *Backward Chaining*: A goal-driven inference mechanism. The algorithm starts strictly with the goal (query) it wants to prove. It searches for rules whose consequent matches the goal. It then takes the premises of those rules and turns them into new sub-goals. It recursively works backward until it hits base facts that are already known to be true.
+  - *Propositional Logic*:
+    - Simplistic boolean logic system using symbols (P, Q) and connectives ($\land, \lor, \neg, \implies, \iff$)
+    - **Limitation**: Lacks expressive power to represent dynamic objects or class properties (e.g., "All humans are mortal")
+  - *First-Order Logic (FOL)*:
+    - Highly expressive extension introducing:
+      - **Predicates**: Functions returning true/false based on arguments (e.g., `IsMortal(Socrates)`)
+      - **Universal Quantifier ($\forall$)**: Condition holds true for absolutely every object
+      - **Existential Quantifier ($\exists$)**: Condition holds true for at least one object
+  - *Forward Chaining*:
+    - Data-driven inference: starts with known base facts
+    - Scans rule base → if premises match facts, fires rule to infer new fact
+    - Loops continuously until target goal fact is generated
+  - *Backward Chaining*:
+    - Goal-driven inference: starts strictly with query to prove
+    - Searches for rules whose consequent matches goal → turns premises into sub-goals
+    - Recursively works backward until hitting known base facts
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Convert the following complex English sentence into strictly quantified First-Order Logic, ensuring proper scope of quantifiers: "Every student who takes an AI course passes the final exam."
@@ -493,16 +890,44 @@ However, if the algorithm is upgraded to a graph-search (which maintains a "clos
 
 ### 4.4 Machine Learning & Neural Networks
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: A paradigm shift from classical programming. Instead of hard-coding rules, machine learning algorithms allow computational models to dynamically adjust their internal mathematical parameters based on empirical data to minimize an error function.
+- **Core Definition**:
+  - Paradigm shift from classical programming (hard-coded rules)
+  - Computational models dynamically adjust mathematical parameters based on empirical data to minimize error
 - **Key Properties & Mechanisms**:
-  - *Supervised Learning*: The algorithm is trained on a dataset containing explicitly labeled target outputs. The model learns to map inputs to targets. (Algorithms: Decision Trees, Support Vector Machines (SVM), K-Nearest Neighbors (KNN)).
-  - *Unsupervised Learning*: The dataset contains raw inputs with zero labels. The algorithm is forced to discover hidden mathematical structures, variance patterns, or groupings within the data. (Algorithms: K-means clustering, Principal Component Analysis (PCA) for dimensionality reduction).
-  - *The Perceptron*: The foundational building block of neural networks. It calculates a weighted linear combination of inputs: $z = \sum_{i=1}^{n} (w_i x_i) + b$. It then applies a non-linear activation step function. 
-    - **Limitation**: A single-layer perceptron can only draw a single straight mathematical line (a hyperplane). Therefore, it is mathematically impossible for it to solve non-linearly separable problems like the XOR logic gate.
-  - *Backpropagation*: The core mathematical algorithm for training Deep Multi-Layer Perceptrons (MLPs). It operates in two phases:
-    1. **Forward Pass**: Data flows through the network to generate an output prediction, and a Loss Function (e.g., Mean Squared Error) calculates the exact deviation from the true target.
-    2. **Backward Pass**: The algorithm uses the Chain Rule of calculus to calculate the partial derivative (gradient) of the Loss Function with respect to absolutely every single weight in the network. Gradient Descent is then used to nudge every weight simultaneously in the opposite direction of the gradient, iteratively minimizing the loss.
-  - *Q-Learning (Reinforcement Learning)*: A model-free algorithmic framework where an agent learns an optimal policy by interacting with an environment. The $Q(s, a)$ function mathematically estimates the total cumulative discounted reward an agent will receive if it takes action $a$ in state $s$, and follows the optimal policy thereafter. It updates via the Bellman Equation.
+  - *Supervised Learning*:
+    - Trained on datasets with explicitly labeled target outputs
+    - Goal: map inputs to targets (e.g., Decision Trees, SVM, KNN)
+  - *Unsupervised Learning*:
+    - Trained on raw inputs with zero labels
+    - Goal: discover hidden structures, variance patterns, or groupings (e.g., K-means, PCA)
+  - *The Perceptron*:
+    - Foundational neural network building block
+    - Calculates weighted linear combination: $z = \sum (w_i x_i) + b$, then applies non-linear activation
+    - **Limitation**: Single-layer perceptron can only draw a single mathematical hyperplane → impossible to solve non-linear problems like XOR
+  - *Backpropagation*:
+    - Core mathematical algorithm for training Deep MLPs via two phases:
+      1. **Forward Pass**: Data flows to output → Loss Function (e.g., MSE) calculates deviation from target
+      2. **Backward Pass**: Uses Chain Rule to calculate partial derivative (gradient) of loss with respect to all weights → Gradient Descent updates weights to minimize loss
+  - *Q-Learning (Reinforcement Learning)*:
+    - Model-free framework where agent interacts with environment to learn optimal policy
+    - $Q(s, a)$ function estimates cumulative discounted reward for taking action $a$ in state $s$
+    - Dynamically updates via the **Bellman Equation**
+
+```mermaid
+graph LR
+    subgraph "Forward Pass"
+        X["Inputs (x)"] -->|Multiply Weights| W["Weights (w)"]
+        W --> A["Activation (y)"]
+        A --> L["Loss Calculation"]
+    end
+    subgraph "Backward Pass"
+        L -.-> |"Chain Rule: ∂L/∂y"| A
+        A -.-> |"Chain Rule: ∂L/∂w"| W
+        W -.-> |"Gradient Descent: w = w - η(∂L/∂w)"| U["Updated Weights"]
+    end
+    style L fill:#e74c3c,color:#fff
+    style U fill:#2ecc71,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A single-layer perceptron has two input features $x_1 = 1.0, x_2 = -1.0$ with initial synapse weights $w_1 = 0.5, w_2 = -0.5$ and a bias weight $b = 0.0$. The learning rate is $\eta = 0.1$. The true target output is $d = 1$, but the current step-function activation outputs a prediction of $y = 0$. Calculate the exact updated value of the weight $w_1$ after one training epoch, detailing the formula used.
@@ -519,20 +944,25 @@ However, if the algorithm is upgraded to a graph-search (which maintains a "clos
 
 ### 4.5 Fuzzy Logic & Genetic Algorithms
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Advanced metaheuristic and non-classical logic architectures that simulate biological and cognitive phenomena to solve highly complex, mathematically intractable optimization problems.
+- **Core Definition**:
+  - Advanced metaheuristic architectures simulating biological and cognitive phenomena
+  - Solves highly complex, mathematically intractable optimization problems
 - **Key Properties & Mechanisms**:
-  - *Classical Boolean Logic vs Fuzzy Logic*: Classical logic is rigidly binary; a variable is strictly True (1) or False (0). Fuzzy logic fundamentally alters this by introducing a continuous **Membership Function $\mu_A(x)$**, which maps elements to a continuous degree of truth precisely between $[0, 1]$. An element can be "70% a member" of set A.
-  - *Fuzzy Set Mathematical Operations*:
-    - **Fuzzy Union (OR Operator)**: Evaluates the maximum membership value across sets. Formula: $\mu_{A \cup B}(x) = \max(\mu_A(x), \mu_B(x))$.
-    - **Fuzzy Intersection (AND Operator)**: Evaluates the minimum membership value across sets. Formula: $\mu_{A \cap B}(x) = \min(\mu_A(x), \mu_B(x))$.
-    - **Fuzzy Complement (NOT Operator)**: Inverts the membership. Formula: $\mu_{\neg A}(x) = 1 - \mu_A(x)$.
-    - **Defuzzification**: The critical final phase in a fuzzy control system where the aggregated fuzzy continuous sets are mathematically converted back into a single, crisp, actionable physical output value (e.g., using the Center of Gravity/Centroid integral method).
-  - *Genetic Algorithms (GA)*: A global search heuristic directly inspired by the biological mechanisms of Darwinian evolution and natural selection.
-    - **Encoding**: The process of representing a potential mathematical solution as a biological chromosome (typically an array of binary bits).
-    - **Fitness Function**: An objective mathematical formula that scores how "good" a specific chromosome is at solving the problem.
-    - **Selection**: Algorithms (like Roulette Wheel Selection or Tournament Selection) that statistically favor chromosomes with higher fitness scores to become parents.
-    - **Crossover (Recombination)**: Splitting the bit-strings of two parents and swapping them to produce offspring, theoretically combining the best traits of both.
-    - **Mutation**: Randomly flipping a tiny percentage of bits in the offspring. This is mathematically critical because it constantly injects new genetic diversity, physically preventing the algorithm from prematurely converging and getting permanently trapped in a local mathematical optimum.
+  - *Classical vs Fuzzy Logic*:
+    - Classical Boolean: rigidly binary (True 1 or False 0)
+    - Fuzzy Logic: continuous **Membership Function $\mu_A(x)$** mapping truth strictly between $[0, 1]$ (e.g., "70% true")
+  - *Fuzzy Set Operations*:
+    - **Union (OR)**: Maximum membership → $\mu_{A \cup B}(x) = \max(\mu_A(x), \mu_B(x))$
+    - **Intersection (AND)**: Minimum membership → $\mu_{A \cap B}(x) = \min(\mu_A(x), \mu_B(x))$
+    - **Complement (NOT)**: Inverted membership → $\mu_{\neg A}(x) = 1 - \mu_A(x)$
+    - **Defuzzification**: Converting aggregated fuzzy sets back into a single crisp output value (e.g., Centroid method)
+  - *Genetic Algorithms (GA)*:
+    - Search heuristic inspired by Darwinian evolution
+    - **Encoding**: Representing potential solution as biological chromosome (binary bit string)
+    - **Fitness Function**: Objective formula scoring how "good" a chromosome is
+    - **Selection**: Statistically favoring higher fitness scores to become parents (Roulette/Tournament)
+    - **Crossover (Recombination)**: Swapping bit-string segments between parents to mix traits
+    - **Mutation**: Randomly flipping tiny percentage of bits → injects diversity to physically prevent premature convergence to local optima
 
 **PYQ Numerical Example (Difficulty: Easy)**:
 *Question*: Given two distinct fuzzy sets $A$ and $B$, an element $x$ has been evaluated to have the following continuous membership values: $\mu_A(x) = 0.7$ and $\mu_B(x) = 0.4$. Calculate the exact membership value of $x$ in both the algebraic product space and the standard fuzzy union space of $A$ and $B$.
@@ -547,14 +977,21 @@ However, if the algorithm is upgraded to a graph-search (which maintains a "clos
 
 ### 4.6 Intelligent Agents, SOMs, and Advanced Fuzzy Logic
 **Deep-Dive Definitions & Properties:**
-- **Intelligent Agent Architectures**: The foundational structures defining how an AI interacts with an environment.
-  - *PEAS Framework*: Defines an agent's problem space. **P**erformance measure (the metric of success), **E**nvironment (the physical/virtual world), **A**ctuators (mechanisms to alter the environment), **S**ensors (mechanisms to perceive the environment).
-  - *Simple Reflex Agents*: Operate strictly on condition-action rules ($if \to then$). They completely ignore the history of percepts and only look at the exact current state.
-  - *Utility-Based Agents*: Mathematically calculate the expected "happiness" or objective utility of all possible future states, allowing them to rationally choose between conflicting goals.
-- **Kohonen Self-Organizing Maps (SOM)**: An Unsupervised neural network that utilizes competitive learning rather than error-correction (backpropagation). It mathematically maps high-dimensional input data onto a 2D grid while strictly preserving the topological properties of the input space.
-  - *Weight Update*: Only the "Winning" neuron (the one closest to the input vector) and its immediate geographic neighbors get their weights updated to become even closer to the input, creating organized mathematical clusters over time.
+- **Intelligent Agent Architectures**:
+  - *PEAS Framework*: Defines agent problem space parameters:
+    - **P**erformance measure (metric of success)
+    - **E**nvironment (physical/virtual world)
+    - **A**ctuators (mechanisms altering environment)
+    - **S**ensors (mechanisms perceiving environment)
+  - *Simple Reflex Agents*: Operate strictly on condition-action ($if \to then$) rules, ignoring history
+  - *Utility-Based Agents*: Calculate mathematical expected utility of all future states to rationally choose between conflicting goals
+- **Kohonen Self-Organizing Maps (SOM)**:
+  - Unsupervised neural network utilizing competitive learning (not backpropagation)
+  - Mathematically maps high-dimensional data onto 2D grid preserving topological properties
+  - *Weight Update*: Only the "Winning" neuron and its geographic neighbors update weights closer to input
 - **Advanced Fuzzy Logic ($\alpha$-cuts)**:
-  - *Alpha-Cut ($\alpha$-cut)*: A mathematical operation that converts a continuous fuzzy set back into a classical, crisp boolean set. The $\alpha$-cut of a fuzzy set $A$ contains strictly those elements whose membership degree is greater than or equal to the specified threshold value $\alpha$. ($A_\alpha = \{x \mid \mu_A(x) \ge \alpha\}$).
+  - *Alpha-Cut ($\alpha$-cut)*: Mathematical operation converting continuous fuzzy set to crisp boolean set
+  - Contains strictly elements with membership degree $\ge \alpha$ threshold ($A_\alpha = \{x \mid \mu_A(x) \ge \alpha\}$)
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Design the PEAS specification for an automated AI medical diagnosis system.
@@ -573,14 +1010,46 @@ To formally map the problem space, we must strictly define the four parameters:
 
 ### 5.1 Software Development Life Cycle (SDLC) Models
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The SDLC is an overarching mathematical and managerial framework that strictly dictates the exact sequential or iterative phases of software creation. It governs the entire lifecycle from the initial elicitation of client requirements to architectural design, coding, testing, deployment, and long-term maintenance. Choosing the correct SDLC minimizes project risk and ensures strict adherence to budgetary and temporal constraints.
+- **Core Definition**:
+  - Overarching mathematical and managerial framework dictating sequential or iterative phases of software creation
+  - Governs entire lifecycle: requirements → design → coding → testing → deployment → maintenance
+  - Goal: minimizes project risk and ensures strict adherence to budgetary and temporal constraints
 - **Key Properties & Mechanisms**:
-  - *Spiral Model*: A fundamentally risk-driven meta-model designed by Barry Boehm. Unlike linear models, it mathematically evaluates project risk at every single iteration. It consists of four strictly defined, highly structured quadrants: (1) Objectives and alternative determination, (2) Risk Assessment and Reduction (where prototypes are explicitly built to test technical feasibility), (3) Development and Verification (the actual coding and testing phase), and (4) Planning for the next phase. This model is absolutely crucial for massive, highly complex, high-risk systems (like aerospace or military defense software) where failure is catastrophic.
-  - *Agile (Scrum & XP)*: A massive paradigm shift away from rigid planning, focusing instead on iterative, highly adaptable delivery in short, time-boxed cycles called "sprints" (usually 2-4 weeks). 
-    - **Scrum**: Relies on specific managerial roles (Product Owner representing the client, Scrum Master removing impediments) and artifacts (Product Backlog of user stories, Sprint Backlog of immediate tasks). It completely abandons heavy documentation in favor of working software.
-    - **Extreme Programming (XP)**: Focuses heavily on code-level engineering practices rather than just management. It mandates strict Test-Driven Development (TDD) where tests are written *before* the code, Continuous Integration (CI) to prevent merge conflicts, and Pair Programming where two engineers share a single workstation to ensure continuous, real-time code review.
-  - *Prototyping Model*: Exclusively used when customer requirements are highly ambiguous, unstable, or poorly articulated. A "throwaway" or evolutionary prototype is rapidly built with no underlying architecture, strictly to extract and validate visual or functional requirements from the client. Deep architectural design is entirely bypassed until the prototype is formally validated.
-  - *Feature Driven Development (FDD)*: An iterative and incremental agile methodology driven strictly by the client's valued features. It follows a highly structured sequential flow: Develop an overall domain object model $\to$ Build a comprehensive feature list $\to$ Plan strictly by feature priority $\to$ Design by feature $\to$ Build by feature.
+  - *Spiral Model*:
+    - Fundamentally risk-driven meta-model designed by Barry Boehm
+    - Mathematically evaluates project risk at every single iteration
+    - Consists of 4 strictly defined quadrants:
+      1. Objectives and alternative determination
+      2. Risk Assessment and Reduction (prototypes explicitly built to test feasibility)
+      3. Development and Verification (coding and testing)
+      4. Planning for the next phase
+    - Crucial for massive, high-risk systems (aerospace, military) where failure is catastrophic
+  - *Agile (Scrum & XP)*:
+    - Paradigm shift from rigid planning to iterative, adaptable delivery in short "sprints"
+    - **Scrum**: Relies on specific roles (Product Owner, Scrum Master) and artifacts (Product/Sprint Backlog). Abandons heavy documentation for working software.
+    - **Extreme Programming (XP)**: Focuses heavily on code-level engineering. Mandates strict Test-Driven Development (TDD), Continuous Integration (CI), and Pair Programming.
+  - *Prototyping Model*:
+    - Used when requirements are highly ambiguous or unstable
+    - A "throwaway" prototype is rapidly built strictly to extract and validate visual/functional requirements
+    - Deep architectural design is bypassed until prototype is formally validated
+  - *Feature Driven Development (FDD)*:
+    - Iterative/incremental agile methodology driven strictly by client's valued features
+    - Structured flow: Domain object model → Feature list → Plan by feature → Design by feature → Build by feature
+
+```mermaid
+graph TD
+    A["1. Requirements"] --> B["2. Design"]
+    B --> C["3. Implementation"]
+    C --> D["4. Testing"]
+    D --> E["5. Deployment"]
+    E --> F["6. Maintenance"]
+    style A fill:#3498db,color:#fff
+    style B fill:#3498db,color:#fff
+    style C fill:#3498db,color:#fff
+    style D fill:#3498db,color:#fff
+    style E fill:#3498db,color:#fff
+    style F fill:#3498db,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In a highly volatile project where the underlying hardware platform is experimental and prone to failure, which SDLC model is strictly mathematically optimal, and what specific quadrant of that model explicitly handles the volatility?
@@ -590,13 +1059,20 @@ When volatility and severe technical risk (hardware failure, shifting requiremen
 
 ### 5.2 Software Metrics & Project Management
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Software metrics are rigorous, quantitative mathematical formulas used to empirically estimate the sheer effort, monetary cost, temporal duration, and structural complexity of a software project long before a single line of code is written.
+- **Core Definition**:
+  - Rigorous, quantitative mathematical formulas used to empirically estimate effort, cost, duration, and structural complexity long before coding starts
 - **Key Properties & Mechanisms**:
-  - *COCOMO (Constructive Cost Model)*: An algorithmic software cost estimation model developed by Boehm. It calculates human Effort (measured in Person-Months) and total Development Time based strictly on the estimated thousands of lines of code (KLOC). 
-    - **Formula**: $\text{Effort} = a \times (\text{KLOC})^b$. The coefficients $a$ and $b$ are mathematically derived constants that depend entirely on the project's complexity mode: **Organic** (small, simple, familiar teams), **Semi-detached** (medium complexity, mixed experience), or **Embedded** (massive, unprecedented complexity, strict hardware constraints).
+  - *COCOMO (Constructive Cost Model)*:
+    - Algorithmic software cost estimation model developed by Boehm
+    - Calculates Effort (Person-Months) and total Development Time based on thousands of lines of code (KLOC)
+    - **Formula**: $\text{Effort} = a \times (\text{KLOC})^b$
+    - Complexity Modes: **Organic** (small/simple), **Semi-detached** (medium), **Embedded** (massive, unprecedented complexity)
   - *PERT/CPM (Program Evaluation and Review Technique / Critical Path Method)*:
-    - **Critical Path**: In a directed acyclic graph (DAG) representing task dependencies, the critical path is the absolute longest continuous sequence of dependent tasks from project start to finish. It mathematically dictates the absolute shortest possible time the entire project can be completed. A delay of even one day on any task within the critical path strictly equals a one-day delay in the final project delivery.
-    - **PERT Time Estimation**: A statistical tool used when task durations are highly uncertain. It uses a probabilistic Beta-distribution weighted average to precisely estimate task duration: $T_E = \frac{O + 4M + P}{6}$ (where $O$=Optimistic time if everything goes perfectly, $M$=Most Likely time under normal conditions, $P$=Pessimistic time if severe disasters occur).
+    - **Critical Path**: The absolute longest continuous sequence of dependent tasks in a directed acyclic graph (DAG)
+    - Mathematically dictates the absolute shortest possible time the entire project can be completed
+    - Any delay on the critical path strictly equals a delay in final project delivery
+    - **PERT Time Estimation**: Probabilistic Beta-distribution weighted average used for uncertain task durations
+    - Formula: $T_E = \frac{O + 4M + P}{6}$ (Optimistic, Most Likely, Pessimistic)
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A critical software module has three estimated times provided by senior engineers: an Optimistic time of 4 days, a Most Likely time of 7 days, and a Pessimistic time of 16 days. Using the standard PERT formula, calculate the expected time ($T_E$) and the statistical variance ($\sigma^2$) of the task to determine its unpredictability.
@@ -612,21 +1088,26 @@ When volatility and severe technical risk (hardware failure, shifting requiremen
 
 ### 5.3 Software Design Principles (Coupling & Cohesion)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Coupling and Cohesion are the absolute fundamental architectural metrics defining the structural integrity of a codebase. They dictate exactly how deeply interconnected modules are to each other (Coupling), and how singular and laser-focused their internal operations are (Cohesion). The ultimate, universal architectural goal in software engineering is mathematically strict: **High Cohesion** and **Low Coupling**.
+- **Core Definition**:
+  - Fundamental architectural metrics defining the structural integrity of a codebase
+  - **Coupling**: How deeply interconnected modules are to each other
+  - **Cohesion**: How singular and laser-focused a module's internal operations are
+  - **Universal Architectural Goal**: mathematically strict **High Cohesion** and **Low Coupling**
 - **Key Properties & Mechanisms**:
-  - *Coupling (Degree of Interdependence)*: Ranked from best (lowest/loosest) to worst (highest/tightest).
-    1. **Data Coupling** (Best): Modules are completely independent and share only strictly necessary, simple primitive data (like an integer or string) via standard function parameters.
-    2. **Stamp Coupling**: Modules share massive, complex composite data structures (like a full database Record or Class object), but a receiving module only actually uses a tiny, irrelevant fraction of it, needlessly exposing the entire schema.
-    3. **Control Coupling**: One module passes a control flag (like a boolean switch) that explicitly dictates the internal logic flow (if/else branches) of another module, violating encapsulation.
-    4. **Common/External Coupling**: Multiple independent modules rely on mutating shared global variables or global state data, leading to unpredictable, untrackable race conditions.
-    5. **Content Coupling** (Worst): One module maliciously bypasses interfaces and directly reads or alters the hidden internal local data or physical code of another module.
-  - *Cohesion (Degree of Internal Focus)*: Ranked from best (highest) to worst (lowest).
-    1. **Functional Cohesion** (Best): Absolute perfection. Every single line of code in the module contributes exclusively to exactly one single, mathematically well-defined task (e.g., a function that *only* calculates square roots).
-    2. **Sequential Cohesion**: The elements are tightly bound because the output data of one element strictly acts as the immediate input data for the next element down the line.
-    3. **Communicational Cohesion**: Elements operate on the exact same central input data structure or database record, even if their outputs are different.
-    4. **Logical Cohesion**: Elements perform logically similar generic tasks (e.g., a `Utility` module handling *all* forms of input validation across the entire app), but the tasks are otherwise completely independent.
-    5. **Coincidental Cohesion** (Worst): A "garbage can" module. Elements are grouped purely randomly with absolutely zero logical or data relationship.
-  - *Jackson's Principle*: A strict design philosophy stating that the hierarchical structure of a program should systematically and identically map to the mathematical hierarchical structure of the data it processes.
+  - *Coupling (Degree of Interdependence)* (Ranked Best to Worst):
+    1. **Data Coupling** (Best): Modules independent, share only simple primitive data via function parameters
+    2. **Stamp Coupling**: Share massive composite data structures, but receiving module only uses a tiny fraction, needlessly exposing the schema
+    3. **Control Coupling**: One module passes a control flag explicitly dictating the internal logic flow of another
+    4. **Common/External Coupling**: Multiple modules mutate shared global variables → unpredictable race conditions
+    5. **Content Coupling** (Worst): Module directly reads/alters hidden internal data or physical code of another
+  - *Cohesion (Degree of Internal Focus)* (Ranked Best to Worst):
+    1. **Functional Cohesion** (Best): Every single line of code contributes exclusively to exactly one single task
+    2. **Sequential Cohesion**: Output data of one element acts as immediate input data for the next
+    3. **Communicational Cohesion**: Elements operate on the exact same central input data structure
+    4. **Logical Cohesion**: Elements perform logically similar generic tasks, but tasks are otherwise independent
+    5. **Coincidental Cohesion** (Worst): Elements grouped purely randomly with zero logical relationship
+  - *Jackson's Principle*:
+    - Strict philosophy stating program hierarchical structure should systematically map to mathematical hierarchical structure of the data it processes
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: If an Authentication Module passes a massive `User` object (containing passwords, addresses, and history) to an Analytics Module, but the Analytics Module only ever reads the `user_id` integer field to execute a query, what specific type of coupling exists, and how must it be optimized?
@@ -636,21 +1117,25 @@ Passing a massive composite data structure when only a primitive sub-element is 
 
 ### 5.4 Software Testing & Quality Assurance
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Quality Assurance is the rigorous, highly structured empirical execution of a program specifically designed to mathematically identify hidden defects, rigidly verify functionality against specifications, and validate that the final product actually solves the client's real-world problem.
+- **Core Definition**:
+  - Rigorous empirical execution of a program designed to mathematically identify defects, verify functionality, and validate client problem-solving
 - **Key Properties & Mechanisms**:
   - *Verification vs Validation*:
-    - **Verification**: "Are we building the product right?" This is an inward-facing check. It ensures the code perfectly matches the internal technical design documents. It is heavily reliant on static analysis, code reviews, and compiler checks without actually running the software dynamically.
-    - **Validation**: "Are we building the right product?" This is an outward-facing check. It involves executing the running software in a real-world environment to ensure it completely satisfies the client's actual business needs, which may have shifted since the design phase.
+    - **Verification**: "Are we building the product right?" (Inward-facing check against design documents via static analysis/code reviews)
+    - **Validation**: "Are we building the right product?" (Outward-facing check against real-world client business needs)
   - *White-Box vs Black-Box Testing*:
-    - **White-Box (Structural/Glass-Box)**: The tester has absolute, unhindered access to the underlying source code. The goal is to traverse every single possible logical branch, loop, and path within the code architecture. The primary mathematical metric used here is *Cyclomatic Complexity*.
-    - **Black-Box (Functional)**: The tester has zero access to the source code and treats the software as an impenetrable box. They focus strictly on input/output mappings based purely on the requirements document. Techniques include:
-      - **Equivalence Partitioning**: Dividing the infinite universe of possible inputs into mathematically distinct valid and invalid classes. Testing just one single value from a class is mathematically assumed to conclusively test the entire class, saving immense time.
-      - **Boundary Value Analysis (BVA)**: A statistical heuristic proving that software bugs overwhelmingly cluster at the absolute extreme boundaries of input domains (due to `>` vs `>=` operator errors). BVA rigidly tests the exact edge cases (e.g., if a valid range is 1-10, BVA strictly tests 0, 1, 10, and 11).
-  - *Cyclomatic Complexity ($V(G)$)*: A rigorous mathematical graph-theory metric measuring the total number of linearly independent paths through a program's source code. It uses a Control Flow Graph. Formula: $V(G) = E - N + 2P$ (where $E$ = total edges, $N$ = total nodes, $P$ = total disconnected components). This number explicitly dictates the absolute minimum number of test cases required for 100% path coverage.
-  - *McCall's Quality Factors*: A highly influential framework dividing overall software quality into 3 distinct operational perspectives:
-    1. **Product Revision (Ability to change)**: Maintainability (ease of fixing), Flexibility (ease of modifying), Testability.
-    2. **Product Transition (Ability to adapt)**: Portability (moving hardware), Reusability (using modules elsewhere), Interoperability (interfacing with other systems).
-    3. **Product Operations (Daily usage)**: Correctness, Reliability, Efficiency, Integrity (security), Usability.
+    - **White-Box (Structural)**: Tester has absolute access to source code. Goal is to traverse every logical branch and loop. Primary metric: Cyclomatic Complexity.
+    - **Black-Box (Functional)**: Zero access to source code (treats as impenetrable box). Focuses strictly on input/output mappings. Techniques:
+      - **Equivalence Partitioning**: Divides infinite input universe into valid/invalid classes. Testing one value mathematically tests the whole class.
+      - **Boundary Value Analysis (BVA)**: Tests absolute extreme edges of input domains where bugs overwhelmingly cluster.
+  - *Cyclomatic Complexity ($V(G)$)*:
+    - Graph-theory metric measuring total number of linearly independent paths
+    - Formula: $V(G) = E - N + 2P$ ($E$=edges, $N$=nodes, $P$=disconnected components)
+    - Explicitly dictates absolute minimum test cases required for 100% path coverage
+  - *McCall's Quality Factors* (3 Perspectives):
+    1. **Product Revision**: Maintainability, Flexibility, Testability
+    2. **Product Transition**: Portability, Reusability, Interoperability
+    3. **Product Operations**: Correctness, Reliability, Efficiency, Integrity, Usability
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A complex mathematical function takes an integer input $X$. If $X > 0$, it enters an `if` block containing a nested `while` loop that iterates based on $X$. If $X \le 0$, it immediately returns an error. When drawn as a control flow graph, it has exactly 7 nodes and 8 edges, existing as 1 single connected component. Calculate the Cyclomatic Complexity and detail its exact practical significance to a QA testing engineer.
@@ -662,11 +1147,37 @@ Passing a massive composite data structure when only a primitive sub-element is 
 
 ### 5.5 Cloud Computing & Virtualization
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Cloud Computing is the scalable, on-demand delivery of massive computing services over the internet. It is heavily reliant on advanced hardware Virtualization, a technology that physically isolates and multiplexes raw hardware resources (CPU, RAM, Disk) among multiple independent tenant environments.
+- **Core Definition**:
+  - Scalable, on-demand delivery of massive computing services over internet
+  - Reliant on **Virtualization**: physically isolating and multiplexing raw hardware (CPU, RAM, Disk) among multiple independent tenants
 - **Key Properties & Mechanisms**:
-  - *Hypervisors (Virtual Machine Monitors)*: The absolute core software layer responsible for securely creating, managing, and executing isolated Virtual Machines (VMs) on a single physical host.
-    - **Type 1 (Bare-Metal/Native)**: The hypervisor installs strictly and directly onto the host's raw silicon hardware (CPU, RAM). It completely bypasses any underlying Operating System. Because it controls the hardware directly, it is vastly more efficient, phenomenally secure, and is the absolute standard for enterprise data centers and cloud providers like AWS. Examples: VMware ESXi, Microsoft Hyper-V, Xen.
-    - **Type 2 (Hosted)**: The hypervisor installs completely on top of a pre-existing, fully functioning host Operating System (like Windows 11 or macOS). To execute a VM instruction, the hypervisor must awkwardly request hardware resources through the host OS's kernel, introducing massive performance overhead and severe latency. It is strictly used for consumer desktop testing. Examples: Oracle VirtualBox, VMware Workstation.
+  - *Hypervisors (Virtual Machine Monitors)*:
+    - Core software layer responsible for securely creating and managing isolated VMs
+    - **Type 1 (Bare-Metal/Native)**:
+      - Installs strictly directly onto host's raw silicon hardware
+      - Completely bypasses underlying OS
+      - Vastly more efficient, phenomenally secure → absolute standard for enterprise (AWS, ESXi, Hyper-V)
+    - **Type 2 (Hosted)**:
+      - Installs completely on top of pre-existing functioning host OS
+      - Requests hardware resources awkwardly through host OS kernel → massive overhead/latency
+      - Used strictly for consumer testing (VirtualBox, Workstation)
+
+```mermaid
+graph TD
+    subgraph "Type 1 (Bare-Metal)"
+        H1["Hardware"] --> HY1["Type 1 Hypervisor"]
+        HY1 --> VM1A["VM 1<br/>Guest OS"]
+        HY1 --> VM1B["VM 2<br/>Guest OS"]
+    end
+    subgraph "Type 2 (Hosted)"
+        H2["Hardware"] --> OS2["Host OS"]
+        OS2 --> HY2["Type 2 Hypervisor"]
+        HY2 --> VM2A["VM 1<br/>Guest OS"]
+        HY2 --> VM2B["VM 2<br/>Guest OS"]
+    end
+    style HY1 fill:#2ecc71,color:#fff
+    style HY2 fill:#e74c3c,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: A major cloud service provider is provisioning a massive new billion-dollar data center intended to physically isolate highly sensitive workloads for government and financial clients. Should they architect the servers using a Type 1 or Type 2 hypervisor, and what is the strict technical and security justification for this choice?
@@ -681,14 +1192,20 @@ They must strictly and unequivocally use a **Type 1 (Bare-Metal)** hypervisor. A
 
 ### 6.1 Relational Algebra & SQL Operations
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Relational Algebra is the rigorous, theoretical, procedural mathematical query language that serves as the absolute foundation for all relational databases. It explicitly dictates *how* to retrieve data through sequential operations. SQL (Structured Query Language) is the practical, declarative implementation of these algebraic concepts, dictating *what* data to retrieve while the database engine handles the "how".
+- **Core Definition**:
+  - Relational Algebra: Rigorous, theoretical, procedural mathematical query language dictating *how* to retrieve data through sequential operations
+  - SQL: Practical, declarative implementation dictating *what* data to retrieve
 - **Key Properties & Mechanisms**:
-  - *Fundamental Operations*: The six building blocks of relational algebra are Select ($\sigma$) for filtering rows, Project ($\pi$) for filtering columns, Union ($\cup$) for combining sets, Set Difference ($-$) for finding elements in one set but not another, Cartesian Product ($\times$) for generating all possible combinations of tuples, and Rename ($\rho$) for altering schema names.
-  - *Division Operator ($\div$)*: A highly complex derived operator. Given a primary relation $R(x, y)$ and a secondary relation $S(y)$, the operation $R \div S$ returns the exact set of all $x$ values in $R$ that are strictly and simultaneously associated with *every single* $y$ value present in $S$. It is mathematically equivalent to a universal quantifier ($\forall$). It is universally used for queries like "Find the specific students who have successfully taken *all* available advanced AI courses".
-  - *Outer Joins*: Standard inner joins ruthlessly discard any tuples that fail to match the strict join condition. Outer joins are explicitly designed to preserve these "dangling" or unmatched tuples to prevent data loss in reports.
-    - **Left Outer Join ($\leftouterjoin$)**: Absolutely guarantees that every single tuple from the left table is kept. If no matching tuple exists in the right table, the right-side attributes are padded strictly with `NULL` values.
-    - **Full Outer Join ($\fullouterjoin$)**: Keeps absolutely all tuples from both tables, padding with `NULL`s symmetrically on whichever side is missing data.
-  - *Data Definition vs Manipulation*: SQL is rigidly divided into sub-languages. DDL (Data Definition Language) alters the fundamental physical schema and structure of the database (`CREATE`, `ALTER`, `DROP`, `TRUNCATE`). DML (Data Manipulation Language) safely queries or modifies the actual data rows without touching the schema (`SELECT`, `INSERT`, `UPDATE`, `DELETE`).
+  - *Fundamental Operations*: Select ($\sigma$), Project ($\pi$), Union ($\cup$), Set Difference ($-$), Cartesian Product ($\times$), Rename ($\rho$)
+  - *Division Operator ($\div$)*:
+    - Highly complex derived operator acting as universal quantifier ($\forall$)
+    - Returns elements in $R$ strictly associated with *every single* element in $S$
+  - *Outer Joins*: Preserves "dangling" unmatched tuples to prevent data loss
+    - **Left Outer Join ($\leftouterjoin$)**: Keeps every tuple from left table, pads with `NULL` on right
+    - **Full Outer Join ($\fullouterjoin$)**: Keeps all tuples from both tables, pads with `NULL`s symmetrically
+  - *Data Definition vs Manipulation*:
+    - **DDL**: Alters physical schema structure (`CREATE`, `ALTER`, `DROP`, `TRUNCATE`)
+    - **DML**: Queries/modifies actual data rows (`SELECT`, `INSERT`, `UPDATE`, `DELETE`)
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Translate the following complex business requirement into standard, mathematically pure Relational Algebra using the Division operator: "Retrieve the exact `driver_id` of the veteran drivers who have successfully driven absolutely every single bus model currently owned by the transport company." You are given two relations: `Drives(driver_id, bus_model)` and `Fleet(bus_model)`.
@@ -701,13 +1218,17 @@ The requirement explicitly asks for entities in one primary set (the drivers) th
 
 ### 6.2 Keys & Functional Dependencies
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: A Functional Dependency (FD), denoted as $X \to Y$, mathematically dictates a strict relationship between attributes. It formally states that if any two tuples (rows) in a database agree identically on the attributes $X$, they must absolutely and strictly agree on the attributes $Y$. This concept is the bedrock of database normalization. Keys are specialized sets of attributes that leverage FDs to logically and uniquely identify every single tuple in a massive relation.
+- **Core Definition**:
+  - Functional Dependency (FD) $X \to Y$: If two tuples agree on $X$, they must absolutely agree on $Y$
+  - Keys are specialized sets of attributes leveraging FDs to uniquely identify tuples
 - **Key Properties & Mechanisms**:
-  - *Super Key*: Any set of attributes whatsoever (even if it contains useless, redundant columns) that mathematically uniquely identifies a tuple.
-  - *Candidate Key*: A *minimal* super key. It is stripped of all redundant attributes. If you remove even one single attribute from a candidate key, it completely loses its unique identification property and shatters. A single table can have multiple distinct Candidate keys (e.g., `Employee_ID` and `Social_Security_Number`).
-  - *Primary Key*: The one specific Candidate key deliberately chosen by the database architect to physically identify tuples and enforce entity integrity.
-  - *Alternate Key*: Any remaining Candidate keys that were *not* selected to be the Primary key. They are often enforced using `UNIQUE` constraints in SQL.
-  - *Prime vs Non-Prime Attributes*: An attribute is strictly defined as **Prime** if it is a physical part of *any* Candidate key in the table. It is **Non-Prime** if it does not belong to *any* Candidate key whatsoever.
+  - *Super Key*: Any set of attributes that mathematically uniquely identifies a tuple
+  - *Candidate Key*: A *minimal* super key. Stripped of redundant attributes; removing one shatters its uniqueness
+  - *Primary Key*: The one specific Candidate key deliberately chosen to physical identify tuples
+  - *Alternate Key*: Remaining Candidate keys not selected as Primary key
+  - *Prime vs Non-Prime Attributes*:
+    - **Prime**: Physical part of *any* Candidate key
+    - **Non-Prime**: Does not belong to *any* Candidate key
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: You are given a complex relation $R(A, B, C, D)$ and the exact set of Functional Dependencies $F = \{A \to B, B \to C, C \to D\}$. Using mathematical attribute closures, find absolutely all Candidate keys for the relation $R$.
@@ -722,14 +1243,16 @@ The requirement explicitly asks for entities in one primary set (the drivers) th
 
 ### 6.3 Normalization (1NF to 5NF)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Normalization is the highly systematic, mathematical process of decomposing large, bloated tables into smaller, linked tables. The strict goal is to absolutely eliminate severe data redundancy and permanently prevent catastrophic database anomalies (Insertion anomalies, Update anomalies, and Deletion anomalies) that destroy data integrity.
+- **Core Definition**:
+  - Systematic mathematical process decomposing bloated tables into smaller linked tables
+  - Goal: completely eliminate data redundancy and prevent catastrophic anomalies (Insertion, Update, Deletion)
 - **Key Properties & Mechanisms**:
-  - *1NF (First Normal Form)*: The absolute baseline. It mathematically bans multi-valued attributes or nested composite relations. Every single domain value must be strictly atomic (indivisible).
-  - *2NF (Second Normal Form)*: Must strictly be in 1NF. Furthermore, it mathematically bans all **Partial Dependencies**. No non-prime attribute can be functionally dependent on just a *proper subset* of any Candidate key. (This only applies if the candidate key is composite, i.e., made of multiple columns).
-  - *3NF (Third Normal Form)*: Must strictly be in 2NF. Furthermore, it mathematically bans all **Transitive Dependencies**. No non-prime attribute is permitted to determine another non-prime attribute. Formally: For every non-trivial functional dependency $X \to Y$, it is allowed strictly if $X$ is a Super key, OR if $Y$ is a Prime attribute.
-  - *BCNF (Boyce-Codd Normal Form)*: A significantly stricter, mathematically pure version of 3NF. For absolutely every non-trivial FD $X \to Y$, $X$ must strictly and unconditionally be a Super key. It aggressively removes the "or $Y$ is a prime attribute" loophole that 3NF tolerates.
-  - *4NF (Fourth Normal Form)*: Must be in BCNF. It explicitly targets and bans **Multi-valued Dependencies** ($X \twoheadrightarrow Y$), which occur when an attribute determines multiple independent sets of values.
-  - *5NF (Fifth Normal Form)*: Deals with highly complex **Join Dependencies**. A relation is in 5NF if it cannot be losslessly decomposed into any number of smaller tables and rejoined without generating false, spurious tuples.
+  - *1NF (First Normal Form)*: Bans multi-valued attributes; all values strictly atomic
+  - *2NF*: Must be 1NF. Bans **Partial Dependencies** (non-prime functionally dependent on subset of Candidate key)
+  - *3NF*: Must be 2NF. Bans **Transitive Dependencies**. For $X \to Y$, $X$ must be Super key OR $Y$ must be Prime attribute
+  - *BCNF (Boyce-Codd)*: Stricter 3NF. For every $X \to Y$, $X$ MUST be a Super key. Closes the overlapping keys loophole
+  - *4NF*: Must be BCNF. Bans **Multi-valued Dependencies** ($X \twoheadrightarrow Y$)
+  - *5NF*: Deals with **Join Dependencies**. Cannot be losslessly decomposed without generating spurious tuples
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: In deep database theory, why is BCNF considered mathematically stricter than 3NF, and what specific, highly dangerous type of dependency anomaly does it aggressively eliminate that the standard 3NF explicitly tolerates?
@@ -739,16 +1262,30 @@ The formal definition of 3NF allows a functional dependency $X \to Y$ to exist e
 
 ### 6.4 Transactions & Concurrency Control
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: A transaction is a strictly atomic, indivisible logical unit of database processing. Concurrency control algorithms are the complex mathematical engines that allow thousands of transactions to execute simultaneously without interfering with each other, guaranteeing that the database never enters an inconsistent, corrupt state.
+- **Core Definition**:
+  - Transaction: strictly atomic, indivisible logical unit of database processing
+  - Concurrency Control: guarantees multiple transactions execute simultaneously without corrupting data
 - **Key Properties & Mechanisms**:
-  - *ACID Properties*: The four unshakeable pillars of transactions. **A**tomicity (All operations execute perfectly, or the entire transaction completely rolls back), **C**onsistency (The transaction moves the database from one valid invariant state to another), **I**solation (Simultaneous transactions cannot see each other's partial, uncommitted changes), **D**urability (Once committed, the changes are written to disk and survive catastrophic power failures).
-  - *Serializability*: The absolute gold standard of concurrent execution. A highly interleaved, concurrent schedule is defined as serializable if its final mathematical outcome is exactly identical to some purely serial (one after the other) execution of those same transactions.
-    - **Conflict Serializability**: The most rigorous test. It checks if conflicting operations (Read-Write, Write-Read, Write-Write on the exact same variable by different transactions) can be swapped without altering the outcome. It is tested by building a directed Precedence Graph; if the graph contains any mathematical cycle, the schedule is strictly NOT conflict serializable.
-    - **View Serializability**: A slightly looser, computationally NP-complete constraint. It tolerates "Blind Writes" (where a transaction blindly overwrites a value without ever reading it first). A schedule can be View Serializable even if it fails the Conflict Serializable test.
-  - *2-Phase Locking (2PL)*: The primary locking protocol guaranteeing conflict serializability. 
-    - **Phase 1 (Growing Phase)**: A transaction is allowed to acquire as many locks as it needs, but it cannot release any.
-    - **Phase 2 (Shrinking Phase)**: Once the transaction releases its first lock, it enters the shrinking phase. It can release remaining locks, but it is strictly forbidden from acquiring any new ones.
-    - *Fatal Limitation*: Standard 2PL is mathematically proven to be highly susceptible to generating Deadlocks, requiring the database to implement complex deadlock detection and abort mechanisms.
+  - *ACID Properties*:
+    - **A**tomicity (All or nothing)
+    - **C**onsistency (Moves DB between valid states)
+    - **I**solation (Simultaneous transactions don't see uncommitted changes)
+    - **D**urability (Committed changes survive power failures)
+  - *Serializability*: Outcome is exactly identical to some purely serial execution
+    - **Conflict Serializability**: Directed Precedence Graph must contain NO mathematical cycles
+    - **View Serializability**: Looser constraint tolerating "Blind Writes"
+  - *2-Phase Locking (2PL)*:
+    - **Phase 1 (Growing)**: Acquire locks, release none
+    - **Phase 2 (Shrinking)**: Release locks, acquire none
+    - *Limitation*: Mathematically proven to generate Deadlocks
+
+```mermaid
+graph TD
+    T1["Transaction T1<br/>Reads X"] -->|Read-Write Conflict| T2["Transaction T2<br/>Writes X"]
+    T2 -->|Write-Write Conflict| T1["Transaction T1<br/>Writes X"]
+    style T1 fill:#3498db,color:#fff
+    style T2 fill:#e74c3c,color:#fff
+```
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: In a highly interleaved database schedule, Transaction $T_1$ reads variable $X$, then Transaction $T_2$ writes to variable $X$, and finally $T_1$ attempts to write to variable $X$. Is this specific schedule conflict serializable? Describe the exact edges formed in the precedence graph.
@@ -761,13 +1298,29 @@ The formal definition of 3NF allows a functional dependency $X \to Y$ to exist e
 
 ### 6.5 Database Storage & Indexing
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Storage and Indexing refer to the highly advanced physical data structures implemented directly on magnetic hard disks or SSDs. Their sole purpose is to drastically, logarithmically reduce the massive I/O cost (disk reads) required to locate specific database records among billions of rows.
+- **Core Definition**:
+  - Advanced physical data structures logarithmically reducing massive I/O cost (disk reads)
 - **Key Properties & Mechanisms**:
-  - *B+ Trees*: The absolute, undisputed industry standard for relational database indexing. Unlike standard algorithmic B-trees, B+ trees enforce a strict rule: all actual data records (or pointers to them) are stored exclusively at the absolute bottom level (the leaf nodes). The internal nodes strictly contain routing keys to guide the search. Most importantly, every single leaf node is physically linked to the next via a sequential pointer chain (a linked list), making high-speed sequential range queries (e.g., `SELECT * WHERE age BETWEEN 10 AND 50`) immensely and uniquely efficient.
+  - *B+ Trees*:
+    - Absolute industry standard for relational DB indexing
+    - Data records exclusively stored at bottom leaf nodes
+    - Internal nodes strictly contain routing keys
+    - Every leaf node horizontally physically linked making high-speed sequential range queries extremely efficient
   - *Dense vs Sparse Indexing*:
-    - **Dense Index**: The index file contains a distinct index entry for absolutely every single search key value present in the data file. It is incredibly fast for direct lookups, but consumes massive amounts of disk space and RAM.
-    - **Sparse Index**: The index file contains index entries for only a select few search key values (typically exactly one entry per physical disk block). It is vastly smaller, relying on the index to find the correct block, and then performing a rapid sequential scan within that specific block.
-  - *Extendible Hashing*: A highly dynamic hashing technique designed for massive databases that grow unpredictably. It utilizes a directory of pointers that can grow and shrink dynamically. It uses the mathematical concept of "Global Depth" (the number of bits used by the main directory) and "Local Depth" (the bits used by a specific data bucket) to split overflowing buckets flawlessly, without ever requiring a massive, system-halting rehashing of the entire multi-terabyte database.
+    - **Dense**: Index entry for *every single* search key value (Fast lookup, massive space)
+    - **Sparse**: Index entry for select few keys (usually one per disk block; smaller, relies on block scanning)
+  - *Extendible Hashing*:
+    - Dynamic hashing technique utilizing pointer directory
+    - Uses "Global Depth" and "Local Depth" to split overflowing buckets flawlessly without full DB rehashing
+
+```mermaid
+graph TD
+    Root["Internal Node<br/>[50]"] --> L1["Leaf Node<br/>[10, 20, 30]"]
+    Root --> L2["Leaf Node<br/>[50, 60, 70]"]
+    L1 -.->|"Sequential Link"| L2
+    style L1 fill:#2ecc71,color:#fff
+    style L2 fill:#2ecc71,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: Why do modern enterprise relational databases overwhelmingly implement B+ Trees for primary key indexing instead of the standard B-Trees studied in basic data structures?
@@ -778,16 +1331,46 @@ In a standard B-Tree, actual data pointers are scattered wildly throughout the i
 ---
 *(End of Subject 6 Checkpoint)*
 
+
 ## 7. Theory of Computation & Compiler Design
 
 ### 7.1 The Chomsky Hierarchy & Formal Languages
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The Chomsky Hierarchy is a strict mathematical containment framework that categorizes formal languages based entirely on the generative power of their underlying grammars and the computational complexity of the automata required to recognize them. It fundamentally defines the absolute limits of algorithmic computation.
+- **Core Definition**:
+  - Strict mathematical containment framework categorizing formal languages
+  - Based entirely on the generative power of underlying grammars and computational complexity of recognizing automata
+  - Fundamentally defines absolute limits of algorithmic computation
 - **Key Properties & Mechanisms**:
-  - *Type 3 (Regular Languages)*: The absolute weakest class. Recognized exclusively by Finite Automata (DFA/NFA) with strictly $O(1)$ constant memory. They mathematically cannot count or match arbitrary parenthesis (e.g., $a^n b^n$ is strictly impossible). Closed under virtually all operations: Union, Intersection, Complementation, Concatenation, and Kleene Star.
-  - *Type 2 (Context-Free Languages - CFL)*: Recognized by Pushdown Automata (PDA), which possess exactly one stack (LIFO memory). They can mathematically count and match pairs (e.g., $a^n b^n$). However, deterministic CFLs (DCFLs) are strictly a subset of non-deterministic CFLs. Notably, CFLs are notoriously NOT closed under Intersection or Complementation (the intersection of two CFLs is often a Context-Sensitive Language).
-  - *Type 1 (Context-Sensitive Languages - CSL)*: Recognized by Linear Bounded Automata (LBA), which are Turing Machines with a tape strictly bounded by the size of the input. They can handle multiple dependencies (e.g., $a^n b^n c^n$).
-  - *Type 0 (Recursively Enumerable Languages - REL)*: The absolute highest level of computational power. Recognized by unconstrained Turing Machines with an infinite tape. These represent all mathematically computable functions. However, they are NOT closed under Complementation (if a language is REL and its complement is also REL, then the language is strictly Recursive/Decidable).
+  - *Type 3 (Regular Languages)*:
+    - Absolute weakest class
+    - Recognized exclusively by Finite Automata (DFA/NFA) with strictly $O(1)$ constant memory
+    - Mathematically cannot count or match pairs (e.g., $a^n b^n$ is strictly impossible)
+    - Closed under: Union, Intersection, Complementation, Concatenation, Kleene Star
+  - *Type 2 (Context-Free Languages - CFL)*:
+    - Recognized by Pushdown Automata (PDA) possessing exactly one stack (LIFO memory)
+    - Can mathematically count and match pairs (e.g., $a^n b^n$)
+    - Deterministic CFLs (DCFLs) strictly subset of non-deterministic CFLs
+    - **Not closed** under Intersection or Complementation
+  - *Type 1 (Context-Sensitive Languages - CSL)*:
+    - Recognized by Linear Bounded Automata (LBA)
+    - Turing Machines with tape strictly bounded by input size
+    - Can handle multiple dependencies (e.g., $a^n b^n c^n$)
+  - *Type 0 (Recursively Enumerable Languages - REL)*:
+    - Absolute highest level of computational power
+    - Recognized by unconstrained Turing Machines with infinite tape
+    - Represents all mathematically computable functions
+    - **Not closed** under Complementation
+
+```mermaid
+graph TD
+    T0["Type 0: Recursively Enumerable<br/>(Turing Machine)"] --> T1["Type 1: Context-Sensitive<br/>(Linear Bounded Automaton)"]
+    T1 --> T2["Type 2: Context-Free<br/>(Pushdown Automaton)"]
+    T2 --> T3["Type 3: Regular<br/>(Finite Automaton)"]
+    style T0 fill:#e74c3c,color:#fff
+    style T1 fill:#e67e22,color:#fff
+    style T2 fill:#f1c40f,color:#333
+    style T3 fill:#2ecc71,color:#fff
+```
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: Given two distinct Context-Free Languages $L_1$ and $L_2$, is their intersection mathematically guaranteed to be Context-Free? If not, provide a strict counter-example demonstrating how the stack mechanism of a PDA fundamentally fails.
@@ -797,12 +1380,22 @@ No, CFLs are strictly **not closed under intersection**. A standard Pushdown Aut
 
 ### 7.2 Turing Machines & Decidability
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: A Turing Machine (TM) is the ultimate theoretical abstraction of a modern computer. The concept of Decidability asks whether a specific mathematical or computational question can be definitively answered with a strict "Yes" or "No" by a Turing Machine in a finite amount of time, without ever entering an infinite loop.
+- **Core Definition**:
+  - Turing Machine (TM): Ultimate theoretical abstraction of modern computer
+  - Decidability: Determines whether a mathematical/computational question can be definitively answered "Yes" or "No" by a TM in finite time
 - **Key Properties & Mechanisms**:
-  - *Decidable (Recursive)*: A problem is strictly decidable if there exists a Turing Machine that will always halt and definitively accept valid inputs, and always halt and definitively reject invalid inputs. (e.g., Does a given DFA accept a given string?).
-  - *Partially Decidable (Recursively Enumerable)*: A Turing Machine will definitively halt and accept valid inputs. However, if the input is invalid, the machine might reject it, or it might mathematically loop forever, never providing an answer.
-  - *Undecidable*: It is mathematically proven that absolutely no algorithm can exist that will always answer the question correctly in finite time for all possible inputs.
-  - *The Halting Problem*: The most famous undecidable problem, proven by Alan Turing. It is mathematically impossible to write a master program that takes the source code of an arbitrary program and its input, and definitively outputs whether that program will eventually halt or run in an infinite loop. Assuming such a program exists leads to an immediate, fatal logical paradox.
+  - *Decidable (Recursive)*:
+    - TM exists that always halts and accepts valid inputs
+    - TM always halts and rejects invalid inputs
+    - Example: Does a DFA accept a given string?
+  - *Partially Decidable (Recursively Enumerable)*:
+    - TM definitively halts and accepts valid inputs
+    - For invalid inputs, TM might reject or might mathematically loop forever
+  - *Undecidable*:
+    - Mathematically proven no algorithm can exist to always answer correctly in finite time for all inputs
+  - *The Halting Problem*:
+    - Most famous undecidable problem (Turing)
+    - Mathematically impossible to write a master program to determine if an arbitrary program will halt or loop infinitely
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: State the decidability status of the following two problems: (1) Does a given Deterministic Finite Automaton (DFA) accept the empty string? (2) Does a given Turing Machine accept the empty string?
@@ -814,14 +1407,21 @@ The computational power of the underlying automaton directly dictates the decida
 
 ### 7.3 Syntax Analysis & Parsing (LL vs LR)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Syntax analysis (Parsing) is the critical compiler phase where the linear stream of tokens generated by the Lexer is mathematically verified against the strict production rules of a Context-Free Grammar. The parser constructs an Abstract Syntax Tree (AST) to validate the grammatical structure of the source code.
+- **Core Definition**:
+  - Syntax analysis (Parsing): Verification of linear token stream against Context-Free Grammar production rules
+  - Constructs Abstract Syntax Tree (AST) to validate structural integrity
 - **Key Properties & Mechanisms**:
-  - *Top-Down Parsing (LL)*: The parser attempts to construct the parse tree starting from the absolute root (the start symbol) and growing downwards to the leaf tokens. It uses **L**eft-to-right scanning and constructs a **L**eftmost derivation.
-    - **LL(1)**: A predictive top-down parser that looks exactly 1 token ahead. It is mathematically incapable of parsing grammars that contain **Left Recursion** (e.g., $A \to A\alpha$) or **Ambiguity**, as these cause the parser to enter catastrophic infinite loops.
-  - *Bottom-Up Parsing (LR)*: Vastly more powerful than top-down. It attempts to construct the parse tree starting from the leaf tokens and repeatedly condensing them upwards to the root start symbol using a technique called **Shift-Reduce** parsing. It uses **L**eft-to-right scanning and constructs a **R**everse rightmost derivation.
-    - **Parsing Power Hierarchy**: $LR(0) < SLR(1) < LALR(1) < CLR(1)$.
-    - **CLR(1) (Canonical LR)**: The absolute most powerful parser. It maintains immense state information by attaching distinct "lookahead" tokens to every single item. This prevents almost all Reduce-Reduce conflicts, but generates a massive, memory-heavy parsing table.
-    - **LALR(1) (Look-Ahead LR)**: The absolute industry standard (used by tools like YACC/Bison). It mathematically merges states from the CLR(1) table that have the exact same core but different lookaheads. This drastically shrinks the table size in RAM while retaining almost all the parsing power of CLR(1).
+  - *Top-Down Parsing (LL)*:
+    - Constructs parse tree from root to leaf tokens
+    - Uses **L**eft-to-right scanning and constructs **L**eftmost derivation
+    - **LL(1)**: Predictive parser looking 1 token ahead. Incapable of parsing Left Recursion or Ambiguity
+  - *Bottom-Up Parsing (LR)*:
+    - Constructs parse tree from leaves condensing upwards to root
+    - Uses **Shift-Reduce** parsing
+    - Uses **L**eft-to-right scanning and constructs **R**everse rightmost derivation
+    - **Parsing Power Hierarchy**: $LR(0) < SLR(1) < LALR(1) < CLR(1)$
+    - **CLR(1)**: Absolute most powerful. Attaches distinct lookahead tokens to prevent Reduce-Reduce conflicts. High memory usage
+    - **LALR(1)**: Industry standard. Mathematically merges CLR(1) states with same core but different lookaheads. Retains power with drastically reduced RAM footprint
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: During the execution of a bottom-up Shift-Reduce parser, define the exact mathematical conditions that cause a "Shift-Reduce Conflict" and a "Reduce-Reduce Conflict".
@@ -833,26 +1433,21 @@ A Shift-Reduce parser operates using a stack and an input buffer.
 
 ### 7.4 Compiler Optimization Techniques
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The highly sophisticated phase of a compiler that rigorously analyzes the intermediate representation (IR) of the source code and mathematically transforms it to strictly minimize execution time, memory consumption, or power usage, without ever altering the logical semantic meaning of the program.
+- **Core Definition**:
+  - Phase transforming Intermediate Representation (IR) to strictly minimize execution time, memory, or power
+  - Must never alter logical semantic meaning
 - **Key Properties & Mechanisms**:
-  - *Constant Folding*: A compile-time optimization where mathematical expressions consisting entirely of constants are evaluated by the compiler itself before the program ever runs. (e.g., replacing `x = 24 * 60 * 60` with the pre-calculated `x = 86400`).
-  - *Loop Invariant Code Motion*: A massive performance optimization targeting loops. If a calculation inside a `while` or `for` loop produces the exact same result on every single iteration (because its variables are not modified within the loop), the compiler physically extracts that calculation and hoists it strictly *outside* and *above* the loop, preventing millions of redundant CPU cycles.
-  - *Common Subexpression Elimination*: Identifying if an identical mathematical expression has already been evaluated recently. If the variables involved have not changed, the compiler replaces the redundant re-calculation with the previously saved temporary result.
-  - *Peephole Optimization*: The absolute final phase of optimization. The compiler examines a tiny, sliding "peephole" of physical machine code instructions (e.g., 2 to 4 assembly lines). It rigorously looks for highly specific local inefficiencies, such as redundant load/store operations (e.g., moving a register to memory, then immediately moving that exact memory back to the register) or replacing expensive operations with cheap ones (e.g., replacing `x * 2` with a lightning-fast bitwise left-shift `x << 1`).
+  - *Constant Folding*: Compile-time evaluation of mathematical expressions containing only constants (e.g., `24 * 60 * 60` $\to$ `86400`)
+  - *Loop Invariant Code Motion*: Extracting calculations from inside loops that produce exact same result every iteration, hoisting them outside/above the loop
+  - *Common Subexpression Elimination*: Replacing redundant re-calculation of identical mathematical expressions with previously saved temporary results
+  - *Peephole Optimization*: Final phase examining sliding window of machine code instructions. Looks for local inefficiencies (e.g., redundant load/store, replacing multiplication with bitwise shifts)
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Identify the exact compiler optimization techniques applied to transform Code Block A into Code Block B.
-Code Block A:
-`for (int i = 0; i < 1000; i++) {`
-`    int limit = 50 * 2;`
-`    array[i] = x + y + limit;`
-`}`
-Code Block B:
-`int limit = 100;`
-`int temp = x + y;`
-`for (int i = 0; i < 1000; i++) {`
-`    array[i] = temp + limit;`
-`}`
+*Code Block A*:
+`for (int i = 0; i < 1000; i++) { int limit = 50 * 2; array[i] = x + y + limit; }`
+*Code Block B*:
+`int limit = 100; int temp = x + y; for (int i = 0; i < 1000; i++) { array[i] = temp + limit; }`
 *Explanation*:
 1. The expression `50 * 2` consists purely of constants. The compiler evaluated this at compile-time to `100`. This is the exact definition of **Constant Folding**.
 2. The assignment of `limit` does not depend on the loop iterator `i`. The compiler extracted it and hoisted it above the loop. This is **Loop Invariant Code Motion**.
@@ -861,13 +1456,15 @@ Code Block B:
 
 ### 7.5 Pumping Lemma & Regularity Constraints
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The Pumping Lemma is a strict mathematical proof technique used fundamentally in an adversarial, game-theoretic manner to mathematically prove that a specific language is *not* Regular or *not* Context-Free. It can absolutely never be used to prove that a language *is* regular.
+- **Core Definition**:
+  - Adversarial, game-theoretic mathematical proof technique
+  - Used strictly to prove a language is *not* Regular or *not* Context-Free (never to prove it *is*)
 - **Key Properties & Mechanisms**:
-  - *The Regular Pumping Lemma*: If a language $L$ is strictly regular, there mathematically exists a pumping length $p$ such that any string $s \in L$ with length $|s| \ge p$ can be mathematically partitioned into three exact pieces, $s = xyz$, satisfying three absolute constraints:
-    1. For absolutely any integer $i \ge 0$, the pumped string $xy^iz \in L$.
-    2. The length of the repeating section must be strictly greater than zero: $|y| > 0$.
-    3. The combined length of the prefix and repeating section must be bounded: $|xy| \le p$.
-  - *Adversarial Proof Process*: To mathematically prove $L = \{a^nb^n \mid n \ge 0\}$ is NOT regular, you assume it is regular, allow an adversary to pick $p$, you pick a valid string (e.g., $s = a^pb^p$), the adversary partitions it into $xyz$, and you mathematically demonstrate that by "pumping" $y$ (e.g., $i=2$), the resulting string fundamentally violates the language properties (e.g., breaking the exact equal count of $a$ and $b$), creating a mathematical contradiction.
+  - *Regular Pumping Lemma*: If $L$ is regular, there exists pumping length $p$ such that any string $s \in L$ where $|s| \ge p$ can be partitioned into $s = xyz$ satisfying:
+    1. For any integer $i \ge 0$, $xy^iz \in L$
+    2. Length of repeating section: $|y| > 0$
+    3. Combined length constraint: $|xy| \le p$
+  - *Adversarial Proof Process*: Assume $L$ regular $\to$ adversary picks $p$ $\to$ you pick valid string $\to$ adversary partitions $\to$ you demonstrate "pumping" $y$ violates language properties
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: Why does the mathematical language $L = \{0^n 1^n \mid n \ge 0\}$ fundamentally fail the Regular Pumping Lemma constraints, making it impossible to parse with a standard DFA?
@@ -877,14 +1474,18 @@ If a DFA attempts to parse this language, it must strictly "remember" the exact 
 
 ### 7.6 Intermediate Code Generation & Optimization
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: During compilation, after Syntax and Semantic Analysis, the compiler mathematically translates the high-level Abstract Syntax Tree (AST) into a machine-independent Intermediate Representation (IR). This allows the compiler to perform massive mathematical optimizations before generating the final hardware-specific assembly code.
+- **Core Definition**:
+  - Translation of high-level AST into machine-independent Intermediate Representation (IR)
+  - Allows massive mathematical optimizations before generating hardware-specific assembly
 - **Key Properties & Mechanisms**:
-  - *Three-Address Code (TAC)*: A highly simplified, linearized sequence of instructions where every single mathematical operation has at most one operator and at most three operands (e.g., `t1 = a + b`).
+  - *Three-Address Code (TAC)*: Linearized instruction sequence where operations have max one operator and max three operands (e.g., `t1 = a + b`)
   - *Implementation Structures*:
-    - **Quadruples**: Stores TAC strictly as a 4-field mathematical record: `(Operator, Argument1, Argument2, Result)`.
-    - **Triples**: Strips away the explicit `Result` variable to save memory. Instead, it mathematically refers to the exact line/index number of the previous operation: `(Operator, Argument1, Argument2)`.
-  - *Basic Blocks & Flow Graphs*: The compiler partitions the massive TAC array into Basic Blocks—straight-line sequences of code with absolutely no mathematical branching or halt instructions inside them. Execution enters strictly at the top and exits strictly at the bottom. The compiler then mathematically maps these Basic Blocks into a Directed Flow Graph to analyze complex loop structures.
-  - *Dominator Trees*: In a Control Flow Graph, node $D$ mathematically *dominates* node $N$ if absolutely every possible execution path from the entry node to $N$ must strictly pass through $D$. This advanced mathematical analysis is strictly required for advanced loop optimization and dead-code elimination.
+    - **Quadruples**: 4-field record: `(Operator, Argument1, Argument2, Result)`
+    - **Triples**: 3-field record omitting Result field. Refers to exact line/index of previous operation: `(Operator, Argument1, Argument2)`
+  - *Basic Blocks & Flow Graphs*:
+    - **Basic Block**: Straight-line code sequence with no branching/halts inside. Single entry, single exit.
+    - **Directed Flow Graph**: Mapped Basic Blocks for complex loop analysis
+  - *Dominator Trees*: Node $D$ *dominates* node $N$ if every execution path to $N$ must strictly pass through $D$. Essential for loop optimization
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In Compiler Design, what is the exact structural difference between a Quadruple and a Triple when representing Three-Address Code (TAC), and why does a Triple mathematically require an "Indirect Triple" mapping array to optimize code motion?
@@ -896,20 +1497,27 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
 ---
 *(End of Subject 7 Checkpoint)*
 
+
 ## 8. Discrete Mathematics & Optimization
 
 ### 8.1 Mathematical Logic (Propositional & Predicate)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Mathematical logic forms the absolute foundational bedrock of computer science architecture, artificial intelligence reasoning, and software verification. Propositional logic deals with declarative statements that are strictly either True ($T$) or False ($F$). Predicate logic (First-Order Logic) exponentially expands this by introducing variables ($x, y$), predicates ($P(x)$ meaning "x has property P"), and universal ($\forall$) and existential ($\exists$) quantifiers.
+- **Core Definition**:
+  - Foundational bedrock of computer science architecture, AI reasoning, and software verification
+  - Propositional logic deals with declarative statements strictly True ($T$) or False ($F$)
+  - Predicate logic (First-Order Logic) introduces variables ($x, y$), predicates ($P(x)$ meaning "x has property P"), and quantifiers ($\forall$, $\exists$)
 - **Key Properties & Mechanisms**:
-  - *Tautology, Contradiction, & Contingency*: A compound proposition is a mathematically strict **Tautology** if it evaluates to True for absolutely every single combination of truth values of its variables. It is a **Contradiction** if it always evaluates to False. It is a **Contingency** if it is sometimes True and sometimes False.
-  - *Logical Equivalence & Inference Laws*: Fundamental laws dictate the algebraic manipulation of logic. 
-    - **De Morgan's Laws**: $\neg(P \land Q) \equiv \neg P \lor \neg Q$. (The negation of an AND is the OR of the negations).
-    - **Modus Ponens**: A primary rule of inference. If $P \to Q$ is True, and $P$ is independently True, then we can mathematically conclude $Q$ is strictly True.
-    - **Modus Tollens**: If $P \to Q$ is True, and $Q$ is False ($\neg Q$), then we can mathematically conclude $P$ is strictly False ($\neg P$).
+  - *Tautology, Contradiction, & Contingency*:
+    - **Tautology**: Compound proposition evaluating to True for every combination of truth values
+    - **Contradiction**: Always evaluates to False
+    - **Contingency**: Sometimes True, sometimes False
+  - *Logical Equivalence & Inference Laws*:
+    - **De Morgan's Laws**: $\neg(P \land Q) \equiv \neg P \lor \neg Q$
+    - **Modus Ponens**: If $P \to Q$ is True, and $P$ is True, then $Q$ is strictly True
+    - **Modus Tollens**: If $P \to Q$ is True, and $Q$ is False ($\neg Q$), then $P$ is strictly False ($\neg P$)
   - *Predicate Quantifiers*:
-    - **Universal Quantifier ($\forall x$)**: States that a property $P(x)$ holds strictly for *every single* element $x$ in the entire domain.
-    - **Existential Quantifier ($\exists x$)**: States that there exists *at least one* specific element $x$ in the domain for which $P(x)$ holds true.
+    - **Universal Quantifier ($\forall x$)**: Property $P(x)$ holds for every element $x$ in the domain
+    - **Existential Quantifier ($\exists x$)**: Exists at least one element $x$ for which $P(x)$ holds true
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: Translate the following complex English statement into pure First-Order Predicate Logic: "Every student who takes Artificial Intelligence will pass the exam, but there exists at least one student who did not take Artificial Intelligence and still passed the exam." Use the predicates $S(x)$ for "x is a student", $AI(x)$ for "x takes AI", and $P(x)$ for "x passes the exam".
@@ -921,14 +1529,20 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
 
 ### 8.2 Set Theory, Relations, & Lattices
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Set theory strictly defines collections of distinct objects. Relations define the mathematical mapping between elements of these sets. This theory dictates everything from database relational algebra models to deep cryptographic security protocols.
+- **Core Definition**:
+  - Set theory strictly defines collections of distinct objects
+  - Relations define mathematical mapping between elements
+  - Dictates database relational algebra models and cryptographic protocols
 - **Key Properties & Mechanisms**:
-  - *Equivalence Relations*: A relation $R$ on a set $A$ is an Equivalence Relation if and only if it strictly satisfies three absolute properties simultaneously:
-    1. **Reflexive**: Every element relates to itself. $\forall a \in A, (a,a) \in R$.
-    2. **Symmetric**: If $a$ relates to $b$, then $b$ strictly relates to $a$. If $(a,b) \in R$, then $(b,a) \in R$.
-    3. **Transitive**: If $a$ relates to $b$, and $b$ relates to $c$, then $a$ strictly relates to $c$. If $(a,b) \in R$ and $(b,c) \in R$, then $(a,c) \in R$.
-  - *Partial Order Relations (POSet)*: A relation is a Partial Order if it is Reflexive, **Anti-Symmetric** (if $aRb$ and $bRa$, then mathematically $a$ must exactly equal $b$), and Transitive. It defines a hierarchy but allows incomparable elements.
-  - *Lattices*: A highly structured POSet where absolutely every single pair of elements mathematically possesses both a unique **Least Upper Bound (LUB / Supremum / Join)** and a unique **Greatest Lower Bound (GLB / Infimum / Meet)**.
+  - *Equivalence Relations*: Relation $R$ on set $A$ is an Equivalence Relation if it satisfies three properties:
+    1. **Reflexive**: $\forall a \in A, (a,a) \in R$
+    2. **Symmetric**: If $(a,b) \in R$, then $(b,a) \in R$
+    3. **Transitive**: If $(a,b) \in R$ and $(b,c) \in R$, then $(a,c) \in R$
+  - *Partial Order Relations (POSet)*:
+    - Reflexive, **Anti-Symmetric** (if $aRb$ and $bRa$, then $a=b$), and Transitive
+    - Defines a hierarchy but allows incomparable elements
+  - *Lattices*:
+    - Highly structured POSet where every pair of elements possesses both a unique **Least Upper Bound (LUB / Supremum / Join)** and a unique **Greatest Lower Bound (GLB / Infimum / Meet)**
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: Let the set $S = \{1, 2, 3, 4, 6, 12\}$. Let the relation $R$ be "x divides y" (denoted $x | y$). Prove mathematically if $(S, R)$ forms a valid Lattice, and specifically find the LUB and GLB for the subset $\{4, 6\}$.
@@ -942,13 +1556,20 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
 
 ### 8.3 Advanced Graph Theory
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Graph theory is the mathematical study of nodes (vertices) connected by edges. It models complex computer networks, operating system deadlock allocation states, and AI state-space search trees.
+- **Core Definition**:
+  - Mathematical study of nodes (vertices) connected by edges
+  - Models complex computer networks, operating system deadlock allocation states, and AI state-space search trees
 - **Key Properties & Mechanisms**:
-  - *Bipartite Graphs*: A graph where the vertex set can be strictly partitioned into two disjoint sets, $V_1$ and $V_2$, such that absolutely every single edge connects a vertex in $V_1$ exclusively to a vertex in $V_2$. Mathematically, a graph is Bipartite if and only if it strictly contains absolutely zero odd-length cycles.
+  - *Bipartite Graphs*:
+    - Vertex set can be partitioned into two disjoint sets, $V_1$ and $V_2$
+    - Every single edge connects a vertex in $V_1$ exclusively to a vertex in $V_2$
+    - Bipartite if and only if it contains absolutely zero odd-length cycles
   - *Eulerian vs Hamiltonian*:
-    - **Eulerian Circuit**: A path that traverses absolutely every single *edge* in the graph exactly once, and starts and ends on the exact same vertex. It mathematically exists if and only if the graph is connected and every single vertex has a strictly even degree.
-    - **Hamiltonian Cycle**: A path that visits absolutely every single *vertex* in the graph exactly once, and returns to the start. Unlike Eulerian circuits, finding a Hamiltonian cycle is mathematically proven to be NP-Complete, meaning no fast polynomial-time algorithm exists.
-  - *Planar Graphs*: A graph that can be physically drawn on a flat 2D plane such that absolutely zero edges cross or intersect each other. Governed by Euler's Formula: $V - E + F = 2$ (where $V$ is vertices, $E$ is edges, and $F$ is distinct bounded faces, including the infinite exterior face).
+    - **Eulerian Circuit**: Path traversing absolutely every *edge* exactly once, starting and ending on the same vertex. Exists if and only if the graph is connected and every vertex has an even degree
+    - **Hamiltonian Cycle**: Path visiting absolutely every *vertex* exactly once, and returning to the start. Finding a Hamiltonian cycle is NP-Complete
+  - *Planar Graphs*:
+    - Can be drawn on a 2D plane with zero intersecting edges
+    - Governed by Euler's Formula: $V - E + F = 2$ ($V$=vertices, $E$=edges, $F$=distinct bounded faces, including the infinite exterior face)
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: A connected planar graph consists of exactly 6 vertices. What is the absolute strict mathematical maximum number of edges this graph can possibly contain while remaining planar?
@@ -963,14 +1584,19 @@ Therefore, a planar graph with 6 vertices can have an absolute maximum of 12 edg
 
 ### 8.4 Combinatorics & Probability
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Combinatorics is the rigorous mathematics of counting, arranging, and combining sets. Probability mathematically quantifies the likelihood of independent and dependent random events. They are the absolute mathematical foundation for analyzing algorithm time complexity and training machine learning models.
+- **Core Definition**:
+  - Combinatorics: mathematics of counting, arranging, and combining sets
+  - Probability: quantifies the likelihood of independent and dependent random events
+  - Foundation for analyzing algorithm time complexity and training machine learning models
 - **Key Properties & Mechanisms**:
-  - *Pigeonhole Principle*: A fundamental theorem stating that if $N$ items are distributed into $M$ containers, and mathematically $N > M$, then it is absolutely, strictly guaranteed that at least one container must possess more than one item. Used extensively in cryptographic hash collision proofs.
+  - *Pigeonhole Principle*: If $N$ items are distributed into $M$ containers, and $N > M$, at least one container must possess more than one item
   - *Permutations vs Combinations*:
-    - **Permutations ($^nP_r$)**: The number of ways to arrange $r$ items out of $N$, where the exact sequence/order is strictly important. Formula: $\frac{N!}{(N-r)!}$.
-    - **Combinations ($^nC_r$)**: The number of ways to simply select a subset of $r$ items out of $N$, where the order is entirely irrelevant. Formula: $\frac{N!}{r!(N-r)!}$.
-  - *Bayes' Theorem*: The absolute bedrock of modern probabilistic machine learning. It calculates the "posterior probability" of an event based entirely on prior knowledge of conditions related to the event. 
-    - **Formula**: $P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}$. It mathematically answers: "What is the probability of hypothesis A being true, given that we have physically observed evidence B?"
+    - **Permutations ($^nP_r$)**: Number of ways to arrange $r$ items out of $N$, sequence is strictly important. Formula: $\frac{N!}{(N-r)!}$
+    - **Combinations ($^nC_r$)**: Number of ways to select a subset of $r$ items out of $N$, order is entirely irrelevant. Formula: $\frac{N!}{r!(N-r)!}$
+  - *Bayes' Theorem*:
+    - Bedrock of modern probabilistic machine learning
+    - Calculates "posterior probability" based on prior knowledge
+    - **Formula**: $P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}$
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A highly contagious virus test has a strict mathematical accuracy of 99% (it correctly identifies 99% of sick people, and correctly identifies 99% of healthy people). However, only exactly 1% of the total population actually has the virus. If a random person's test returns positive, what is the exact mathematical probability that they actually have the virus?
@@ -991,14 +1617,20 @@ We are looking for $P(V|Pos)$ (Probability of having virus GIVEN a positive test
 
 ### 8.5 Linear Programming & Optimization (LPP)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Linear Programming is a rigorous mathematical modeling technique used heavily in operations research and computer networking. Its singular goal is to find the absolute mathematically optimal solution (maximizing profit or minimizing cost) for a highly complex system bounded by strict, linear inequality constraints (like limited bandwidth, memory, or CPU time).
+- **Core Definition**:
+  - Rigorous mathematical modeling technique used in operations research and computer networking
+  - Singular goal is to find absolute optimal solution (maximizing profit or minimizing cost) bounded by linear inequality constraints
 - **Key Properties & Mechanisms**:
-  - *Standard Form*: A mathematical LPP must consist of a strict **Objective Function** (e.g., Maximize $Z = 3x + 5y$) and a set of strict **Linear Constraints** (e.g., $x + y \le 100$, and $x, y \ge 0$).
-  - *Graphical Method*: For problems strictly limited to exactly two variables, the constraints are physically graphed on a 2D plane to form a closed polygon called the "Feasible Region". The Fundamental Theorem of Linear Programming mathematically dictates that the absolute optimal solution is strictly guaranteed to exist entirely at one of the extreme boundary corner points (vertices) of this polygon.
-  - *Simplex Method*: For massive optimization problems with hundreds of variables, graphing is impossible. The Simplex algorithm mathematically constructs a high-dimensional polyhedron and systematically, algebraically traverses along the edges from one corner point to adjacent corner points, strictly ensuring every single move mathematically increases the objective function until the absolute global maximum is reached.
+  - *Standard Form*: Consists of an **Objective Function** (e.g., Maximize $Z = 3x + 5y$) and **Linear Constraints** (e.g., $x + y \le 100$, and $x, y \ge 0$)
+  - *Graphical Method*:
+    - For 2 variables, constraints are graphed on a 2D plane forming a "Feasible Region"
+    - Optimal solution strictly guaranteed to exist at an extreme boundary corner point (vertex)
+  - *Simplex Method*:
+    - For massive optimization problems with hundreds of variables
+    - Constructs high-dimensional polyhedron and algebraically traverses along edges from one corner point to adjacent corner points until optimal solution is reached
   - *Special LPPs*:
-    - **Transportation Problem**: An LPP designed strictly to minimize the cost of shipping goods from multiple distinct sources to multiple distinct destinations.
-    - **Assignment Problem**: A highly specific variation of the transportation problem where $N$ tasks must be strictly assigned to exactly $N$ workers on a 1-to-1 basis to minimize total execution time. Solved highly efficiently using the Hungarian Algorithm.
+    - **Transportation Problem**: Minimizes cost of shipping goods from multiple sources to multiple destinations
+    - **Assignment Problem**: Assigns $N$ tasks to $N$ workers on a 1-to-1 basis to minimize execution time. Solved using the Hungarian Algorithm
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: In solving a massive Linear Programming problem with 5 variables using the algebraic Simplex Method, what mathematical geometric feature of the multi-dimensional feasible region does the algorithm physically traverse to find the optimal solution?
@@ -1008,11 +1640,18 @@ The system of linear constraints in an LPP mathematically forms a convex geometr
 
 ### 8.6 Queuing Theory & Mathematical Processes
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Queuing Theory is the rigorous mathematical study of waiting lines, focusing explicitly on analyzing the statistical behavior of entities (processes, packets, customers) arriving at a system, waiting in a buffer, and subsequently being processed by service nodes.
+- **Core Definition**:
+  - Rigorous mathematical study of waiting lines
+  - Analyzes statistical behavior of entities arriving at a system, waiting in a buffer, and being processed by service nodes
 - **Key Properties & Mechanisms**:
-  - *Kendall's Notation ($A/B/C$)*: A strict mathematical shorthand to classify queuing systems. $A$ defines the Arrival process (e.g., $M$ for Markovian/Poisson). $B$ defines the Service time distribution (e.g., $M$ for Exponential). $C$ defines the strictly finite or infinite number of physical server nodes in the system (e.g., $M/M/1$ means Poisson arrivals, Exponential service times, and exactly 1 server).
-  - *Little's Law ($L = \lambda W$)*: One of the most phenomenally powerful and universally applicable mathematical theorems in all of computer science operations research. It asserts that under strict steady-state mathematical conditions, the long-term average number of items in a queuing system ($L$) is absolutely, mathematically equal to the long-term average effective arrival rate ($\lambda$) multiplied by the average time an item spends physically trapped within the system ($W$). 
-    - **Universality**: This mathematical theorem is completely agnostic to the internal scheduling algorithm. It remains absolute mathematical truth whether the queue processes items via FCFS, LIFO, or complex Priority scheduling.
+  - *Kendall's Notation ($A/B/C$)*:
+    - Mathematical shorthand to classify queuing systems
+    - $A$: Arrival process (e.g., $M$ for Markovian/Poisson)
+    - $B$: Service time distribution (e.g., $M$ for Exponential)
+    - $C$: Number of physical server nodes (e.g., $M/M/1$ means Poisson arrivals, Exponential service times, 1 server)
+  - *Little's Law ($L = \lambda W$)*:
+    - Powerful mathematical theorem asserting that under steady-state conditions, average number of items in system ($L$) equals average arrival rate ($\lambda$) multiplied by average time an item spends in system ($W$)
+    - **Universality**: Completely agnostic to internal scheduling algorithm (FCFS, LIFO, Priority)
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A high-performance database server cluster receives an average of precisely 50 SQL query requests per second. Monitoring software verifies that, on average, there are exactly 15 queries actively waiting or being processed within the cluster at any given microsecond. Using Little's Law, what is the exact average mathematical response time (in milliseconds) for a single SQL query traversing the cluster?
@@ -1035,15 +1674,26 @@ The system of linear constraints in an LPP mathematically forms a convex geometr
 ---
 *(End of Subject 8 Checkpoint)*
 
+
 ## 9. Computer Architecture & Systems
 
 ### 9.1 Digital Logic & Boolean Algebra
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Digital logic forms the absolute microscopic physical foundation of all computational hardware. Boolean algebra is the rigorous mathematical framework used to analyze and drastically minimize the massive networks of electronic logic gates (AND, OR, NOT, NAND, NOR) that execute binary arithmetic.
+- **Core Definition**:
+  - Digital logic forms the physical foundation of computational hardware
+  - Boolean algebra minimizes networks of electronic logic gates executing binary arithmetic
 - **Key Properties & Mechanisms**:
-  - *Universal Gates*: NAND and NOR are mathematically proven to be Universal Gates. Absolutely any Boolean function, no matter how infinitely complex, can be physically synthesized using exclusively NAND gates or exclusively NOR gates, without requiring a single basic AND/OR/NOT gate. This is highly utilized in mass silicon manufacturing to minimize wafer costs.
-  - *Karnaugh Maps (K-Maps)*: A visual, two-dimensional geometric matrix representing a Boolean truth table. It utilizes Gray Code strictly on its axes so that physically adjacent cells mathematically differ by exactly one single bit. Grouping adjacent 1s in pairs of $2^n$ (2, 4, 8) algebraically eliminates the redundant variables, instantly yielding the absolute optimal minimized Sum of Products (SOP) or Product of Sums (POS) expression.
-  - *Don't Care Conditions ($X$)*: Specific binary input combinations that are physically impossible to occur in the actual system (e.g., BCD codes beyond 1001). In a K-Map, these 'X' cells can be mathematically treated as either a 1 or a 0—whichever strategically allows the engineer to draw the absolute largest possible grouping, drastically shrinking the final circuit design.
+  - *Universal Gates*:
+    - NAND and NOR are Universal Gates
+    - Any Boolean function can be synthesized using exclusively NAND or exclusively NOR gates
+    - Utilized in mass silicon manufacturing to minimize wafer costs
+  - *Karnaugh Maps (K-Maps)*:
+    - 2D geometric matrix representing a Boolean truth table
+    - Utilizes Gray Code strictly on axes to ensure adjacent cells differ by exactly one bit
+    - Grouping adjacent 1s algebraically eliminates redundant variables yielding optimal minimized SOP/POS expressions
+  - *Don't Care Conditions ($X$)*:
+    - Impossible binary input combinations
+    - Treated as either 1 or 0 to enable the largest possible groupings for optimal circuit minimization
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: Why do the axes of a Karnaugh Map strictly utilize the non-weighted Gray Code sequence ($00, 01, 11, 10$) instead of standard binary sequence ($00, 01, 10, 11$)?
@@ -1053,13 +1703,21 @@ The entire mathematical principle of K-Map minimization relies entirely on the B
 
 ### 9.2 Combinational & Sequential Circuits
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Circuits are divided into two distinct architectural categories. Combinational circuits possess zero memory; their current output is mathematically determined strictly and instantaneously by their current inputs. Sequential circuits possess physical memory (feedback loops); their output is determined by both their current inputs AND their internal past state, driven by a highly precise clock signal.
+- **Core Definition**:
+  - **Combinational circuits**: Zero memory; current output determined strictly and instantaneously by current inputs
+  - **Sequential circuits**: Possess physical memory (feedback loops); output determined by current inputs AND internal past state, driven by clock signal
 - **Key Properties & Mechanisms**:
-  - *Multiplexers (MUX)*: A combinational "Data Selector". A $2^n \times 1$ MUX physically funnels $2^n$ distinct input lines into a single output line, mathematically controlled by exactly $n$ distinct selection lines. It is functionally a universal combinational circuit; a $2^n \times 1$ MUX can blindly synthesize *any* Boolean function of $n+1$ variables without needing any external logic gates.
-  - *Flip-Flops (SR, D, JK, T)*: The absolute fundamental 1-bit memory cell of sequential circuits.
-    - **JK Flip-Flop**: The most versatile flip-flop. It mathematically resolves the catastrophic "undefined" state of the SR flip-flop. If both $J=1$ and $K=1$, the JK flip-flop simply *toggles* its internal state ($Q_{next} = \neg Q$).
-    - **Race Around Condition**: A severe hardware anomaly strictly occurring in level-triggered JK flip-flops when $J=1, K=1$ and the clock pulse duration is physically longer than the propagation delay of the flip-flop. The output uncontrollably toggles multiple times within a single clock pulse, destroying the data. It is permanently solved by implementing a Master-Slave Flip-Flop architecture.
-  - *Counters & Registers*: Arrays of interconnected flip-flops. Synchronous counters trigger all flip-flops simultaneously via a master clock, allowing massive speed. Asynchronous (Ripple) counters trigger subsequent flip-flops using the output of the previous one, severely limiting speed due to compounded hardware propagation delay.
+  - *Multiplexers (MUX)*:
+    - Combinational "Data Selector"
+    - Funnels $2^n$ distinct input lines into a single output line, controlled by $n$ selection lines
+    - Universal combinational circuit
+  - *Flip-Flops (SR, D, JK, T)*:
+    - Fundamental 1-bit memory cell of sequential circuits
+    - **JK Flip-Flop**: Resolves undefined state of SR. If $J=1$ and $K=1$, the state toggles ($Q_{next} = \neg Q$)
+    - **Race Around Condition**: Severe anomaly in level-triggered JK flip-flops when $J=1, K=1$ and clock pulse is longer than propagation delay. Solved using Master-Slave architecture
+  - *Counters & Registers*:
+    - **Synchronous counters**: Trigger all flip-flops simultaneously via master clock (high speed)
+    - **Asynchronous (Ripple) counters**: Trigger subsequent flip-flops using output of previous (slower due to compounded propagation delay)
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: You are architecting an asynchronous Ripple Down-Counter that must accurately count backwards from exactly 127 down to 0, and then reset. Exactly how many individual Flip-Flops must be physically wired in series to achieve this, and what is the Modulus (MOD) of this counter?
@@ -1071,13 +1729,16 @@ The entire mathematical principle of K-Map minimization relies entirely on the B
 
 ### 9.3 Memory Hierarchy & Cache Mapping
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The Memory Hierarchy is a physical hardware pyramid designed to mathematically bridge the catastrophic speed gap between the ultra-fast CPU and the massive, ultra-slow magnetic Hard Drive. It relies entirely on the **Principle of Locality** (Temporal and Spatial) to temporarily copy highly-active data into ultra-fast SRAM (Cache) located adjacent to the CPU cores.
+- **Core Definition**:
+  - Physical hardware pyramid bridging speed gap between ultra-fast CPU and slow storage
+  - Relies entirely on **Principle of Locality** (Temporal and Spatial)
 - **Key Properties & Mechanisms**:
-  - *Cache Mapping Techniques*: Dictates exactly where a physical block from Main Memory (RAM) is allowed to be placed inside the much smaller Cache.
-    - **Direct Mapping**: The most rigid, lowest-latency mechanism. A memory block $B$ can mathematically be placed into exactly *one single* designated line $L$ in the cache, strictly determined by the modulo formula: $L = B \pmod C$ (where $C$ is total cache lines). This causes catastrophic "Thrashing" if two active blocks map to the exact same line, constantly evicting each other.
-    - **Fully Associative Mapping**: The most flexible, highest-latency mechanism. A memory block can be physically placed in absolutely *any* available empty line in the entire cache. However, searching for it requires a massive, complex hardware comparator array to simultaneously check every single line.
-    - **Set-Associative Mapping**: The absolute industry standard compromise. The cache is divided into distinct "Sets", each containing $K$ lines (e.g., 4-way Set Associative). A memory block maps mathematically to exactly one specific Set ($S = B \pmod N$), but can be placed in *any* of the $K$ available lines physically within that Set.
-  - *Cache Coherence*: In modern Multi-Core CPUs, every core possesses its own private L1 cache. If Core A modifies variable $X$ in its private cache, Core B's cached copy of $X$ is instantly "stale" or invalid. Hardware protocols (like MESI - Modified, Exclusive, Shared, Invalid) mathematically guarantee that all cores always read the absolute most recently written value.
+  - *Cache Mapping Techniques*:
+    - **Direct Mapping**: $L = B \pmod C$. Highly rigid, lowest-latency. Susceptible to catastrophic "Thrashing"
+    - **Fully Associative Mapping**: Block can be placed anywhere. Most flexible, highest-latency due to massive comparator array
+    - **Set-Associative Mapping**: Industry standard compromise. Cache divided into Sets of $K$ lines. Block maps to specific Set ($S = B \pmod N$), but can be placed in any line within that Set
+  - *Cache Coherence*:
+    - Hardware protocols (e.g., MESI - Modified, Exclusive, Shared, Invalid) mathematically guarantee all multi-core CPU caches read the most recently written value
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: A computer system possesses a 64 KB Direct-Mapped Cache, strictly divided into 32-Byte physical cache blocks. The Main Memory (RAM) capacity is a massive 16 MB. The CPU generates a physical memory address. Mathematically dissect this physical address, stating the exact number of bits strictly required for the TAG, LINE, and WORD offset fields.
@@ -1087,21 +1748,23 @@ The entire mathematical principle of K-Map minimization relies entirely on the B
 3. **Calculate LINE (Index) Bits**: Total Cache Size = 64 KB ($2^{16}$ bytes). Number of lines in cache = (Total Cache) / (Block Size) = $\frac{2^{16}}{2^5} = 2^{11}$ lines. To address exactly $2^{11}$ distinct lines, we mathematically need exactly **11 bits**.
 4. **Calculate TAG Bits**: The TAG physically identifies which specific RAM block is currently occupying the cache line. TAG = (Total Address Bits) - (LINE bits) - (WORD bits).
    TAG = $24 - 11 - 5 = 8$ bits.
-   *Answer*: The 24-bit physical address is strictly partitioned into: TAG = 8 bits, LINE = 11 bits, WORD = 5 bits.
+*Answer*: The 24-bit physical address is strictly partitioned into: TAG = 8 bits, LINE = 11 bits, WORD = 5 bits.
 
 ### 9.4 Microprocessor Architecture & Addressing Modes
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: The Microprocessor is the physical silicon brain of the system, comprising the ALU (Arithmetic Logic Unit), Control Unit (CU), and high-speed internal Registers. The Instruction Cycle dictates how it physically operates: Fetch, Decode, Execute, and Write-Back.
+- **Core Definition**:
+  - Physical silicon brain comprising ALU, Control Unit (CU), and high-speed internal Registers
+  - Instruction Cycle: Fetch, Decode, Execute, Write-Back
 - **Key Properties & Mechanisms**:
-  - *Addressing Modes*: Highly distinct hardware mechanisms that mathematically calculate the final "Effective Address" (EA) of an operand physically stored in RAM.
-    - **Immediate**: The actual data operand is physically hardcoded directly into the instruction itself (e.g., `ADD R1, #50`). Extremely fast, zero memory access required.
-    - **Direct**: The instruction contains the exact physical RAM address of the operand (e.g., `LOAD R1, 1000`). Requires exactly one memory access.
-    - **Indirect**: The instruction contains a RAM address, but that address holds a *pointer* to the actual operand (e.g., `LOAD R1, (1000)`). Requires exactly two slow memory accesses.
-    - **Register / Register Indirect**: The operand, or its pointer, is stored securely inside a high-speed CPU register. Immensely faster than RAM.
-    - **Indexed / Base Register**: The EA is mathematically calculated by adding a constant offset directly to the contents of a specific CPU Base Register. Absolutely vital for traversing massive arrays and supporting code relocation by the OS.
+  - *Addressing Modes*:
+    - **Immediate**: Operand physically hardcoded in instruction
+    - **Direct**: Instruction contains exact physical RAM address
+    - **Indirect**: Instruction contains RAM address pointing to another address holding operand
+    - **Register / Register Indirect**: Operand or pointer stored securely inside CPU register
+    - **Indexed / Base Register**: Effective Address (EA) calculated by adding offset to Base Register
   - *RISC vs CISC*:
-    - **RISC (Reduced Instruction Set Computer)**: ARM architecture. Executes exclusively simple, highly optimized, uniform-length instructions that strictly complete in exactly one clock cycle. Relies entirely on explicit `LOAD`/`STORE` instructions to touch memory. Allows massive pipelining.
-    - **CISC (Complex Instruction Set Computer)**: x86 architecture. Executes highly complex, multi-cycle instructions. A single instruction can physically perform math and memory reads simultaneously (e.g., `ADD [1000], R1`). Highly efficient for compiler writers, but severely complicates pipelining.
+    - **RISC (Reduced Instruction Set Computer)**: Executes simple, uniform-length instructions in exactly one clock cycle. Uses explicit `LOAD`/`STORE`. Allows massive pipelining (e.g., ARM)
+    - **CISC (Complex Instruction Set Computer)**: Executes highly complex, multi-cycle instructions performing math and memory reads simultaneously (e.g., x86)
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In modern Operating Systems, when an entirely compiled software program is physically loaded into RAM at an unpredictable, random memory location, which specific hardware Addressing Mode is absolutely mathematically required to guarantee the program executes without crashing?
@@ -1111,17 +1774,21 @@ When a compiler generates machine code, it often assumes the program will start 
 
 ### 9.5 Pipelining & Parallel Processing
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Pipelining is a highly advanced hardware architecture that overlaps the execution of multiple continuous instructions. While Instruction 1 is being Executed, Instruction 2 is physically being Decoded, and Instruction 3 is simultaneously being Fetched. It drastically increases CPU throughput.
+- **Core Definition**:
+  - Advanced hardware architecture overlapping execution of continuous instructions
+  - Drastically increases CPU throughput
 - **Key Properties & Mechanisms**:
-  - *Pipeline Hazards*: Severe physical anomalies that completely shatter the continuous flow of the pipeline, forcing it to "stall" (insert dead clock cycles).
-    - **Structural Hazards**: Two distinct instructions attempt to physically utilize the exact same hardware resource (e.g., the ALU or Memory Bus) at the exact same fraction of a second.
-    - **Data Hazards (RAW, WAW, WAR)**: An instruction strictly requires the mathematical result of a previous instruction that has not completely finished executing yet. E.g., `ADD R1, R2, R3` immediately followed by `SUB R4, R1, R5`. Solved using complex hardware **Operand Forwarding**.
-    - **Control (Branch) Hazards**: An `IF/ELSE` branch instruction forces the CPU to jump to a completely new memory location. The CPU has already aggressively fetched the wrong subsequent instructions into the pipeline, requiring it to violently "flush" them out, destroying efficiency. Solved using advanced Branch Prediction algorithms.
-  - *Amdahl’s Law*: A brutal, pessimistic mathematical law defining the absolute maximum theoretical speedup achievable by adding multiple parallel processors. If a program possesses an inherently sequential fraction $F$ (code that strictly cannot be parallelized), the maximum speedup using an infinite number of processors is strictly bounded to $\frac{1}{F}$.
-  - *Flynn’s Taxonomy*: Classifies computer architectures based entirely on Instruction Streams and Data Streams.
-    - **SISD**: Standard single-core PC. One instruction manipulates one piece of data.
-    - **SIMD**: GPUs and Vector Processors. A single overarching instruction mathematically manipulates a massive array of distinct data simultaneously.
-    - **MIMD**: Modern Multi-Core Supercomputers. Multiple independent instructions manipulate multiple independent sets of data concurrently.
+  - *Pipeline Hazards*:
+    - **Structural Hazards**: Two instructions attempt to utilize exact same hardware resource simultaneously
+    - **Data Hazards (RAW, WAW, WAR)**: Instruction requires mathematical result of uncompleted previous instruction. Solved using **Operand Forwarding**
+    - **Control (Branch) Hazards**: Branch instruction forces CPU jump, requiring aggressive pipeline flush. Solved using Branch Prediction
+  - *Amdahl’s Law*:
+    - Maximum theoretical speedup achievable by adding multiple parallel processors
+    - Formula: maximum speedup strictly bounded to $\frac{1}{F}$, where $F$ is sequential fraction
+  - *Flynn’s Taxonomy*:
+    - **SISD**: Standard single-core PC
+    - **SIMD**: GPUs and Vector Processors. Single instruction manipulates massive array of data
+    - **MIMD**: Multi-Core Supercomputers. Multiple instructions manipulate multiple data streams concurrently
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: A non-pipelined CPU architecture requires exactly 10ns to complete one instruction. We physically upgrade it to a deeply pipelined CPU possessing exactly 5 distinct stages. Due to latch overhead, each stage takes 2.5ns. Calculate the exact theoretical Speedup of the pipeline when executing a massive workload of 1000 instructions, assuming absolutely zero hazards.
@@ -1137,13 +1804,15 @@ When a compiler generates machine code, it often assumes the program will start 
 
 ### 9.6 Secondary Storage & RAID Architectures
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Redundant Array of Independent Disks (RAID) is a highly mathematical storage virtualization technology that explicitly combines multiple physical disk drive components into a single logical unit for the strict purposes of massive data redundancy (error correction) and extreme performance improvement (striping).
+- **Core Definition**:
+  - Redundant Array of Independent Disks (RAID): Storage virtualization technology combining multiple physical disks
+  - Designed for massive data redundancy (error correction) and extreme performance improvement (striping)
 - **Key Properties & Mechanisms**:
-  - *RAID 0 (Data Striping)*: Mathematically shatters data into chunks and spreads them aggressively across multiple disks. It provides absolutely massive read/write speeds, but features exactly zero redundancy. If a single drive mathematically fails, the entire array is catastrophically and irrevocably destroyed.
-  - *RAID 1 (Data Mirroring)*: Every single mathematical bit of data written to the array is simultaneously perfectly duplicated onto a secondary disk. Provides absolute mathematical redundancy, but catastrophically cuts the effective storage capacity by exactly half (50% overhead).
-  - *RAID 4 (Block-Level Striping with Dedicated Parity)*: Data is striped across disks, but one disk is entirely mathematically dedicated to storing parity bits. A severe bottleneck occurs because every single random write operation mathematically forces an update to the exact same dedicated parity disk.
-  - *RAID 5 (Block-Level Striping with Distributed Parity)*: The absolute enterprise standard. It completely mathematically solves the RAID 4 bottleneck by distributing the parity bits evenly across all disks in the array. It provides massive striping speed, guarantees survival against a single drive failure, and only mathematically sacrifices the capacity equivalent of exactly one disk.
-  - *RAID 6 (Double Distributed Parity)*: Mathematically extends RAID 5 by calculating and striping two entirely separate sets of mathematical parity blocks. It mathematically guarantees the array's survival even if exactly two massive physical drives catastrophically fail at the exact same time.
+  - *RAID 0 (Data Striping)*: Massive read/write speeds, zero redundancy. One failure destroys entire array
+  - *RAID 1 (Data Mirroring)*: Perfect data duplication. Absolute redundancy, 50% storage overhead
+  - *RAID 4 (Block-Level Striping, Dedicated Parity)*: Creates severe bottleneck since every random write forces update to the identical dedicated parity disk
+  - *RAID 5 (Block-Level Striping, Distributed Parity)*: Enterprise standard. Solves RAID 4 bottleneck by evenly distributing parity bits. Tolerates single drive failure
+  - *RAID 6 (Double Distributed Parity)*: Calculates and stripes two separate sets of parity. Tolerates two simultaneous drive failures
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In a massive enterprise storage array utilizing RAID 5, if exactly one physical disk suffers a catastrophic hardware failure, what is the exact mathematical operation the RAID controller executes on the remaining surviving disks to perfectly reconstruct the lost data?
@@ -1155,15 +1824,26 @@ When a drive dies in RAID 5, the system enters a "degraded" state. Every time th
 ---
 *(End of Subject 9 Checkpoint)*
 
+
 ## 10. Programming in C and C++
 
 ### 10.1 Memory Architecture, Scope, & Pointers (C)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: C is a procedural, low-level language that grants absolute, unprotected access to the system's raw RAM. A Pointer is a highly specialized variable whose strict mathematical value is the physical hexadecimal memory address of another variable. They are the absolute foundation of dynamic memory allocation and massive data structures.
+- **Core Definition**:
+  - C is a procedural, low-level language with unprotected access to raw RAM
+  - **Pointer**: Specialized variable storing the hexadecimal memory address of another variable; foundational for dynamic memory and data structures
 - **Key Properties & Mechanisms**:
-  - *Memory Layout*: A compiled C program is strictly divided into four physical RAM segments. (1) **Code Segment**: Read-only executable instructions. (2) **Data Segment**: Global and static variables initialized by the programmer. (3) **Stack**: LIFO memory managing local variables, function parameters, and return addresses. It automatically grows downwards. (4) **Heap**: Massive unstructured memory strictly managed via manual dynamic allocation (`malloc`/`free`). It grows upwards.
-  - *Pointer Arithmetic*: When a mathematical integer $N$ is added to a pointer $P$, the hardware does not simply add $N$ to the raw address. The compiler mathematically scales the addition strictly by the physical byte-size of the data type the pointer points to. Formula: $\text{New Address} = P + (N \times \text{sizeof(type)})$.
-  - *Double Pointers (`**ptr`)*: A pointer that strictly stores the memory address of *another* pointer. They are absolutely mandatory when a C function needs to permanently modify a pointer passed as an argument, or when dynamically allocating massive 2D matrices on the Heap.
+  - *Memory Layout*:
+    - **Code Segment**: Read-only executable instructions
+    - **Data Segment**: Global and static variables
+    - **Stack**: LIFO memory for local variables, parameters, and return addresses (grows downwards)
+    - **Heap**: Unstructured memory for manual dynamic allocation via `malloc`/`free` (grows upwards)
+  - *Pointer Arithmetic*:
+    - Adding $N$ to pointer $P$ scales by the byte-size of the data type
+    - Formula: $\text{New Address} = P + (N \times \text{sizeof(type)})$
+  - *Double Pointers (`**ptr`)*:
+    - Stores memory address of another pointer
+    - Mandatory for modifying a pointer passed as an argument or allocating 2D matrices on the Heap
 
 **PYQ Numerical Example (Difficulty: Hard)**:
 *Question*: Assume a 32-bit architecture where `int` takes strictly 4 bytes and all pointers take strictly 4 bytes. An integer array `arr[5]` is physically stored starting at memory address 1000. What are the exact integer values printed by the following C code snippet?
@@ -1178,11 +1858,21 @@ When a drive dies in RAID 5, the system enters a "degraded" state. Every time th
 
 ### 10.2 Parameter Passing & Recursion
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Functions physically encapsulate code blocks into isolated Execution Contexts. Parameter passing dictates exactly how data travels between the calling function and the called function. Recursion occurs when a function mathematically defines its solution in terms of a smaller instance of itself, severely taxing the call stack.
+- **Core Definition**:
+  - Functions encapsulate code blocks into isolated Execution Contexts
+  - Parameter passing dictates data travel between caller and called function
+  - Recursion occurs when a function defines its solution in terms of a smaller instance of itself
 - **Key Properties & Mechanisms**:
-  - *Pass by Value*: The compiler physically duplicates the exact mathematical value of the argument and passes the clone into the function's private Stack Frame. Any internal modifications are strictly isolated to the clone; the original variable in the caller remains absolutely untouched.
-  - *Pass by Reference (Pointers in C)*: The compiler physically calculates the raw memory address of the original variable and passes that address instead of the value. The called function blindly dereferences this address (`*ptr`), allowing it to directly, permanently modify the physical memory belonging to the caller.
-  - *Activation Records (Stack Frames)*: Every single time a function is called, the OS aggressively pushes a massive data structure called an Activation Record onto the call stack. It strictly contains: Local variables, incoming parameters, the physical Return Address (where the CPU must resume execution), and the previous Frame Pointer. Excessive recursion mathematically exhausts physical RAM, causing a catastrophic Stack Overflow.
+  - *Pass by Value*:
+    - Compiler duplicates mathematical value into function's private Stack Frame
+    - Original variable in caller remains untouched
+  - *Pass by Reference (Pointers in C)*:
+    - Raw memory address is passed
+    - Function dereferences address (`*ptr`) to directly modify caller's physical memory
+  - *Activation Records (Stack Frames)*:
+    - Pushed onto Call Stack upon function call
+    - Contains: Local variables, incoming parameters, physical Return Address, and previous Frame Pointer
+    - Excessive recursion exhausts RAM, causing Stack Overflow
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: A recursive function mathematically calculates the factorial of $N$. If this function is executed with $N=10$, exactly how many independent Activation Records will be physically pushed onto the Call Stack simultaneously at the deepest absolute point of execution, before any records are popped?
@@ -1197,12 +1887,19 @@ At the exact microsecond $f(0)$ executes, it has not returned yet. Therefore, th
 
 ### 10.3 Object-Oriented Foundations (C++)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Object-Oriented Programming (OOP) in C++ is a massive architectural paradigm shift from C. It mathematically models software not as isolated functions, but as strict, interacting entities called Objects, tightly binding data (attributes) and logic (methods) into cohesive, secure units.
+- **Core Definition**:
+  - Object-Oriented Programming (OOP) mathematically models software as strict, interacting entities (Objects)
+  - Tightly binds data (attributes) and logic (methods) into secure units
 - **Key Properties & Mechanisms**:
-  - *Classes vs Objects*: A Class is a theoretical, compile-time blueprint detailing strict data schemas. An Object is the physical, runtime instantiation of that exact class occupying raw RAM on the Heap or Stack.
-  - *Encapsulation*: The absolute restriction of direct access to an object's internal state. Data is physically hidden within the `private` access specifier. The outside world is mathematically forced to interact with the data strictly through `public` accessor and mutator functions, permanently guaranteeing data integrity.
-  - *Polymorphism*: The mathematical ability of a single interface or function name to morph and exhibit entirely different behaviors based exactly on the data types or object types it receives.
-    - **Compile-Time (Static)**: Function Overloading and Operator Overloading. The compiler rigorously analyzes function signatures at compile-time and permanently binds the call to the exact matching function memory address before the program ever runs. Very fast, zero runtime overhead.
+  - *Classes vs Objects*:
+    - **Class**: Theoretical, compile-time blueprint detailing data schemas
+    - **Object**: Physical, runtime instantiation of a class occupying RAM on Heap or Stack
+  - *Encapsulation*:
+    - Restriction of direct access to internal state (data hidden within `private`)
+    - Outside world strictly interacts via `public` accessor and mutator functions
+  - *Polymorphism*:
+    - Single interface exhibiting entirely different behaviors based on received data types
+    - **Compile-Time (Static)**: Function Overloading and Operator Overloading. Compiler rigorously analyzes signatures at compile-time and permanently binds memory address. Zero runtime overhead
 
 **PYQ Conceptual Example (Difficulty: Easy)**:
 *Question*: In C++, if a developer attempts to compile a class that contains two distinct methods with the exact same name `calculate()`, under what absolute strict mathematical conditions will the C++ compiler successfully allow this through Function Overloading?
@@ -1212,10 +1909,18 @@ Function Overloading is a strict form of Compile-Time Polymorphism. To prevent f
 
 ### 10.4 Inheritance & Dynamic Polymorphism
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Inheritance is a hierarchical architecture allowing a new "Derived" class to physically absorb the properties and methods of an existing "Base" class, driving massive code reusability. Dynamic Polymorphism allows a generic Base pointer to execute highly specific Derived methods at exact runtime.
+- **Core Definition**:
+  - **Inheritance**: Hierarchical architecture where Derived class absorbs properties of Base class
+  - **Dynamic Polymorphism**: Generic Base pointer executes specific Derived methods at runtime
 - **Key Properties & Mechanisms**:
-  - *The Diamond Problem*: A catastrophic architectural paradox strictly occurring in Multiple Inheritance. If Class $B$ and Class $C$ both inherit from Base Class $A$, and Class $D$ mathematically inherits from *both* $B$ and $C$, an object of $D$ will physically contain two entirely distinct, duplicated copies of Base Class $A$ in RAM. Any call to a method from $A$ results in fatal ambiguity. It is permanently solved by declaring $B$ and $C$ to inherit virtually (`virtual public A`).
-  - *Virtual Functions & V-Tables (Dynamic Binding)*: When a Base class declares a method as `virtual`, it commands the compiler to completely abandon fast Compile-Time binding. Instead, the compiler invisibly constructs a massive Array of Function Pointers in RAM called the Virtual Table (V-Table) for the class. Every physical object receives a hidden pointer (vptr) pointing to this table. At the exact microsecond of execution, the CPU uses the vptr to dynamically look up the mathematical memory address of the correct overriding function, incurring a slight runtime performance penalty.
+  - *The Diamond Problem*:
+    - Catastrophic paradox in Multiple Inheritance ($D$ inherits from $B$ and $C$, both inheriting from $A$)
+    - Object $D$ physically contains two duplicated copies of Base Class $A$ in RAM, causing ambiguity
+    - Solved by virtual inheritance (`virtual public A`)
+  - *Virtual Functions & V-Tables (Dynamic Binding)*:
+    - Base class method declared `virtual` forces compiler to construct Virtual Table (V-Table) array of function pointers
+    - Objects receive hidden pointer (vptr) to this table
+    - CPU uses vptr to dynamically look up method memory address at runtime, incurring slight performance penalty
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: A C++ program declares a Base class pointer that physically points to a dynamically allocated Derived class object on the Heap. The developer calls a method through this pointer, but the Base class method is executed instead of the overridden Derived class method. What specific architectural keyword did the developer fail to use, and exactly how did the compiler mathematically handle the binding?
@@ -1225,13 +1930,17 @@ Because a Base pointer was used, the C++ compiler strictly defaults to **Early B
 
 ### 10.5 Templates & Exception Handling
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Templates provide massive generic programming power, allowing the compiler to automatically generate specialized code. Exception handling is a rigorous architectural framework explicitly designed to gracefully intercept and manage catastrophic runtime errors (like division by zero or exhausted Heap memory) without physically crashing the entire Operating System process.
+- **Core Definition**:
+  - **Templates**: Provide generic programming power, allowing compiler to automatically generate specialized code
+  - **Exception handling**: Rigorous framework intercepting catastrophic runtime errors (division by zero, exhausted memory) without crashing OS
 - **Key Properties & Mechanisms**:
-  - *Function & Class Templates*: A mathematical blueprint. When a developer writes a generic function `template <typename T> swap(T a, T b)`, no physical machine code is generated. At compile-time, when the compiler detects a call like `swap(int, int)`, it aggressively physicalizes a highly specific integer version of the function in the Code Segment. If called with floats, it generates a completely separate, distinct float version. This causes severe "Code Bloat" in the final executable binary.
+  - *Function & Class Templates*:
+    - Blueprint resulting in no immediate machine code
+    - Compiler physicalizes specific versions based on data types detected at compile-time, causing "Code Bloat"
   - *Try-Catch-Throw Mechanism*:
-    - **try**: A protected code block physically monitored by the runtime environment for fatal mathematical or logical anomalies.
-    - **throw**: The keyword executed when an anomaly is detected. It immediately creates an Exception Object, completely halts current execution, and physically violently "unwinds" the Call Stack, abruptly destroying local variables until a matching handler is found.
-    - **catch**: The highly specific error-handling block that matches the exact data type of the thrown object, successfully preventing the OS from terminating the program.
+    - **try**: Protected code block physically monitored for fatal anomalies
+    - **throw**: Keyword creating Exception Object, halting execution, and "unwinding" Call Stack
+    - **catch**: Specific error-handling block preventing program termination by matching object data type
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In a massive C++ software system utilizing deep nested function calls, an exception is `thrown` exactly 5 levels deep in the Call Stack. No `try-catch` blocks exist in the immediate function. Exactly what rigorous physical mechanism does the C++ runtime environment execute to locate a handler, and what happens to local objects?
@@ -1247,16 +1956,21 @@ If it entirely unwinds the massive stack all the way to `main()` without finding
 ---
 *(End of Subject 10 Checkpoint)*
 
+
 ## 11. Computer Graphics
 
 ### 11.1 Display Architectures & Rasterization
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Computer Graphics is the rigorous mathematical synthesis of 2D and 3D visual data onto a physical 2D pixel grid. The core architecture relies heavily on the Frame Buffer—a massive block of dedicated Video RAM (VRAM) that strictly stores the exact color value (RGB) for every single physical pixel on the monitor.
+- **Core Definition**:
+  - Computer Graphics is the mathematical synthesis of 2D and 3D visual data onto a physical 2D pixel grid
+  - **Frame Buffer**: Dedicated Video RAM (VRAM) storing the exact RGB color value for every single physical pixel on the monitor
 - **Key Properties & Mechanisms**:
   - *Raster vs Random Scan*:
-    - **Random Scan (Vector Display)**: The electron beam is mathematically directed to draw strictly the physical lines of the object, completely ignoring empty screen space. It produces mathematically perfect, infinitely smooth lines with absolutely zero pixelation, but it is physically incapable of drawing solid, filled polygons or realistic shading.
-    - **Raster Scan**: The absolute industry standard. The screen is physically divided into a massive, rigid matrix of discrete pixels. The electron beam sweeps linearly from top-left to bottom-right, painting the entire screen row by row. It supports highly realistic shading and solid polygons, but inherently suffers from "Aliasing" (the jagged stair-step effect on diagonal lines) because mathematical lines must be violently approximated into discrete square pixels.
-  - *Resolution & Aspect Ratio*: Resolution strictly defines the physical matrix size (e.g., $1920 \times 1080$). Aspect Ratio is the strict mathematical ratio of screen width to height (e.g., 16:9). To prevent catastrophic geometric distortion (where perfect circles are stretched into physical ellipses), the physical aspect ratio of the monitor must perfectly match the resolution aspect ratio.
+    - **Random Scan (Vector Display)**: Electron beam mathematically directed to draw strict lines of an object, ignoring empty space. Produces perfect, smooth lines with no pixelation, but cannot draw solid polygons or shading
+    - **Raster Scan**: The industry standard. Screen is divided into a rigid pixel matrix. Electron beam sweeps row by row. Supports shading and solid polygons, but suffers from "Aliasing" (jagged edges)
+  - *Resolution & Aspect Ratio*:
+    - **Resolution**: Defines physical matrix size (e.g., $1920 \times 1080$)
+    - **Aspect Ratio**: Mathematical ratio of screen width to height (e.g., 16:9). Monitor ratio must match resolution ratio to prevent geometric distortion
 
 **PYQ Numerical Example (Difficulty: Medium)**:
 *Question*: A high-end raster graphics system features a physical resolution of $1024 \times 1024$ pixels. It supports True Color, meaning exactly 24 bits are mathematically allocated per pixel (8 bits each for Red, Green, and Blue). Calculate the absolute minimum size of the physical Frame Buffer (VRAM) required strictly in Megabytes (MB).
@@ -1270,16 +1984,27 @@ If it entirely unwinds the massive stack all the way to `main()` without finding
 
 ### 11.2 Geometric Drawing Algorithms
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: A mathematical line has infinite precision. A raster monitor has discrete, rigid square pixels. Drawing algorithms are highly optimized mathematical engines designed to calculate exactly which physical pixels most accurately approximate the ideal mathematical line or curve, while strictly utilizing integer arithmetic to maximize CPU/GPU speed.
+- **Core Definition**:
+  - Mathematical lines have infinite precision; raster monitors have discrete pixels
+  - Drawing algorithms calculate which physical pixels most accurately approximate ideal lines using integer arithmetic for speed
 - **Key Properties & Mechanisms**:
-  - *Digital Differential Analyzer (DDA)*: Calculates the exact mathematical slope ($m = \frac{\Delta y}{\Delta x}$). At each step, it increments the primary axis by exactly 1 pixel, and adds the fractional slope to the other axis. Because it relies entirely on floating-point arithmetic and continuous rounding, it is mathematically slow and highly susceptible to floating-point truncation errors on massive screens.
-  - *Bresenham’s Line Algorithm*: The absolute industry standard. It entirely eliminates slow floating-point arithmetic. It relies strictly on an "Integer Decision Parameter" ($P_k$). At each physical pixel step, the algorithm mathematically evaluates the sign of $P_k$ to determine if the true mathematical line is physically closer to the top pixel or the bottom pixel. Because it uses exclusively integer addition and subtraction, it is blindingly fast and implemented directly in GPU silicon.
-  - *Midpoint Circle Algorithm*: Utilizes the strict 8-way mathematical symmetry of a circle. By calculating the exact pixels for merely one single $45^\circ$ octant, the algorithm physically mirrors those pixels across the $X, Y,$ and diagonal axes to instantly generate the remaining 7 octants, drastically slashing computational load by 87.5%.
+  - *Digital Differential Analyzer (DDA)*:
+    - Calculates exact mathematical slope ($m = \frac{\Delta y}{\Delta x}$)
+    - Increments primary axis by 1 pixel, adds fractional slope to other axis
+    - Uses slow floating-point arithmetic; susceptible to truncation errors
+  - *Bresenham’s Line Algorithm*:
+    - Industry standard eliminating floating-point arithmetic
+    - Relies on "Integer Decision Parameter" ($P_k$) to choose between top or bottom pixel
+    - Blindingly fast and implemented in GPU silicon
+  - *Midpoint Circle Algorithm*:
+    - Utilizes 8-way mathematical symmetry
+    - Calculates pixels for one $45^\circ$ octant and mirrors across axes
+    - Slashes computational load by 87.5%
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: In Bresenham’s Line Drawing algorithm for a line strictly within the first octant (slope $0 < m < 1$), the decision parameter $P_k$ determines the next pixel. If the current pixel is $(x_k, y_k)$ and the mathematically calculated $P_k$ is strictly greater than zero ($P_k > 0$), what are the exact coordinates of the very next plotted pixel, and why?
 *Explanation*:
-In the first octant ($0 < m < 1$), the line is more horizontal than vertical. Therefore, the algorithm forces the $X coordinate to unconditionally increment by exactly 1 physical pixel every single step ($x_{k+1} = x_k + 1$). The only mathematical decision is whether the $Y$ coordinate stays flat ($y_k$) or moves up one row ($y_k + 1$).
+In the first octant ($0 < m < 1$), the line is more horizontal than vertical. Therefore, the algorithm forces the $X$ coordinate to unconditionally increment by exactly 1 physical pixel every single step ($x_{k+1} = x_k + 1$). The only mathematical decision is whether the $Y$ coordinate stays flat ($y_k$) or moves up one row ($y_k + 1$).
 The Decision Parameter $P_k$ mathematically measures the distance from the true line to the upper pixel minus the distance to the lower pixel.
 - If $P_k < 0$, the true line is physically closer to the lower pixel. The $Y$ coordinate remains flat: $(x_k + 1, y_k)$.
 - If $P_k > 0$, the true line is physically closer to the upper pixel. The $Y$ coordinate must strictly increment: $(x_k + 1, y_k + 1)$.
@@ -1287,10 +2012,20 @@ The Decision Parameter $P_k$ mathematically measures the distance from the true 
 
 ### 11.3 2D & 3D Transformations (Homogeneous Coordinates)
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Transformations are strict mathematical matrix multiplications applied to the physical vertices of an object to Translation (move), Rotate, or Scale it. In standard Cartesian coordinates, Translation is an *addition* operation, while Rotation and Scaling are *multiplication* operations. This mathematically prevents the combining of multiple transformations into a single fast matrix.
+- **Core Definition**:
+  - Transformations are mathematical matrix multiplications applied to vertices (Translate, Rotate, Scale)
+  - In standard Cartesian coordinates, Translation is addition while Rotation/Scaling are multiplication
 - **Key Properties & Mechanisms**:
-  - *Homogeneous Coordinates*: A massive mathematical breakthrough in graphics architecture. By artificially elevating a 2D point $(x, y)$ into a 3D vector $(x, y, 1)$, Translation is mathematically converted from an incompatible addition into a pure Matrix Multiplication. This allows infinite sequences of transformations (e.g., Translate $\to$ Rotate $\to$ Translate) to be mathematically multiplied together into one single "Composite Matrix". The GPU then multiplies millions of vertices by this single matrix, resulting in exponential speedups.
-  - *Rotation vs Fixed Point Rotation*: Standard rotation matrices strictly mathematically rotate an object exactly around the screen's Origin $(0,0)$. To rotate an object around its own physical center (a fixed point $P$), the architecture must strictly execute three composite steps: (1) Translate the object so $P$ sits exactly on the Origin, (2) Execute the pure Rotation matrix, (3) Execute an inverse Translation to physically shove the object back to its original location.
+  - *Homogeneous Coordinates*:
+    - Elevates 2D point $(x, y)$ to 3D vector $(x, y, 1)$
+    - Converts Translation into Matrix Multiplication
+    - Allows combining multiple transformations into a single "Composite Matrix" for exponential GPU speedups
+  - *Rotation vs Fixed Point Rotation*:
+    - Standard rotation strictly around origin $(0,0)$
+    - Rotation around fixed point $P$ requires 3 steps:
+      1. Translate object so $P$ sits exactly on Origin
+      2. Execute pure Rotation matrix
+      3. Execute inverse Translation back to original location
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: A graphics engine must mathematically scale a 2D polygon uniformly by a factor of 3, but the scaling must strictly occur relative to a fixed point $(h, k)$, not the origin. Provide the exact mathematical sequence of Homogeneous Transformation Matrices that must be multiplied together to generate the Composite Transformation Matrix.
@@ -1304,12 +2039,17 @@ In strict matrix multiplication (which is applied right-to-left against the vert
 
 ### 11.4 Clipping & Viewport Architecture
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: A massive virtual world contains billions of polygons, but a user's monitor (the Viewport) can only physically display a tiny fraction of them. Clipping algorithms rigorously mathematical intersect every single polygon against the camera's "Viewing Frustum" to instantly delete objects that are physically off-screen, saving massive GPU rendering time.
+- **Core Definition**:
+  - Clipping algorithms intersect polygons against camera's "Viewing Frustum"
+  - Deletes off-screen objects to save GPU rendering time
 - **Key Properties & Mechanisms**:
-  - *Cohen-Sutherland Line Clipping*: The absolute standard for 2D line clipping. It mathematically divides the infinite 2D plane into 9 strict regions, assigning every point a 4-bit "Outcode" (Top, Bottom, Right, Left).
-    - **Trivial Accept**: If both endpoints have an Outcode of strictly `0000`, the entire line is perfectly inside the screen.
-    - **Trivial Reject**: If a strict Bitwise AND of the two endpoint Outcodes yields any value other than `0000`, it mathematically proves both endpoints share an external zone (e.g., both are above the screen). The line is instantly deleted without any complex intersection math.
-  - *Sutherland-Hodgman Polygon Clipping*: A highly structured pipeline algorithm. The entire massive polygon is mathematically clipped sequentially against the Left edge, then the Right edge, then Bottom, then Top. It dynamically generates new vertices wherever an edge physically intersects a boundary, perfectly slicing complex shapes to fit the screen.
+  - *Cohen-Sutherland Line Clipping*:
+    - Divides 2D plane into 9 strict regions with 4-bit "Outcode" (Top, Bottom, Right, Left)
+    - **Trivial Accept**: Both endpoints have Outcode `0000` (perfectly inside screen)
+    - **Trivial Reject**: Bitwise AND of two Outcodes yields non-zero (mathematically proves both share external zone, instantly deleted)
+  - *Sutherland-Hodgman Polygon Clipping*:
+    - Pipelined algorithm sequentially clipping against Left, Right, Bottom, Top edges
+    - Dynamically generates new vertices at physical edge intersections
 
 **PYQ Conceptual Example (Difficulty: Medium)**:
 *Question*: In the Cohen-Sutherland line clipping algorithm, Line segment $AB$ has the following endpoint Outcodes: $A = 1001$ and $B = 0101$. Without calculating exact intersections, what is the immediate mathematical conclusion the algorithm reaches regarding this line?
@@ -1324,12 +2064,17 @@ Because the final result is strictly NOT `0000`, it mathematically proves that b
 
 ### 11.5 3D Projections & Hidden Surface Removal
 **Deep-Dive Definitions & Properties:**
-- **Core Definition**: Projections mathematically compress a massive 3D volume ($X, Y, Z$) down onto a strictly 2D flat monitor ($X, Y$). Hidden Surface Removal algorithms must mathematically determine exactly which 3D polygons are physically blocking other polygons from the camera's perspective, ensuring objects in the back are not illegally drawn on top of objects in the front.
+- **Core Definition**:
+  - Projections compress 3D volume ($X, Y, Z$) to 2D monitor ($X, Y$)
+  - Hidden Surface Removal determines which polygons physically block others
 - **Key Properties & Mechanisms**:
   - *Perspective vs Parallel Projection*:
-    - **Parallel (Orthographic)**: The mathematical projection lines drop strictly parallel to each other. The physical size of the object on screen remains exactly the same regardless of how far away it is in the Z-axis. Vital for CAD engineering and architectural blueprints where exact measurements are required.
-    - **Perspective**: The mathematical projection lines violently converge at a single specific point (The Center of Projection / Camera Eye). Objects physically farther away in the Z-axis are mathematically divided by their Z-depth, making them shrink. This perfectly simulates the physics of the human eye.
-  - *Z-Buffer (Depth Buffer) Algorithm*: The absolute foundation of all modern 3D GPU hardware. VRAM contains two arrays: the Frame Buffer (stores RGB color) and the massive Z-Buffer (stores the exact floating-point Z-depth of every physical pixel). When drawing a new polygon, the GPU mathematically calculates the Z-depth of the new pixel. It strictly compares it to the value already residing in the Z-Buffer. The pixel is physically drawn to the screen *if and only if* its mathematical Z-depth is physically closer to the camera than the old pixel.
+    - **Parallel (Orthographic)**: Projection lines are strictly parallel. Physical object size remains constant regardless of Z-depth. Used in CAD engineering
+    - **Perspective**: Projection lines violently converge at a single Center of Projection (Camera Eye). Objects further in Z-axis shrink, simulating human eye physics
+  - *Z-Buffer (Depth Buffer) Algorithm*:
+    - Foundation of modern 3D GPU hardware utilizing two VRAM arrays: Frame Buffer (RGB) and Z-Buffer (floating-point Z-depth)
+    - Mathematically calculates Z-depth of each new pixel
+    - Pixel is drawn *if and only if* its Z-depth is physically closer to camera than old pixel
 
 **PYQ Conceptual Example (Difficulty: Hard)**:
 *Question*: Two opaque 3D triangles physically intersect each other in deep 3D space. One triangle is red, the other is blue. If the graphics engine strictly relies on the "Painter's Algorithm" (Depth-Sort Algorithm) for Hidden Surface Removal, why will the visual output be mathematically catastrophic, and why is the Z-Buffer algorithm completely immune to this physical failure?
@@ -1340,3 +2085,4 @@ The **Z-Buffer Algorithm** completely abandons polygon-level sorting. It mathema
 
 ---
 *(End of Subject 11 Checkpoint - Study Guide Complete)*
+
