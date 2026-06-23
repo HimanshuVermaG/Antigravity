@@ -626,7 +626,7 @@ graph LR
   - Disk Scheduling algorithms sequence the read/write queue to minimize mechanical arm movement (Seek Time)
 - **Key Properties & Mechanisms**:
   - *SCAN (Elevator) Algorithm*:
-    - Disk arm sweeps from one absolute edge to the other, servicing requests en route
+    - Disk arm sweeps from one absolute edge to the other, servicing requests in route
     - Reverses direction upon reaching the physical edge
     - Services requests in both sweep directions
   - *C-LOOK (Circular LOOK)*:
@@ -824,17 +824,10 @@ When a packet arrives at the Network Layer (Layer 3), it strictly possesses a de
 
   - **Core Mathematical Formulas**:
     - *TCP Throughput bound*: $Throughput \le \frac{W \times MSS}{RTT}$. Where $W$ is the congestion window size.
+    
     - *TCP Sequence Number Calculation*: $Seq_{next} = Seq_{current} + \text{Payload Bytes}$. A strict mathematical offset used to perfectly reassemble fragmented segments.
-
-
-> **📊 DIFFERENCE TABLE:** TCP vs UDP
-> | Feature | TCP (Transmission Control Protocol) | UDP (User Datagram Protocol) |
-> | :--- | :--- | :--- |
-> | **Connection State** | Connection-Oriented (3-Way Handshake) | Connectionless (Fire and Forget) |
-> | **Reliability** | Extremely High (ACKs, Retransmission, Sequencing) | None (No ACKs, No guarantees) |
-> | **Header Size** | 20 Bytes (Minimum) | 8 Bytes (Fixed) |
-> | **Speed & Overhead** | Slower, High overhead | Extremely Fast, Minimal overhead |
-> | **Use Cases** | Web Browsing (HTTP), File Transfer (FTP), Email | Streaming (VoIP), Gaming, DNS |
+    
+      
 
 #### 📝 PYQ Numerical Example (Difficulty: Medium)
 **Question:** A TCP connection is actively transmitting data and the current Congestion Threshold is strictly set to 16 KB. The connection suffers a catastrophic Timeout event when its Congestion Window mathematically reaches exactly 24 KB. Assuming a Maximum Segment Size (MSS) of exactly 2 KB, what will be the exact size of the Congestion Window after 3 successful, completely error-free Round Trip Times (RTTs)?
@@ -1381,7 +1374,9 @@ graph TD
 #### 📝 PYQ Conceptual Example (Difficulty: Medium)
 **Question:** In a highly volatile project where the underlying hardware platform is experimental and prone to failure, which SDLC model is strictly mathematically optimal, and what specific quadrant of that model explicitly handles the volatility?
 **Explanation:**
-When volatility and severe technical risk (hardware failure, shifting requirements, unknown technical feasibility) are the primary constraints, linear models like Waterfall will catastrophically fail because they cannot adapt mid-cycle. The **Spiral Model** is the only SDLC designed inherently to mathematically quantify, simulate, and mitigate risk. In the second quadrant (Risk Analysis and Resolution), the engineering team mathematically evaluates the probability of failure and explicitly builds physical prototypes or runs deep computer simulations strictly to resolve those risks *before* committing any massive budget to actual code development.
+When volatility and severe technical risk (hardware failure, shifting requirements, unknown technical feasibility) are the primary constraints, linear models like Waterfall will catastrophically fail because they cannot adapt mid-cycle. 
+
+The **Spiral Model** is the only SDLC designed inherently to mathematically quantify, simulate, and mitigate risk. In the second quadrant (Risk Analysis and Resolution), the engineering team mathematically evaluates the probability of failure and explicitly builds physical prototypes or runs deep computer simulations strictly to resolve those risks *before* committing any massive budget to actual code development.
 **Answer:** The Spiral Model. The Risk Assessment and Resolution quadrant specifically handles this by evaluating prototypes and fallback strategies before development begins.
 
 ### 5.2 Software Metrics & Project Management
@@ -1476,6 +1471,7 @@ Passing a massive composite data structure when only a primitive sub-element is 
 #### 📝 PYQ Numerical Example (Difficulty: Hard)
 **Question:** A complex mathematical function takes an integer input $X$. If $X \gt 0$, it enters an `if` block containing a nested `while` loop that iterates based on $X$. If $X \le 0$, it immediately returns an error. When drawn as a control flow graph, it has exactly 7 nodes and 8 edges, existing as 1 single connected component. Calculate the Cyclomatic Complexity and detail its exact practical significance to a QA testing engineer.
 **Explanation:**
+
 1. **Apply the Graph Theory Formula**: $V(G) = E - N + 2P$.
 2. **Mathematical Execution**: $V(G) = 8 - 7 + 2(1) = 1 + 2 = 3$.
 3. **Practical Significance**: The cyclomatic complexity is exactly 3. In rigorous white-box testing, this mathematically guarantees that the QA engineer must design and execute a strict minimum of exactly 3 fully distinct test cases to achieve 100% basis path coverage. This mathematically ensures that absolutely every single line of code, including every possible branch of the `if` statement and the full execution of the `while` loop, will have been traversed at least once across the entire test suite.
@@ -1620,7 +1616,11 @@ The requirement explicitly asks for entities in one primary set (the drivers) th
 #### 📝 PYQ Conceptual Example (Difficulty: Hard)
 **Question:** In deep database theory, why is BCNF considered mathematically stricter than 3NF, and what specific, highly dangerous type of dependency anomaly does it aggressively eliminate that the standard 3NF explicitly tolerates?
 **Explanation:**
-The formal definition of 3NF allows a functional dependency $X \to Y$ to exist even if the determinant $X$ is completely powerless (not a super key), provided that the dependent attribute $Y$ is a **prime attribute** (a part of some candidate key). This creates a massive, critical loophole in databases with overlapping composite candidate keys. It allows a situation where a part of a candidate key is functionally determined by an attribute that is *not* a candidate key, leading directly to data redundancy and update anomalies. BCNF ruthlessly closes this exact loophole. In BCNF, the left-hand side ($X$) must absolutely, unconditionally be a super key. Therefore, BCNF is required to eliminate the severe anomalies caused specifically by overlapping candidate keys.
+The formal definition of 3NF allows a functional dependency $X \to Y$ to exist even if the determinant $X$ is completely powerless (not a super key), provided that the dependent attribute $Y$ is a **prime attribute** (a part of some candidate key). 
+
+This creates a massive, critical loophole in databases with overlapping composite candidate keys. It allows a situation where a part of a candidate key is functionally determined by an attribute that is *not* a candidate key, leading directly to data redundancy and update anomalies. BCNF ruthlessly closes this exact loophole. 
+
+In BCNF, the left-hand side ($X$) must absolutely, unconditionally be a super key. Therefore, BCNF is required to eliminate the severe anomalies caused specifically by overlapping candidate keys.
 **Answer:** BCNF strictly requires the determinant to be a super key in all cases, permanently eliminating the 3NF loophole that tolerates non-key attributes determining prime attributes (which causes anomalies when tables have overlapping composite candidate keys).
 
 ### 6.4 Transactions & Concurrency Control
@@ -1692,7 +1692,9 @@ graph TD
 #### 📝 PYQ Conceptual Example (Difficulty: Easy)
 **Question:** Why do modern enterprise relational databases overwhelmingly implement B+ Trees for primary key indexing instead of the standard B-Trees studied in basic data structures?
 **Explanation:**
-In a standard B-Tree, actual data pointers are scattered wildly throughout the internal nodes and the root. If a user executes a range query (e.g., retrieving all users with IDs from 100 to 500), the database must perform a mathematically complex, highly inefficient In-Order traversal, violently bouncing up and down the tree structure, causing massive disk I/O latency. In a **B+ Tree**, all data resides strictly at the bottom leaf level, and every single leaf is linked horizontally via a linked list. To execute a range query, the database simply traverses down the tree once to find the starting node (ID 100), and then effortlessly slides horizontally across the linked leaves until it hits ID 500, requiring a tiny fraction of the disk I/O operations.
+In a standard B-Tree, actual data pointers are scattered wildly throughout the internal nodes and the root. If a user executes a range query (e.g., retrieving all users with IDs from 100 to 500), the database must perform a mathematically complex, highly inefficient In-Order traversal, violently bouncing up and down the tree structure, causing massive disk I/O latency.
+
+ In a **B+ Tree**, all data resides strictly at the bottom leaf level, and every single leaf is linked horizontally via a linked list. To execute a range query, the database simply traverses down the tree once to find the starting node (ID 100), and then effortlessly slides horizontally across the linked leaves until it hits ID 500, requiring a tiny fraction of the disk I/O operations.
 **Answer:** B+ Trees store all data exclusively at the leaf nodes, which are linked horizontally. This makes sequential range queries mathematically and physically vastly more efficient than traversing standard B-Trees.
 
 ---
@@ -1952,6 +1954,7 @@ A **Triple** mathematically eliminates the explicit Result field to save RAM. In
 #### 📝 PYQ Conceptual Example (Difficulty: Medium)
 **Question:** Translate the following complex English statement into pure First-Order Predicate Logic: "Every student who takes Artificial Intelligence will pass the exam, but there exists at least one student who did not take Artificial Intelligence and still passed the exam." Use the predicates $S(x)$ for "x is a student", $AI(x)$ for "x takes AI", and $P(x)$ for "x passes the exam".
 **Explanation:**
+
 1. The first clause is a universal statement conditional upon taking AI: "For all $x$, if $x$ is a student and $x$ takes AI, then $x$ passes." This translates to: $\forall x \, ((S(x) \land AI(x)) \to P(x))$.
 2. The second clause is an existential statement: "There exists an $x$ such that $x$ is a student, and $x$ did not take AI, and $x$ passed." This translates to: $\exists x \, (S(x) \land \neg AI(x) \land P(x))$.
 3. We connect both major clauses with a logical AND ($\land$).
