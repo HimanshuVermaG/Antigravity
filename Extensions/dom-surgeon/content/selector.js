@@ -1,0 +1,300 @@
+/**
+ * DOM Surgeon — Element Selector
+ * Handles hover highlighting, click-to-select, and keyboard navigation.
+ * Overlay elements are placed directly on the page (not in Shadow DOM)
+ * so they can visually overlay any page element.
+ */
+(function () {
+  'use strict';
+  const DS = (window.__DOMSurgeon = window.__DOMSurgeon || {});
+
+  const Selector = {
+    _active: false,
+    _hoveredEl: null,
+    _selectedEl: null,
+
+    // Overlay DOM nodes (injected into page)
+    _hoverOverlay: null,
+    _selectOverlay: null,
+    _infoTag: null,
+
+    // Bound listeners (for clean add/remove)
+    _onMove: null,
+    _onClick: null,
+    _onKey: null,
+    _onScroll: null,
+
+    // ── Public API ─────────────────────────────────────
+
+    init() {
+      this._hoverOverlay = this._makeOverlay('dom-surgeon-hover');
+      this._selectOverlay = this._makeOverlay('dom-surgeon-select');
+      this._infoTag = this._makeInfoTag();
+
+      this._onMove = this._handleMove.bind(this);
+      this._onClick = this._handleClick.bind(this);
+      this._onKey = this._handleKey.bind(this);
+      this._onScroll = this._handleScroll.bind(this);
+    },
+
+    toggle() {
+      this._active ? this.deactivate() : this.activate();
+      return this._active;
+    },
+
+    activate() {
+      if (this._active) return;
+      this._active = true;
+
+      document.addEventListener('mousemove', this._onMove, true);
+      document.addEventListener('click', this._onClick, true);
+      document.addEventListener('keydown', this._onKey, true);
+      window.addEventListener('scroll', this._onScroll, true);
+      window.addEventListener('resize', this._onScroll, true);
+
+      document.body.style.setProperty('cursor', 'crosshair', 'important');
+    },
+
+    deactivate() {
+      if (!this._active) return;
+      this._active = false;
+
+      document.removeEventListener('mousemove', this._onMove, true);
+      document.removeEventListener('click', this._onClick, true);
+      document.removeEventListener('keydown', this._onKey, true);
+      window.removeEventListener('scroll', this._onScroll, true);
+      window.removeEventListener('resize', this._onScroll, true);
+
+      document.body.style.removeProperty('cursor');
+      this._clearHover();
+      this.deselect();
+    },
+
+    selectElement(el) {
+      if (!el || el === document.body || el === document.documentElement) return;
+      if (this._isOwn(el)) return;
+
+      this._selectedEl = el;
+      this._positionOverlay(this._selectOverlay, el, true);
+
+      if (DS.EditorPanel) DS.EditorPanel.show(el);
+    },
+
+    deselect() {
+      this._selectedEl = null;
+      this._hide(this._selectOverlay);
+      if (DS.EditorPanel) DS.EditorPanel.hide();
+    },
+
+    getSelectedElement() {
+      return this._selectedEl;
+    },
+
+    isActive() {
+      return this._active;
+    },
+
+    /** Re-position the selection overlay (call after element resizes). */
+    refreshSelection() {
+      if (this._selectedEl) {
+        // Check if element is still in the DOM
+        if (!document.body.contains(this._selectedEl)) {
+          this.deselect();
+          return;
+        }
+        this._positionOverlay(this._selectOverlay, this._selectedEl, true);
+      }
+    },
+
+    // ── Event Handlers ─────────────────────────────────
+
+    _handleMove(e) {
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      if (!target || target === this._hoveredEl) return;
+      if (this._isOwn(target)) return;
+      if (target === document.body || target === document.documentElement) {
+        this._clearHover();
+        return;
+      }
+
+      this._hoveredEl = target;
+
+      // Don't show hover overlay on the already-selected element
+      if (target === this._selectedEl) {
+        this._hide(this._hoverOverlay);
+        this._hide(this._infoTag);
+        return;
+      }
+
+      this._positionOverlay(this._hoverOverlay, target, false);
+      this._positionInfoTag(target);
+    },
+
+    _handleClick(e) {
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      if (!target || this._isOwn(target)) return;
+      if (target === document.body || target === document.documentElement) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      this._clearHover();
+      this.selectElement(target);
+    },
+
+    _handleKey(e) {
+      // Ignore if typing in our own inputs
+      if (e.target.closest?.('#dom-surgeon-host')) return;
+
+      switch (e.key) {
+        case 'Escape':
+          e.preventDefault();
+          if (this._selectedEl) {
+            this.deselect();
+          } else {
+            this.deactivate();
+            DS.Toast?.show('Selector mode off', 'info');
+          }
+          break;
+
+        case 'Delete':
+        case 'Backspace':
+          // Handled by editor panel if visible
+          break;
+      }
+    },
+
+    _handleScroll() {
+      // Reposition overlays on scroll/resize
+      if (this._hoveredEl && this._hoverOverlay.style.display !== 'none') {
+        if (document.body.contains(this._hoveredEl)) {
+          this._positionOverlay(this._hoverOverlay, this._hoveredEl, false);
+          this._positionInfoTag(this._hoveredEl);
+        }
+      }
+      if (this._selectedEl && this._selectOverlay.style.display !== 'none') {
+        if (document.body.contains(this._selectedEl)) {
+          this._positionOverlay(this._selectOverlay, this._selectedEl, true);
+        }
+      }
+    },
+
+    // ── Overlay Management ─────────────────────────────
+
+    _makeOverlay(id) {
+      const el = document.createElement('div');
+      el.id = id;
+      el.style.cssText = [
+        'position:fixed',
+        'pointer-events:none',
+        'z-index:2147483644',
+        'display:none',
+        'box-sizing:border-box',
+        'transition:top 50ms ease-out,left 50ms ease-out,width 50ms ease-out,height 50ms ease-out',
+        'border-radius:2px'
+      ].join(';');
+      document.documentElement.appendChild(el);
+      return el;
+    },
+
+    _makeInfoTag() {
+      const el = document.createElement('div');
+      el.id = 'dom-surgeon-info';
+      el.style.cssText = [
+        'position:fixed',
+        'pointer-events:none',
+        'z-index:2147483645',
+        'display:none',
+        'background:#0F0F12',
+        'color:#EDEDEF',
+        "font-family:'SF Mono','Cascadia Code',monospace",
+        'font-size:11px',
+        'line-height:1.4',
+        'padding:3px 8px',
+        'border-radius:4px',
+        'border:1px solid rgba(255,255,255,0.08)',
+        'box-shadow:0 4px 12px rgba(0,0,0,0.5)',
+        'white-space:nowrap'
+      ].join(';');
+      document.documentElement.appendChild(el);
+      return el;
+    },
+
+    _positionOverlay(overlay, el, isSelected) {
+      const r = el.getBoundingClientRect();
+
+      Object.assign(overlay.style, {
+        display: 'block',
+        top: r.top + 'px',
+        left: r.left + 'px',
+        width: r.width + 'px',
+        height: r.height + 'px'
+      });
+
+      if (isSelected) {
+        overlay.style.border = '2px solid #6366F1';
+        overlay.style.background = 'rgba(99,102,241,0.08)';
+        overlay.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.25)';
+      } else {
+        overlay.style.border = '1.5px dashed rgba(99,102,241,0.55)';
+        overlay.style.background = 'rgba(99,102,241,0.05)';
+        overlay.style.boxShadow = 'none';
+      }
+    },
+
+    _positionInfoTag(el) {
+      const r = el.getBoundingClientRect();
+      const tag = el.tagName.toLowerCase();
+
+      let cls = '';
+      if (typeof el.className === 'string' && el.className.trim()) {
+        cls = '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.');
+      }
+
+      const dims = Math.round(r.width) + ' × ' + Math.round(r.height);
+      this._infoTag.textContent = tag + cls + '  ' + dims;
+      this._infoTag.style.display = 'block';
+
+      // Position above element (or below if too close to top)
+      let top = r.top - 26;
+      if (top < 4) top = r.bottom + 4;
+
+      let left = r.left;
+      const w = this._infoTag.offsetWidth;
+      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+      if (left < 4) left = 4;
+
+      this._infoTag.style.top = top + 'px';
+      this._infoTag.style.left = left + 'px';
+    },
+
+    _clearHover() {
+      this._hoveredEl = null;
+      this._hide(this._hoverOverlay);
+      this._hide(this._infoTag);
+    },
+
+    _hide(el) {
+      if (el) el.style.display = 'none';
+    },
+
+    /** Check if an element belongs to our own injected UI. */
+    _isOwn(el) {
+      let cur = el;
+      while (cur) {
+        const id = cur.id;
+        if (id === 'dom-surgeon-host' ||
+            id === 'dom-surgeon-hover' ||
+            id === 'dom-surgeon-select' ||
+            id === 'dom-surgeon-info') {
+          return true;
+        }
+        cur = cur.parentElement;
+      }
+      return false;
+    }
+  };
+
+  DS.Selector = Selector;
+})();

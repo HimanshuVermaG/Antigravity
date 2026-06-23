@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "DOM Surgeon",
+  "version": "1.0.0",
+  "description": "Visually select, edit, and manage DOM elements on any website. Delete, resize, and customize with persistent changes.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "lib/selector-engine.js",
+        "lib/storage.js",
+        "lib/history.js",
+        "content/toast.js",
+        "content/selector.js",
+        "content/editor-panel.js",
+        "content/main.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "commands": {
+    "toggle-selector": {
+      "suggested_key": {
+        "default": "Alt+S"
+      },
+      "description": "Toggle element selector mode"
+    }
+  }
+}
