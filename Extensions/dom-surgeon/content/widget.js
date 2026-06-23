@@ -187,70 +187,105 @@
         <!-- Full State -->
         <div class="ds-widget__full">
           <!-- Header (Draggable) -->
-          <div class="ds-widget__header">
-            <div class="ds-widget__brand">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="2" width="16" height="16" rx="3" stroke="#6366F1" stroke-width="1.5"/>
-                <path d="M7 7L13 13M13 7L7 13" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round"/>
-                <circle cx="10" cy="10" r="2" fill="#6366F1" opacity="0.3"/>
-              </svg>
-              <span>DOM Surgeon</span>
+          <header class="header">
+            <div class="header__brand">
+              <div class="header__icon">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                  <rect x="2" y="2" width="16" height="16" rx="3" stroke="#6366F1" stroke-width="1.5"/>
+                  <path d="M7 7L13 13M13 7L7 13" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="10" cy="10" r="2" fill="#6366F1" opacity="0.3"/>
+                </svg>
+              </div>
+              <div>
+                <h1 class="header__title">DOM Surgeon</h1>
+                <p class="header__sub">Visually edit any website</p>
+              </div>
             </div>
-            <div class="ds-widget__controls">
-              <button class="ds-w-btn ds-w-btn--icon" id="ds-w-min" title="Minimize">
+            <div class="header__controls">
+              <button class="header-btn" id="ds-w-min" title="Minimize">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
               </button>
-              <button class="ds-w-btn ds-w-btn--icon" id="ds-w-close" title="Close">
+              <button class="header-btn" id="ds-w-close" title="Close">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6m0-6l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
               </button>
             </div>
-          </div>
+          </header>
 
           <!-- Selector toggle -->
-          <div class="ds-widget__section">
-            <span class="ds-widget__label">Element Selector</span>
+          <section class="section section--toggle">
+            <span class="section__label">Element Selector</span>
             <label class="toggle">
               <input type="checkbox" class="toggle__input">
-              <span class="toggle__track"><span class="toggle__thumb"></span></span>
+              <span class="toggle__track">
+                <span class="toggle__thumb"></span>
+              </span>
             </label>
-          </div>
+          </section>
 
           <!-- Actions -->
-          <div class="ds-widget__actions">
-            <button class="ds-w-btn" id="ds-w-undo" title="Undo last change (Cmd+Z)">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8H12C13.1 8 14 8.9 14 10V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 5L3 8L6 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Undo
+          <section class="section section--actions">
+            <button class="action-btn" id="ds-w-undo" title="Undo last change (Cmd+Z)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8H12C13.1 8 14 8.9 14 10V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 5L3 8L6 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Undo</span>
             </button>
-            <button class="ds-w-btn" id="ds-w-redo" title="Redo last change (Cmd+Shift+Z)">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13 8H4C2.9 8 2 8.9 2 10V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 5L13 8L10 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Redo
+            <button class="action-btn" id="ds-w-redo" title="Redo last change (Cmd+Shift+Z)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M13 8H4C2.9 8 2 8.9 2 10V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 5L13 8L10 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Redo</span>
             </button>
-            <button class="ds-w-btn ds-w-btn--danger" id="ds-w-reset" title="Reset all changes on this page">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              Reset
+            <button class="action-btn action-btn--danger" id="ds-w-reset" title="Reset all changes on this page">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <span>Reset</span>
             </button>
-          </div>
+          </section>
 
           <!-- History -->
-          <div class="ds-widget__history">
-            <div class="ds-widget__history-head">
-              <span class="ds-widget__label">History</span>
-              <span class="ds-widget__badge" id="ds-w-history-count">0</span>
+          <section class="section section--history" id="history-section">
+            <div class="section--history__header">
+              <span class="section__label">History</span>
+              <span class="badge badge--sm" id="ds-w-history-count">0</span>
             </div>
             <div class="history-list" id="ds-w-history-list">
               <div class="history-empty" id="ds-w-history-empty">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/><path d="M12 7V12L15 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/>
+                  <path d="M12 7V12L15 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
                 <span>No changes yet</span>
               </div>
             </div>
-          </div>
-          
-          <!-- Shortcuts Info -->
-          <div class="ds-widget__shortcuts">
-            <div class="shortcut">
-              <kbd>Alt</kbd>+<kbd>S</kbd> to toggle selector
+          </section>
+
+          <!-- Shortcuts -->
+          <section class="section section--shortcuts">
+            <div class="section__label ds-shortcut-toggle" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              Keyboard Shortcuts
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ds-shortcut-icon" style="transition: transform 200ms;"><path d="M6 9l6 6 6-6"/></svg>
             </div>
-          </div>
+            <div class="shortcut-grid" style="display: none; margin-top: 10px;">
+              <div class="shortcut">
+                <kbd>Esc</kbd>
+                <span>Exit selector</span>
+              </div>
+              <div class="shortcut">
+                <kbd>Alt</kbd><kbd>S</kbd>
+                <span>Toggle mode</span>
+              </div>
+              <div class="shortcut">
+                <kbd>Cmd</kbd><kbd>Z</kbd>
+                <span>Undo change</span>
+              </div>
+              <div class="shortcut">
+                <kbd>Cmd</kbd><kbd>Shift</kbd><kbd>Z</kbd>
+                <span>Redo change</span>
+              </div>
+            </div>
+          </section>
         </div>
       `;
       this._container = w;
@@ -280,34 +315,100 @@
       let resetTimer;
       const btnReset = w.querySelector('#ds-w-reset');
       btnReset.addEventListener('click', () => {
-        if (!btnReset.classList.contains('ds-w-btn--confirm')) {
-          btnReset.classList.add('ds-w-btn--confirm');
-          btnReset.innerHTML = 'Confirm';
+        if (!btnReset.classList.contains('action-btn--confirm')) {
+          btnReset.classList.add('action-btn--confirm');
+          btnReset.innerHTML = '<span>Confirm</span>';
           resetTimer = setTimeout(() => {
-            btnReset.classList.remove('ds-w-btn--confirm');
-            btnReset.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>Reset';
+            btnReset.classList.remove('action-btn--confirm');
+            btnReset.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg><span>Reset</span>';
           }, 3000);
           return;
         }
         clearTimeout(resetTimer);
-        btnReset.classList.remove('ds-w-btn--confirm');
-        btnReset.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>Reset';
+        btnReset.classList.remove('action-btn--confirm');
+        btnReset.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg><span>Reset</span>';
         DS.Main?.reset().then(() => this.refresh());
       });
 
-      // Minimize / Close
+      let lastRect = null;
+
       w.querySelector('#ds-w-close').addEventListener('click', () => this.hide());
       w.querySelector('#ds-w-min').addEventListener('click', () => {
-        this._isMinimized = true;
-        w.classList.add('ds-widget--minimized');
+        lastRect = w.getBoundingClientRect();
+        
+        // The minimized bubble is roughly 60x40 and sits at bottom:24, right:24
+        // So its center is approx window.innerWidth - 24 - 30, window.innerHeight - 24 - 20
+        const targetCenterX = window.innerWidth - 54;
+        const targetCenterY = window.innerHeight - 44;
+        
+        // We will scale to 0.15, so the widget's new dimensions will be:
+        const scaledWidth = lastRect.width * 0.15;
+        const scaledHeight = lastRect.height * 0.15;
+        
+        // Calculate dx, dy so the top-left is positioned such that the center aligns with the target
+        const dx = targetCenterX - lastRect.left - (scaledWidth / 2);
+        const dy = targetCenterY - lastRect.top - (scaledHeight / 2);
+
+        w.style.transition = 'transform 300ms cubic-bezier(0.32, 0, 0.1, 1)';
+        w.style.transformOrigin = 'top left';
+        w.style.transform = `translate(${dx}px, ${dy}px) scale(0.15)`;
+        
+        setTimeout(() => {
+          this._isMinimized = true;
+          w.classList.add('ds-widget--minimized');
+          w.style.transition = '';
+          w.style.transform = 'none';
+        }, 300);
       });
+
       w.querySelector('.ds-widget__min').addEventListener('click', () => {
         this._isMinimized = false;
         w.classList.remove('ds-widget--minimized');
+        
+        if (lastRect) {
+          const targetCenterX = window.innerWidth - 54;
+          const targetCenterY = window.innerHeight - 44;
+          const scaledWidth = lastRect.width * 0.15;
+          const scaledHeight = lastRect.height * 0.15;
+          const dx = targetCenterX - lastRect.left - (scaledWidth / 2);
+          const dy = targetCenterY - lastRect.top - (scaledHeight / 2);
+          
+          w.style.transition = 'none';
+          w.style.transformOrigin = 'top left';
+          w.style.transform = `translate(${dx}px, ${dy}px) scale(0.15)`;
+          
+          // Force reflow
+          void w.offsetWidth;
+          
+          w.style.transition = 'transform 350ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+          w.style.transform = 'translate(0, 0) scale(1)';
+          
+          setTimeout(() => {
+            w.style.transition = '';
+            w.style.transform = 'none';
+          }, 350);
+        } else {
+          // Fallback if no lastRect
+          w.style.transition = 'none';
+          w.style.opacity = '0';
+          void w.offsetWidth;
+          w.style.transition = 'opacity 300ms ease';
+          w.style.opacity = '1';
+        }
+      });
+
+      // Shortcut accordion
+      const shortcutToggle = w.querySelector('.ds-shortcut-toggle');
+      const shortcutGrid = w.querySelector('.shortcut-grid');
+      const shortcutIcon = w.querySelector('.ds-shortcut-icon');
+      shortcutToggle.addEventListener('click', () => {
+        const isHidden = shortcutGrid.style.display === 'none';
+        shortcutGrid.style.display = isHidden ? 'flex' : 'none';
+        shortcutIcon.style.transform = isHidden ? 'rotate(180deg)' : '';
       });
 
       // Dragging logic
-      const head = w.querySelector('.ds-widget__header');
+      const head = w.querySelector('.header');
       head.addEventListener('mousedown', (e) => {
         if (e.target.closest('button')) return;
         this._dragging = true;
@@ -338,14 +439,12 @@
 
     getStyles() {
       return `
-/* ── Floating Widget ─────────────────────────────── */
+/* ── Floating Widget Base ─────────────────────────────── */
 .ds-widget {
   position: fixed;
   width: 320px;
-  background: rgba(15, 15, 18, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #0F0F12;
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -353,12 +452,14 @@
   z-index: 2147483647;
   pointer-events: auto;
   overflow: hidden;
+  font-size: 13px;
+  line-height: 1.5;
 
   /* Closed state */
   display: none;
   opacity: 0;
   transform: scale(0.96) translateY(10px);
-  transition: opacity 300ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 300ms ease, width 300ms ease;
+  transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 400ms ease, width 400ms ease;
 }
 
 .ds-widget--open {
@@ -429,35 +530,76 @@
   padding: 0 4px;
 }
 
+/* ── Professional Popup Styles ───────────────────────── */
+:host {
+  --bg:             #0F0F12;
+  --bg-card:        #16161B;
+  --bg-hover:       #1E1E24;
+  --border:         rgba(255, 255, 255, 0.06);
+  --border-hover:   rgba(255, 255, 255, 0.10);
+  --text:           #EDEDEF;
+  --text-2:         #8B8B96;
+  --text-3:         #5A5A65;
+  --accent:         #6366F1;
+  --accent-hover:   #7577F5;
+  --accent-muted:   rgba(99, 102, 241, 0.12);
+  --danger:         #EF4444;
+  --danger-muted:   rgba(239, 68, 68, 0.10);
+  --radius:         8px;
+  --radius-sm:      6px;
+  --transition:     120ms ease;
+}
+
 /* ── Header ── */
-.ds-widget__header {
+.header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  align-items: center;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
   cursor: grab;
   user-select: none;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
 }
-.ds-widget__header:active { cursor: grabbing; }
+.header:active { cursor: grabbing; }
 
-.ds-widget__brand {
+.header__brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.header__icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-muted);
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+
+.header__title {
+  font-size: 15px;
   font-weight: 600;
-  font-size: 13px;
-  color: #fff;
+  color: var(--text);
+  letter-spacing: -0.2px;
+  margin: 0;
 }
 
-.ds-widget__controls {
+.header__sub {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 400;
+  margin-top: 1px;
+}
+
+.header__controls {
   display: flex;
-  align-items: center;
   gap: 4px;
 }
 
-.ds-w-btn--icon {
+.header-btn {
   background: none;
   border: none;
   color: #8B8B96;
@@ -468,125 +610,202 @@
   align-items: center;
   transition: all 150ms;
 }
-.ds-w-btn--icon:hover {
+.header-btn:hover {
   background: rgba(255,255,255,0.1);
   color: #fff;
 }
 
 /* ── Section ── */
-.ds-widget__section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+.section {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
 }
-.ds-widget__label {
+
+.section__label {
   font-size: 12px;
   font-weight: 500;
-  color: #EDEDEF;
+  color: var(--text-2);
 }
 
-/* ── Actions ── */
-.ds-widget__actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  padding: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.ds-w-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #EDEDEF;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 8px 0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 150ms;
-}
-.ds-w-btn:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.15);
-}
-.ds-w-btn:active { transform: scale(0.96); }
-
-.ds-w-btn--danger:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #EF4444;
-}
-.ds-w-btn--confirm {
-  background: #EF4444 !important;
-  color: #fff !important;
-  border-color: #EF4444 !important;
-}
-
-/* ── History ── */
-.ds-widget__history {
-  display: flex;
-  flex-direction: column;
-  max-height: 250px;
-}
-.ds-widget__history-head {
+/* ── Toggle Section ── */
+.section--toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: rgba(0,0,0,0.2);
 }
-.ds-widget__badge {
-  background: rgba(255,255,255,0.1);
-  color: #EDEDEF;
-  font-size: 10px;
+
+.toggle {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+.toggle__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle__track {
+  display: block;
+  width: 40px;
+  height: 22px;
+  background: #2A2A32;
+  border-radius: 11px;
+  position: relative;
+  transition: background var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #6B6B78;
+  border-radius: 50%;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), background 120ms ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.toggle__input:checked + .toggle__track {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+.toggle__input:checked + .toggle__track .toggle__thumb {
+  transform: translateX(18px);
+  background: #6366F1;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+}
+.toggle--on .toggle__track {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+.toggle--on .toggle__thumb {
+  transform: translateX(18px);
+  background: #6366F1;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-size: 11px;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 12px;
+  border-radius: 11px;
+}
+.badge--sm {
+  min-width: 18px;
+  height: 18px;
+  font-size: 10px;
+  padding: 0 5px;
+}
+
+/* ── Actions Section ── */
+.section--actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition), transform 80ms ease;
+}
+.action-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+.action-btn:active { transform: scale(0.96); }
+.action-btn svg { opacity: 0.7; }
+.action-btn:hover svg { opacity: 1; }
+
+.action-btn--danger:hover {
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+}
+.action-btn--danger:hover svg { color: var(--danger); }
+.action-btn--confirm {
+  background: var(--danger-muted) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: var(--danger) !important;
+}
+.action-btn--confirm svg {
+  color: var(--danger) !important;
+  opacity: 1 !important;
+}
+
+/* ── History Section ── */
+.section--history {
+  padding: 12px 16px;
+}
+.section--history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
 .history-list {
-  padding: 8px;
+  max-height: 130px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
-.history-list::-webkit-scrollbar { width: 6px; }
-.history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.history-list::-webkit-scrollbar { width: 4px; }
+.history-list::-webkit-scrollbar-track { background: transparent; }
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
 
 .history-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 30px 0;
-  gap: 8px;
-  color: #5A5A65;
-  font-size: 12px;
+  gap: 6px;
+  padding: 16px 0;
+  color: var(--text-3);
+  font-size: 11px;
 }
+.history-empty svg { opacity: 0.35; }
 
 .history-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.02);
+  padding: 6px 8px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 200ms ease;
+  transition: background var(--transition), border-color var(--transition), opacity 250ms ease, transform 250ms ease;
 }
-.history-item:hover {
-  background: rgba(255,255,255,0.06);
-}
+.history-item:hover { background: var(--bg-hover); }
 .history-item--previewing {
-  background: rgba(234, 179, 8, 0.1) !important;
+  background: rgba(234, 179, 8, 0.08) !important;
   border-color: rgba(234, 179, 8, 0.3);
 }
 .history-item--removing {
@@ -594,7 +813,11 @@
   transform: translateX(20px);
 }
 
-.history-item__icon { font-size: 12px; }
+.history-item__icon {
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1;
+}
 .history-item__body {
   flex: 1;
   min-width: 0;
@@ -604,76 +827,80 @@
 .history-item__desc {
   font-size: 11px;
   font-weight: 500;
-  color: #EDEDEF;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .history-item__detail {
   font-size: 10px;
-  color: #8B8B96;
+  color: var(--text-3);
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  margin-top: 1px;
 }
 .history-item__time {
+  flex-shrink: 0;
   font-size: 10px;
-  color: #5A5A65;
+  color: var(--text-3);
+  white-space: nowrap;
 }
-
 .history-item__undo {
-  background: none;
-  border: none;
-  color: #5A5A65;
-  padding: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 4px;
+  color: var(--text-3);
   cursor: pointer;
-  transition: all 150ms;
+  opacity: 0;
+  transition: opacity var(--transition), background var(--transition), border-color var(--transition), color var(--transition);
 }
+.history-item:hover .history-item__undo { opacity: 1; }
 .history-item__undo:hover {
-  color: #EDEDEF;
-  background: rgba(255,255,255,0.1);
+  background: var(--accent-muted);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--accent);
 }
 
-/* ── Toggle switch ── */
-.toggle {
-  position: relative;
-  display: inline-block;
-  width: 36px;
-  height: 20px;
+/* ── Shortcuts Section ── */
+.section--shortcuts {
+  padding: 12px 16px;
 }
-.toggle__input { opacity: 0; width: 0; height: 0; margin: 0; }
-.toggle__track {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #27272A;
-  border-radius: 20px;
-  transition: background-color 200ms;
-  cursor: pointer;
+.section--shortcuts .section__label {
+  display: block;
+  margin-bottom: 8px;
 }
-.toggle__thumb {
-  position: absolute;
-  top: 2px; left: 2px;
-  width: 16px; height: 16px;
-  background-color: #fff;
-  border-radius: 50%;
-  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.shortcut-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.toggle--on .toggle__track { background-color: #6366F1; }
-.toggle--on .toggle__thumb { transform: translateX(16px); }
-
-/* ── Shortcuts Info ── */
-.ds-widget__shortcuts {
-  padding: 10px 14px;
-  font-size: 10px;
-  color: #8B8B96;
-  text-align: center;
-  border-top: 1px solid rgba(255,255,255,0.06);
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-3);
 }
 kbd {
-  font-family: inherit;
-  background: rgba(255,255,255,0.1);
-  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  background: #222228;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 4px;
-  color: #EDEDEF;
+  color: var(--text-2);
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 `;
     }
