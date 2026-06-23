@@ -372,6 +372,23 @@
               </div>
             </div>
           </section>
+
+          <!-- Export / Import Footer -->
+          <footer class="ds-w-footer-actions">
+            <button class="footer-btn" id="ds-w-export">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span>Export</span>
+            </button>
+            <button class="footer-btn" id="ds-w-import-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Import</span>
+            </button>
+            <input type="file" id="ds-w-import-file" accept=".json" style="display:none;">
+          </footer>
         </div>
       `;
       this._container = w;
@@ -561,6 +578,59 @@
           this._dragging = false;
           w.style.transition = '';
         }
+      });
+
+      // Export logic
+      w.querySelector('#ds-w-export').addEventListener('click', async () => {
+        try {
+          const data = await DS.Storage.getAllData();
+          const json = JSON.stringify(data, null, 2);
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          a.href = url;
+          const date = new Date().toISOString().split('T')[0];
+          a.download = `dom-surgeon-backup-${date}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          DS.Toast?.show('Backup exported successfully', 'success');
+        } catch (err) {
+          console.error('[DOM Surgeon] Export failed', err);
+          DS.Toast?.show('Failed to export backup', 'danger');
+        }
+      });
+
+      // Import logic
+      const importBtn = w.querySelector('#ds-w-import-btn');
+      const importFile = w.querySelector('#ds-w-import-file');
+      
+      importBtn.addEventListener('click', () => importFile.click());
+      
+      importFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const json = event.target.result;
+            const res = await DS.Storage.importData(json);
+            if (res.success) {
+              DS.Toast?.show('Backup imported successfully. Reloading...', 'success');
+              setTimeout(() => location.reload(), 1500);
+            } else {
+              throw new Error(res.error);
+            }
+          } catch (err) {
+            console.error('[DOM Surgeon] Import failed', err);
+            DS.Toast?.show('Failed to import backup: Invalid JSON', 'danger');
+          }
+          // Reset file input
+          importFile.value = '';
+        };
+        reader.readAsText(file);
       });
     },
 
@@ -1187,6 +1257,48 @@ kbd {
   font-size: 10px;
   font-weight: 500;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ── Footer / Export & Import ── */
+.ds-w-footer-actions {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.footer-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.footer-btn:last-child {
+  border-right: none;
+}
+.footer-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.footer-btn:active {
+  background: var(--surface-tertiary);
+}
+.footer-btn svg {
+  opacity: 0.7;
+}
+.footer-btn:hover svg {
+  opacity: 1;
+  color: var(--accent);
 }
 `;
     }

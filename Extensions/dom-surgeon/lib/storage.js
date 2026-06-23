@@ -75,22 +75,19 @@
     async getAllData() {
       return new Promise(resolve => {
         chrome.storage.local.get(null, items => {
-          const sites = {};
-          
-          // Migrate old single-key format if present
-          if (items.domSurgeonData && items.domSurgeonData.sites) {
-            Object.assign(sites, items.domSurgeonData.sites);
-          }
+          const exportData = {
+            version: 2,
+            records: {}
+          };
 
-          // Gather all per-URL and per-Domain keys
+          // Gather all per-URL and per-Domain keys intact
           for (const key in items) {
             if (key.startsWith('ds_site_') || key.startsWith('ds_domain_')) {
-              const urlOrDomain = key.replace('ds_site_', '').replace('ds_domain_', '');
-              sites[urlOrDomain] = items[key]; // For dashboard purposes
+              exportData.records[key] = items[key];
             }
           }
 
-          resolve({ version: 2, sites });
+          resolve(exportData);
         });
       });
     },
@@ -99,13 +96,24 @@
     async importData(json) {
       try {
         const parsed = typeof json === 'string' ? JSON.parse(json) : json;
-        if (!parsed || !parsed.sites) {
+        if (!parsed || (!parsed.sites && !parsed.records)) {
           throw new Error('Invalid DOM Surgeon data format');
         }
         
         const toSave = {};
-        for (const url in parsed.sites) {
-          toSave[this._key(url)] = parsed.sites[url];
+        
+        // Handle V1 format (older exports where keys were stripped)
+        if (parsed.sites) {
+          for (const url in parsed.sites) {
+            toSave[this._key(url)] = parsed.sites[url];
+          }
+        }
+        
+        // Handle V2 format (new exports)
+        if (parsed.records) {
+          for (const key in parsed.records) {
+            toSave[key] = parsed.records[key];
+          }
         }
         
         await new Promise(resolve => chrome.storage.local.set(toSave, resolve));
