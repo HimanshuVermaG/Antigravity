@@ -81,6 +81,43 @@
         badgeCount.style.display = changes.length > 0 ? 'flex' : 'none';
       }
       this._renderHistory(changes);
+      this._renderQuickClean();
+    },
+
+    async _renderQuickClean() {
+      const qcList = this._shadow.querySelector('#ds-w-qc-list');
+      const qcCount = this._shadow.querySelector('#ds-w-qc-count');
+      const qcEmpty = this._shadow.querySelector('#ds-w-qc-empty');
+      const qcCleanBtn = this._shadow.querySelector('#ds-w-qc-clean');
+
+      if (!qcList) return;
+
+      const suggestions = DS.SmartSuggestions?.scan() || [];
+      qcList.innerHTML = '';
+      qcCount.textContent = suggestions.length;
+
+      if (suggestions.length === 0) {
+        qcEmpty.style.display = 'flex';
+        qcCleanBtn.style.display = 'none';
+        return;
+      }
+
+      qcEmpty.style.display = 'none';
+      qcCleanBtn.style.display = 'flex';
+
+      for (const s of suggestions) {
+        const item = document.createElement('label');
+        item.className = 'qc-item';
+        item.innerHTML = `
+          <input type="checkbox" class="qc-item__check" value="${s.selector}" checked>
+          <span class="qc-item__icon">${s.icon}</span>
+          <div class="qc-item__body">
+            <div class="qc-item__label">${s.label}</div>
+            <div class="qc-item__detail">${s.shortLabel} — ${s.dimensions}</div>
+          </div>
+        `;
+        qcList.appendChild(item);
+      }
     },
 
     _renderHistory(changes) {
@@ -228,6 +265,30 @@
             </label>
           </section>
 
+          <!-- Quick Clean -->
+          <section class="section section--quick-clean" id="ds-w-qc-section">
+            <div class="qc-header">
+              <div class="qc-header__left">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <span class="section__label">Quick Clean</span>
+              </div>
+              <span class="badge badge--sm" id="ds-w-qc-count">—</span>
+            </div>
+            <div class="qc-list" id="ds-w-qc-list"></div>
+            <div class="qc-empty" id="ds-w-qc-empty" style="display:none;">
+              <span class="qc-empty__icon">✨</span>
+              <span>Page looks clean!</span>
+            </div>
+            <button class="qc-clean-btn" id="ds-w-qc-clean" style="display:none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+              </svg>
+              <span>Clean Selected</span>
+            </button>
+          </section>
+
           <!-- Actions -->
           <section class="section section--actions">
             <button class="action-btn" id="ds-w-undo" title="Undo last change (Cmd+Z)">
@@ -350,6 +411,28 @@
       w.querySelector('#ds-w-redo').addEventListener('click', () => {
         DS.Main?.redo().then(() => this.refresh());
       });
+
+      const qcCleanBtn = w.querySelector('#ds-w-qc-clean');
+      if (qcCleanBtn) {
+        qcCleanBtn.addEventListener('click', async () => {
+          const checked = w.querySelectorAll('.qc-item__check:checked');
+          const selectors = Array.from(checked).map(cb => cb.value);
+          if (selectors.length === 0) return;
+
+          qcCleanBtn.classList.add('action-btn--pressed');
+          qcCleanBtn.querySelector('span').textContent = 'Cleaning...';
+
+          if (DS.SmartSuggestions) {
+            await DS.SmartSuggestions.clean(selectors);
+          }
+
+          qcCleanBtn.querySelector('span').textContent = 'Clean Selected';
+          qcCleanBtn.classList.remove('action-btn--pressed');
+          
+          this.refresh();
+          DS.ChangeSidebar?.refresh();
+        });
+      }
 
       let resetTimer;
       const btnReset = w.querySelector('#ds-w-reset');
@@ -796,6 +879,165 @@
   color: var(--danger) !important;
   opacity: 1 !important;
 }
+
+/* ── Quick Clean Section ── */
+
+.section--quick-clean {
+  padding: 12px 16px;
+}
+
+.qc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.qc-header__left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+}
+
+.qc-header__left svg {
+  opacity: 0.6;
+}
+
+.qc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.qc-list::-webkit-scrollbar { width: 4px; }
+.qc-list::-webkit-scrollbar-track { background: transparent; }
+.qc-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+.qc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.qc-item:hover {
+  background: var(--bg-hover);
+}
+
+.qc-item__check {
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.qc-item__check:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.qc-item__check:checked::after {
+  content: '';
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 4px;
+  height: 7px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.qc-item__icon {
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.qc-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.qc-item__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qc-item__detail {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 0;
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.qc-empty__icon {
+  font-size: 20px;
+}
+
+.qc-clean-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--accent-muted);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition),
+              border-color var(--transition),
+              transform 80ms ease;
+}
+
+.qc-clean-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.qc-clean-btn:active {
+  transform: scale(0.98);
+}
+
 
 /* ── History Section ── */
 .section--history {

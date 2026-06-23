@@ -33,6 +33,7 @@
         "content/widget.js",
         "content/change-sidebar.js",
         "content/multi-select.js",
+        "content/smart-suggestions.js",
         "content/main.js"
       ],
       "run_at": "document_idle"

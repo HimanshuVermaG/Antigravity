@@ -197,6 +197,18 @@
           sendResponse({ ok: true });
           return true;
 
+        case 'scan-suggestions': {
+          const suggestions = DS.SmartSuggestions?.scan() || [];
+          sendResponse({ suggestions });
+          return true;
+        }
+
+        case 'clean-suggestions':
+          DS.SmartSuggestions?.clean(msg.selectors).then(() => {
+            sendResponse({ ok: true });
+          });
+          return true;
+
         case 'dashboard-preview':
           this.previewChange(msg.changeId);
           sendResponse({ ok: true });
