@@ -86,7 +86,23 @@
       DS.Toast.init(this._shadow);
       DS.EditorPanel.init(this._shadow);
       DS.Widget.init(this._shadow);
+      DS.Breadcrumb?.init(this._shadow);
       DS.Selector.init();
+
+      // Before/After badge in shadow DOM
+      this._buildBeforeAfterBadge();
+
+      // B-key for Before/After toggle (active globally when widget is open)
+      document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'b' && !e.metaKey && !e.ctrlKey) {
+          const target = e.target;
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+          // Only fire when selector is NOT in typing mode
+          if (target.closest?.('#dom-surgeon-host')) return;
+          e.preventDefault();
+          this._toggleBeforeAfter();
+        }
+      }, true);
 
       // 5. Replay saved changes
       await this._replay();
@@ -217,19 +233,22 @@
             });
           } else if (msg.action === 'hide') {
             const selector = DS.SelectorEngine.generate(el);
-            const oldVal = el.style.opacity || '';
+            const originalDisplay = el.style.display || '';
+            const preHideRect = el.getBoundingClientRect(); // Capture rect BEFORE setting display: none
+            
             const change = {
               id: 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
               selector,
-              type: 'resize',
-              property: 'opacity',
-              original: oldVal,
-              modified: '0',
+              type: 'hide',
+              original: originalDisplay,
+              modified: 'none',
               timestamp: Date.now()
             };
             
-            this._apply(change);
-            el.style.pointerEvents = 'none'; // also disable interactions
+            el.dataset.dsHidden = 'true';
+            el.dataset.dsOriginalDisplay = originalDisplay;
+            el.style.display = 'none';
+
             DS.Storage.saveChange(url, change).then(() => {
               DS.History.push(url, change);
               DS.Toast.show('Element hidden via context menu', 'success');
@@ -405,6 +424,50 @@
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           break;
         }
+
+        case 'style': {
+          const el = DS.SelectorEngine.find(change.selector);
+          if (!el) return;
+
+          this._previewOriginalStyle = el.style[change.property] || '';
+          if (change.original !== undefined && change.original !== '') {
+            el.style[change.property] = change.original;
+          } else {
+            el.style.removeProperty(change.property);
+          }
+
+          el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
+          el.style.transition = 'all 0.2s ease';
+          
+          this._previewNode = el;
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+
+        case 'hide': {
+          const el = DS.SelectorEngine.find(change.selector);
+          if (!el) return;
+
+          // Hiding means original was visible. We preview the original visible state.
+          el.style.display = change.original || '';
+          el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
+          el.style.transition = 'all 0.2s ease';
+          
+          this._previewNode = el;
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+
+        case 'show': {
+          const el = DS.SelectorEngine.find(change.selector);
+          if (!el) return;
+
+          // Showing means original was hidden. We preview the original hidden state.
+          el.style.display = 'none';
+          
+          this._previewNode = el;
+          break;
+        }
       }
     },
 
@@ -417,22 +480,30 @@
       if (el) {
         if (ch.type === 'delete') {
           el.remove();
-        } else if (ch.type === 'resize') {
+        } else if (ch.type === 'resize' || ch.type === 'style') {
           if (ch.styles && this._previewOriginalStyle && typeof this._previewOriginalStyle === 'object') {
             for (const p in ch.styles) {
-              if (this._previewOriginalStyle[p]) {
-                el.style[p] = this._previewOriginalStyle[p];
+              if (ch.styles[p].modified !== undefined && ch.styles[p].modified !== '') {
+                el.style[p] = ch.styles[p].modified;
               } else {
                 el.style.removeProperty(p);
               }
             }
           } else {
-            if (this._previewOriginalStyle) {
-               el.style[ch.property] = this._previewOriginalStyle;
+            if (ch.modified !== undefined && ch.modified !== '') {
+               el.style[ch.property] = ch.modified;
             } else {
                el.style.removeProperty(ch.property);
             }
           }
+          el.style.boxShadow = '';
+        } else if (ch.type === 'hide') {
+          // Put back the applied "hide" state
+          el.style.display = 'none';
+          el.style.boxShadow = '';
+        } else if (ch.type === 'show') {
+          // Put back the applied "show" state
+          el.style.display = ch.modified || '';
           el.style.boxShadow = '';
         }
       }
@@ -490,6 +561,40 @@
           console.warn('[DOM Surgeon] Resize target not found:', ch.selector);
           return null;
 
+        case 'hide':
+          if (el) {
+            const origDisplay = ch.original || '';
+            el.dataset.dsHidden = 'true';
+            el.dataset.dsOriginalDisplay = origDisplay;
+            el.style.display = 'none';
+            return el;
+          }
+          console.warn('[DOM Surgeon] Hide target not found:', ch.selector);
+          return null;
+
+        case 'show':
+          if (el) {
+            const display = ch.modified || '';
+            el.style.display = display;
+            el.style.removeProperty('pointer-events');
+            delete el.dataset.dsHidden;
+            delete el.dataset.dsOriginalDisplay;
+            return el;
+          }
+          return null;
+
+        case 'style':
+          if (el) {
+            if (ch.modified !== undefined && ch.modified !== '') {
+              el.style[ch.property] = ch.modified;
+            } else {
+              el.style.removeProperty(ch.property);
+            }
+            return el;
+          }
+          console.warn('[DOM Surgeon] Style target not found:', ch.selector);
+          return null;
+
         default:
           console.warn('[DOM Surgeon] Unknown change type:', ch.type);
           return null;
@@ -540,6 +645,39 @@
           }
           return el;
         }
+
+        case 'style': {
+          const el = DS.SelectorEngine.find(ch.selector);
+          if (!el) return null;
+          if (ch.original) {
+            el.style[ch.property] = ch.original;
+          } else {
+            el.style.removeProperty(ch.property);
+          }
+          return el;
+        }
+
+        case 'hide': {
+          // Undo a hide = show the element
+          const el = DS.SelectorEngine.find(ch.selector);
+          if (!el) return null;
+          const origDisplay = ch.original || '';
+          el.style.display = origDisplay;
+          el.style.removeProperty('pointer-events');
+          delete el.dataset.dsHidden;
+          delete el.dataset.dsOriginalDisplay;
+          return el;
+        }
+
+        case 'show': {
+          // Undo a show = hide again
+          const el = DS.SelectorEngine.find(ch.selector);
+          if (!el) return null;
+          el.dataset.dsHidden = 'true';
+          el.dataset.dsOriginalDisplay = ch.original || '';
+          el.style.display = 'none';
+          return el;
+        }
       }
       return null;
     },
@@ -554,6 +692,45 @@
         DS.Selector.refreshSelection();
       } else {
         DS.Selector.deselect();
+      }
+    },
+
+    // ── Before / After ───────────────────────────────────
+
+    _beforeAfterMode: false,
+    _beforeAfterSnapshot: null,
+    _beforeAfterBadge: null,
+
+    _buildBeforeAfterBadge() {
+      const badge = document.createElement('div');
+      badge.className = 'ds-ba-badge';
+      badge.innerHTML = `
+        <span>Viewing Original</span>
+        <kbd>B</kbd>
+        <span>to return</span>
+      `;
+      this._shadow.appendChild(badge);
+      this._beforeAfterBadge = badge;
+    },
+
+    async _toggleBeforeAfter() {
+      if (this._beforeAfterMode) {
+        // Re-apply all changes
+        this._beforeAfterMode = false;
+        const url = this._pageKey();
+        const changes = await DS.Storage.getChanges(url);
+        for (const ch of changes) this._apply(ch);
+        if (this._beforeAfterBadge) this._beforeAfterBadge.classList.remove('ds-ba-badge--visible');
+        DS.Toast?.show('Changes restored', 'success');
+      } else {
+        // Revert all changes temporarily
+        this._beforeAfterMode = true;
+        const url = this._pageKey();
+        const changes = await DS.Storage.getChanges(url);
+        // Revert in reverse order
+        for (let i = changes.length - 1; i >= 0; i--) this._revert(changes[i]);
+        if (this._beforeAfterBadge) this._beforeAfterBadge.classList.add('ds-ba-badge--visible');
+        DS.Toast?.show('Viewing original — press B to restore', 'info');
       }
     },
 
@@ -575,6 +752,45 @@
       if (DS.Toast?.getStyles) css += DS.Toast.getStyles();
       if (DS.EditorPanel?.getStyles) css += DS.EditorPanel.getStyles();
       if (DS.Widget?.getStyles) css += DS.Widget.getStyles();
+      if (DS.Breadcrumb?.getStyles) css += DS.Breadcrumb.getStyles();
+      css += `
+/* ── Before/After Badge ───────────────────────────── */
+.ds-ba-badge {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: rgba(15,15,18,0.96);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 30px;
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  color: #EDEDEF;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 2147483646;
+  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 300ms ease;
+  opacity: 0;
+}
+.ds-ba-badge--visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.ds-ba-badge kbd {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  color: #818CF8;
+}
+`;
       return css;
     }
   };

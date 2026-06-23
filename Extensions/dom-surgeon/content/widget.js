@@ -281,8 +281,24 @@
                 <span>Undo change</span>
               </div>
               <div class="shortcut">
-                <kbd>Cmd</kbd><kbd>Shift</kbd><kbd>Z</kbd>
+                <kbd>Cmd</kbd><kbd>⇧</kbd><kbd>Z</kbd>
                 <span>Redo change</span>
+              </div>
+              <div class="shortcut" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <kbd>Q</kbd>
+                <span>Select parent</span>
+              </div>
+              <div class="shortcut">
+                <kbd>W</kbd>
+                <span>Select first child</span>
+              </div>
+              <div class="shortcut">
+                <kbd>A</kbd>
+                <span>Previous sibling</span>
+              </div>
+              <div class="shortcut">
+                <kbd>D</kbd>
+                <span>Next sibling</span>
               </div>
             </div>
           </section>

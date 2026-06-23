@@ -78,12 +78,14 @@
       this._positionOverlay(this._selectOverlay, el, true);
 
       if (DS.EditorPanel) DS.EditorPanel.show(el);
+      if (DS.Breadcrumb) DS.Breadcrumb.show(el);
     },
 
     deselect() {
       this._selectedEl = null;
       this._hide(this._selectOverlay);
       if (DS.EditorPanel) DS.EditorPanel.hide();
+      if (DS.Breadcrumb) DS.Breadcrumb.hide();
     },
 
     getSelectedElement() {
@@ -195,6 +197,65 @@
           DS.Main?.undo();
         }
         return;
+      }
+
+      // Only process QWAD nav when an element is selected
+      if (this._selectedEl) {
+        let next = null;
+        
+        // Helper to check if element is valid for navigation (not script/style)
+        const isValid = (el) => {
+          return !this._isOwn(el) && !['SCRIPT','STYLE','LINK','META','NOSCRIPT'].includes(el.tagName);
+        };
+
+        switch (e.key.toLowerCase()) {
+          case 'q': { // Parent
+            let p = this._selectedEl.parentElement;
+            while (p && p !== document.body && p !== document.documentElement && !isValid(p)) {
+              p = p.parentElement;
+            }
+            if (p && p !== document.body && p !== document.documentElement) {
+              this._navHistory = this._navHistory || new WeakMap();
+              this._navHistory.set(p, this._selectedEl); // remember the path we came from
+              next = p;
+            }
+            break;
+          }
+          case 'w': { // First child element (or last visited child)
+            const children = Array.from(this._selectedEl.children).filter(isValid);
+            if (children.length > 0) {
+              this._navHistory = this._navHistory || new WeakMap();
+              const lastVisited = this._navHistory.get(this._selectedEl);
+              if (lastVisited && children.includes(lastVisited)) {
+                next = lastVisited;
+              } else {
+                next = children[0];
+              }
+            }
+            break;
+          }
+          case 'a': { // Previous sibling element
+            let prev = this._selectedEl.previousElementSibling;
+            while (prev && !isValid(prev)) prev = prev.previousElementSibling;
+            if (prev) next = prev;
+            break;
+          }
+          case 'd': { // Next sibling element
+            let sib = this._selectedEl.nextElementSibling;
+            while (sib && !isValid(sib)) sib = sib.nextElementSibling;
+            if (sib) next = sib;
+            break;
+          }
+        }
+        if (next) {
+          e.preventDefault();
+          e.stopPropagation();
+          this._clearHover();
+          this.selectElement(next);
+          // Scroll the newly selected element into view gently
+          next.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+          return;
+        }
       }
 
       switch (e.key) {
