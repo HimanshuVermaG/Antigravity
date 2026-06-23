@@ -80,7 +80,6 @@
         badgeCount.textContent = changes.length;
         badgeCount.style.display = changes.length > 0 ? 'flex' : 'none';
       }
-
       this._renderHistory(changes);
     },
 
@@ -116,6 +115,10 @@
       let detail = '';
       if (change.type === 'resize') {
         detail = `${change.property}: ${change.modified}`;
+      } else if (change.type === 'style') {
+        detail = `${change.property}: ${change.modified}`;
+      } else if (change.type === 'hide') {
+        detail = `display: none`;
       }
 
       const diff = Math.floor((Date.now() - change.timestamp) / 1000);
@@ -159,7 +162,10 @@
         e.stopPropagation();
         e.currentTarget.disabled = true;
         el.classList.add('history-item--removing');
-        DS.Main?.undoSpecific(change.id).then(() => this.refresh());
+        DS.Main?.undoSpecific(change.id).then(() => {
+          this.refresh();
+          DS.ChangeSidebar?.refresh();
+        });
       });
 
       return el;
@@ -259,8 +265,11 @@
                 <span>No changes yet</span>
               </div>
             </div>
+            <button class="action-btn" id="ds-w-open-sidebar" style="flex-direction: row; gap: 8px; justify-content: center; margin-top: 8px; width: 100%;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="21 3 14 10"/><polyline points="21 3 15 3"/><polyline points="21 3 21 9"/></svg>
+              <span>View All Changes (C)</span>
+            </button>
           </section>
-
           <!-- Shortcuts -->
           <section class="section section--shortcuts">
             <div class="section__label ds-shortcut-toggle" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -358,6 +367,11 @@
         btnReset.classList.remove('action-btn--confirm');
         btnReset.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg><span>Reset</span>';
         DS.Main?.reset().then(() => this.refresh());
+      });
+      
+      // Sidebar Toggle
+      w.querySelector('#ds-w-open-sidebar')?.addEventListener('click', () => {
+        DS.ChangeSidebar?.open();
       });
 
       let lastRect = null;

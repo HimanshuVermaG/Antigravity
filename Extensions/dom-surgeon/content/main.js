@@ -86,6 +86,7 @@
       DS.Toast.init(this._shadow);
       DS.EditorPanel.init(this._shadow);
       DS.Widget.init(this._shadow);
+      DS.ChangeSidebar?.init(this._shadow);
       DS.Breadcrumb?.init(this._shadow);
       DS.Selector.init();
 
@@ -99,11 +100,18 @@
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
           // Only fire when selector is NOT in typing mode
           if (target.closest?.('#dom-surgeon-host')) return;
-          // Only fire when the element selector is ON
-          if (!DS.Selector?.isActive()) return;
-          
-          e.preventDefault();
-          this._toggleBeforeAfter();
+          // Only fire when selector is NOT in typing mode
+          if (DS.Selector.isActive()) {
+            e.preventDefault();
+            this._toggleBeforeAfter();
+          }
+        } else if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey) {
+          const target = e.target;
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+          if (DS.Selector.isActive()) {
+            e.preventDefault();
+            DS.ChangeSidebar?.toggle();
+          }
         }
       }, true);
 
@@ -278,6 +286,26 @@
 
       const target = this._revert(change);
       await DS.Storage.removeChange(url, change.id, change.isGlobal);
+      DS.Toast.show('Change undone', 'info');
+      this._afterChange();
+
+      if (target && DS.Selector.flashHighlight) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        DS.Selector.flashHighlight(target);
+      }
+    },
+
+    async undoSpecific(id) {
+      this.clearPreview();
+      const url = this._pageKey();
+      
+      const changes = await DS.Storage.getChanges(url);
+      const change = changes.find(c => c.id === id);
+      if (!change) return;
+
+      const target = this._revert(change);
+      await DS.Storage.removeChange(url, id, change.isGlobal);
+      await DS.History.removeSpecific(url, id);
       DS.Toast.show('Change undone', 'info');
       this._afterChange();
 

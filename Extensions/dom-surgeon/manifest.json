@@ -31,6 +31,7 @@
         "content/editor-panel.js",
         "content/breadcrumb.js",
         "content/widget.js",
+        "content/change-sidebar.js",
         "content/main.js"
       ],
       "run_at": "document_idle"

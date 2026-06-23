@@ -60,6 +60,14 @@
     /** Clear both stacks for a URL. */
     async reset(url) {
       await DS.Storage.saveHistory(url, { undoStack: [], redoStack: [] });
+    },
+
+    /** Remove a specific change by ID from both stacks. */
+    async removeSpecific(url, changeId) {
+      const h = await DS.Storage.getHistory(url);
+      h.undoStack = h.undoStack.filter(c => c.id !== changeId);
+      h.redoStack = h.redoStack.filter(c => c.id !== changeId);
+      await DS.Storage.saveHistory(url, h);
     }
   };
 
