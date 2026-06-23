@@ -99,6 +99,9 @@
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
           // Only fire when selector is NOT in typing mode
           if (target.closest?.('#dom-surgeon-host')) return;
+          // Only fire when the element selector is ON
+          if (!DS.Selector?.isActive()) return;
+          
           e.preventDefault();
           this._toggleBeforeAfter();
         }

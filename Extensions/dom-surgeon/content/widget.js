@@ -317,6 +317,10 @@
         if (on !== undefined) {
           DS.Toast?.show(on ? 'Selector mode on' : 'Selector mode off', 'info');
           this.refresh();
+          // Auto-minimize when activating selector
+          if (on && !this._isMinimized) {
+            w.querySelector('#ds-w-min').click();
+          }
         }
       });
 
