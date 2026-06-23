@@ -59,6 +59,7 @@
       // 4. Initialize modules
       DS.Toast.init(this._shadow);
       DS.EditorPanel.init(this._shadow);
+      DS.Widget.init(this._shadow);
       DS.Selector.init();
 
       // 5. Replay saved changes
@@ -66,6 +67,11 @@
 
       // 6. Listen for messages from popup / background
       chrome.runtime.onMessage.addListener(this._onMessage.bind(this));
+
+      // Context menu tracking
+      document.addEventListener('contextmenu', (e) => {
+        this._contextMenuTarget = e.target;
+      }, true);
 
       // 7. Update badge
       this._syncBadge();
@@ -84,8 +90,14 @@
             'info'
           );
           sendResponse({ active: on });
+          DS.Widget?.refresh();
           break;
         }
+
+        case 'toggle-widget':
+          DS.Widget?.toggle();
+          sendResponse({ ok: true });
+          return true;
 
         case 'undo':
           this.undo().then(() => sendResponse({ ok: true }));
@@ -130,6 +142,62 @@
           this.clearPreview();
           sendResponse({ ok: true });
           return true;
+
+        case 'context-action': {
+          if (!this._contextMenuTarget) {
+            sendResponse({ ok: false, error: 'No target found' });
+            return true;
+          }
+          const el = this._contextMenuTarget;
+          const url = this._pageKey();
+          
+          if (msg.action === 'delete') {
+            const selector = DS.SelectorEngine.generate(el);
+            const parent = el.parentElement;
+            const parentSelector = parent ? DS.SelectorEngine.generate(parent) : null;
+            const childIndex = parent ? Array.from(parent.children).indexOf(el) : 0;
+            
+            const change = {
+              id: 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+              selector,
+              type: 'delete',
+              outerHTML: el.outerHTML,
+              parentSelector,
+              childIndex,
+              timestamp: Date.now()
+            };
+            
+            this._apply(change);
+            DS.Storage.saveChange(url, change).then(() => {
+              DS.History.push(url, change);
+              DS.Toast.show('Element deleted via context menu', 'success');
+              this._afterChange();
+            });
+          } else if (msg.action === 'hide') {
+            const selector = DS.SelectorEngine.generate(el);
+            const oldVal = el.style.opacity || '';
+            const change = {
+              id: 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+              selector,
+              type: 'resize',
+              property: 'opacity',
+              original: oldVal,
+              modified: '0',
+              timestamp: Date.now()
+            };
+            
+            this._apply(change);
+            el.style.pointerEvents = 'none'; // also disable interactions
+            DS.Storage.saveChange(url, change).then(() => {
+              DS.History.push(url, change);
+              DS.Toast.show('Element hidden via context menu', 'success');
+              this._afterChange();
+            });
+          }
+          
+          sendResponse({ ok: true });
+          return true;
+        }
       }
     },
 
@@ -269,12 +337,23 @@
           const el = DS.SelectorEngine.find(change.selector);
           if (!el) return;
 
-          this._previewOriginalStyle = el.style[change.property] || '';
-
-          if (change.original) {
-            el.style[change.property] = change.original;
+          if (change.styles) {
+            this._previewOriginalStyle = {};
+            for (const p in change.styles) {
+              this._previewOriginalStyle[p] = el.style[p] || '';
+              if (change.styles[p].original) {
+                el.style[p] = change.styles[p].original;
+              } else {
+                el.style.removeProperty(p);
+              }
+            }
           } else {
-            el.style.removeProperty(change.property);
+            this._previewOriginalStyle = el.style[change.property] || '';
+            if (change.original) {
+              el.style[change.property] = change.original;
+            } else {
+              el.style.removeProperty(change.property);
+            }
           }
 
           el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
@@ -297,10 +376,20 @@
         if (ch.type === 'delete') {
           el.remove();
         } else if (ch.type === 'resize') {
-          if (this._previewOriginalStyle) {
-             el.style[ch.property] = this._previewOriginalStyle;
+          if (ch.styles && this._previewOriginalStyle && typeof this._previewOriginalStyle === 'object') {
+            for (const p in ch.styles) {
+              if (this._previewOriginalStyle[p]) {
+                el.style[p] = this._previewOriginalStyle[p];
+              } else {
+                el.style.removeProperty(p);
+              }
+            }
           } else {
-             el.style.removeProperty(ch.property);
+            if (this._previewOriginalStyle) {
+               el.style[ch.property] = this._previewOriginalStyle;
+            } else {
+               el.style.removeProperty(ch.property);
+            }
           }
           el.style.boxShadow = '';
         }
@@ -339,7 +428,16 @@
           return null;
 
         case 'resize':
-          if (el) { el.style[ch.property] = ch.modified; return el; }
+          if (el) {
+            if (ch.styles) {
+              for (const p in ch.styles) {
+                el.style[p] = ch.styles[p].modified;
+              }
+            } else {
+              el.style[ch.property] = ch.modified;
+            }
+            return el;
+          }
           console.warn('[DOM Surgeon] Resize target not found:', ch.selector);
           return null;
 
@@ -375,10 +473,21 @@
         case 'resize': {
           const el = DS.SelectorEngine.find(ch.selector);
           if (!el) return null;
-          if (ch.original) {
-            el.style[ch.property] = ch.original;
+          
+          if (ch.styles) {
+            for (const p in ch.styles) {
+              if (ch.styles[p].original) {
+                el.style[p] = ch.styles[p].original;
+              } else {
+                el.style.removeProperty(p);
+              }
+            }
           } else {
-            el.style.removeProperty(ch.property);
+            if (ch.original) {
+              el.style[ch.property] = ch.original;
+            } else {
+              el.style.removeProperty(ch.property);
+            }
           }
           return el;
         }
@@ -404,6 +513,7 @@
       DS.Storage.getChangeCount(url).then((count) => {
         try { chrome.runtime.sendMessage({ type: 'update-badge', count }); }
         catch (e) { /* context invalidated */ }
+        DS.Widget?.refresh();
       });
     },
 
@@ -415,6 +525,7 @@
       let css = '';
       if (DS.Toast?.getStyles) css += DS.Toast.getStyles();
       if (DS.EditorPanel?.getStyles) css += DS.EditorPanel.getStyles();
+      if (DS.Widget?.getStyles) css += DS.Widget.getStyles();
       return css;
     }
   };

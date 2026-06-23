@@ -5,13 +5,14 @@
   "description": "Visually select, edit, and manage DOM elements on any website. Delete, resize, and customize with persistent changes.",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "background": {
     "service_worker": "background.js"
   },
+  "options_page": "options/options.html",
   "action": {
-    "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",
@@ -28,6 +29,7 @@
         "content/toast.js",
         "content/selector.js",
         "content/editor-panel.js",
+        "content/widget.js",
         "content/main.js"
       ],
       "run_at": "document_idle"

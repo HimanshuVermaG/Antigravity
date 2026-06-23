@@ -11,11 +11,26 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === 'toggle-selector') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, { type: 'toggle-selector' }).catch(() => {
-          // Content script not loaded on this page (e.g., chrome:// pages)
-        });
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'toggle-selector' }).catch(() => {});
       }
     });
+  }
+});
+
+// Toggle widget when extension icon is clicked
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id) {
+    chrome.tabs.sendMessage(tab.id, { type: 'toggle-widget' }).catch(() => {});
+  }
+});
+
+// Context Menu (Right Click)
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (tab?.id) {
+    chrome.tabs.sendMessage(tab.id, { 
+      type: 'context-action', 
+      action: info.menuItemId 
+    }).catch(() => {});
   }
 });
 
@@ -52,4 +67,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Set default badge style on install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.action.setBadgeBackgroundColor({ color: '#6366F1' });
+  
+  chrome.contextMenus.create({
+    id: 'delete',
+    title: 'Delete Element',
+    contexts: ['all']
+  });
+  
+  chrome.contextMenus.create({
+    id: 'hide',
+    title: 'Hide Element (Visibility)',
+    contexts: ['all']
+  });
 });

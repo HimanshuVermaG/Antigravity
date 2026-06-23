@@ -234,6 +234,7 @@
 
       const url = window.location.origin + window.location.pathname;
       const selector = DS.SelectorEngine.generate(this._currentEl);
+      const changesMap = {};
       let madeChange = false;
 
       for (const prop of ['width', 'height']) {
@@ -243,28 +244,39 @@
         const newVal = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
         const oldVal = this._currentEl.style[prop] || '';
 
-        if (newVal === oldVal) continue;
+        if (newVal !== oldVal) {
+          changesMap[prop] = { original: oldVal, modified: newVal };
+          this._currentEl.style[prop] = newVal;
+          madeChange = true;
+        }
+      }
 
+      if (madeChange) {
         const change = {
           id: _uid(),
           selector,
           type: 'resize',
-          property: prop,
-          original: oldVal,
-          modified: newVal,
+          styles: changesMap,
           timestamp: Date.now()
         };
 
-        this._currentEl.style[prop] = newVal;
+        const propsChanged = Object.keys(changesMap);
+        if (propsChanged.length === 1) {
+          change.property = propsChanged[0];
+          change.original = changesMap[propsChanged[0]].original;
+          change.modified = changesMap[propsChanged[0]].modified;
+        } else {
+          change.property = 'dimensions';
+          change.modified = 'updated';
+        }
+
         await DS.Storage.saveChange(url, change);
         await DS.History.push(url, change);
-        madeChange = true;
-      }
 
-      if (madeChange) {
         DS.Toast?.show('Dimensions updated', 'success', {
           undoCallback: () => DS.Main?.undo()
         });
+        DS.Main?._afterChange();
         DS.Selector?.refreshSelection();
         this._populate(this._currentEl);
       }
@@ -315,6 +327,7 @@
       DS.Toast?.show('Element deleted', 'danger', {
         undoCallback: () => DS.Main?.undo()
       });
+      DS.Main?._afterChange();
     },
 
     _resetDelete() {
