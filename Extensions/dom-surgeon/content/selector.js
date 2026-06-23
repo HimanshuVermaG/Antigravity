@@ -47,8 +47,14 @@
       this._active = true;
 
       document.addEventListener('mousemove', this._onMove, true);
-      document.addEventListener('click', this._onClick, true);
       document.addEventListener('keydown', this._onKey, true);
+      
+      // Delay click listener to prevent catching the trailing click that activated the selector
+      setTimeout(() => {
+        if (this._active) {
+          document.addEventListener('click', this._onClick, true);
+        }
+      }, 50);
       window.addEventListener('scroll', this._onScroll, true);
       window.addEventListener('resize', this._onScroll, true);
 
@@ -171,6 +177,8 @@
     },
 
     _handleClick(e) {
+      if (!e.isTrusted) return; // Ignore programmatic clicks
+
       const target = document.elementFromPoint(e.clientX, e.clientY);
       if (!target || this._isOwn(target)) return;
       if (target === document.body || target === document.documentElement) return;

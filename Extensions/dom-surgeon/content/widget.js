@@ -312,14 +312,24 @@
       const w = this._container;
       
       // Toggle logic
-      w.querySelector('.toggle__input').addEventListener('change', () => {
+      w.querySelector('.toggle__input').addEventListener('change', async () => {
         const on = DS.Selector?.toggle();
         if (on !== undefined) {
           DS.Toast?.show(on ? 'Selector mode on' : 'Selector mode off', 'info');
-          this.refresh();
+          
+          try {
+            await this.refresh();
+          } catch (err) {
+            console.error('[DOM Surgeon] Failed to refresh widget:', err);
+          }
+          
           // Auto-minimize when activating selector
           if (on && !this._isMinimized) {
-            w.querySelector('#ds-w-min').click();
+            // Slight delay ensures toggle animation doesn't conflict with minimize animation
+            setTimeout(() => {
+              const minBtn = w.querySelector('#ds-w-min');
+              if (minBtn) minBtn.click();
+            }, 100);
           }
         }
       });
