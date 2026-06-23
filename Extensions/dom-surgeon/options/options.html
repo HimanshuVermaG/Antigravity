@@ -22,7 +22,7 @@
         </div>
       </div>
       <button id="btn-clear-all" class="btn btn--danger">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5L4 2.5M4 2.5L5.5 4.5M4 2.5V9C4 11.2 5.8 13 8 13C10.2 13 12 11.2 12 9C12 6.8 10.2 5 8 5H6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
         Wipe All Data
       </button>
     </header>
@@ -40,18 +40,9 @@
       </div>
 
       <div class="table-container">
-        <table class="sites-table">
-          <thead>
-            <tr>
-              <th>Website URL</th>
-              <th>Changes</th>
-              <th width="100">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="sites-list">
-            <!-- Rendered by JS -->
-          </tbody>
-        </table>
+        <div id="sites-list" class="accordion">
+          <!-- Rendered by JS -->
+        </div>
         
         <div id="empty-state" class="empty-state" style="display: none;">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">

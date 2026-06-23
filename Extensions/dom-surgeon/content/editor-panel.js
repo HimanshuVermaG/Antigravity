@@ -119,14 +119,15 @@
 
           <div class="ds-ep__hr"></div>
 
-          <!-- Delete -->
-          <div class="ds-ep__sec">
-            <button class="ds-ep__btn ds-ep__btn--danger" data-action="delete">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2.5 4H11.5M5 4V2.5H9V4M5.5 6V10.5M8.5 6V10.5M3.5 4L4 11.5H10L10.5 4"
-                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>Delete Element</span>
+          <!-- Actions -->
+          <div class="ds-ep__sec" style="display: flex; gap: 8px;">
+            <button class="ds-ep__btn ds-ep__btn--secondary" data-action="hide" style="flex:1; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg>
+              <span>Hide</span>
+            </button>
+            <button class="ds-ep__btn ds-ep__btn--danger" data-action="delete" style="flex:1; padding: 8px 4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <span>Delete</span>
             </button>
           </div>
         </div>
@@ -144,6 +145,10 @@
 
       p.querySelector('[data-action="apply"]').addEventListener('click', () => {
         this._applyDimensions();
+      });
+
+      p.querySelector('[data-action="hide"]').addEventListener('click', () => {
+        this._handleHide();
       });
 
       p.querySelector('[data-action="delete"]').addEventListener('click', () => {
@@ -351,21 +356,22 @@
     // ── Delete ─────────────────────────────────────────
 
     async _handleDelete() {
-      const btn = this._panel.querySelector('[data-action="delete"]');
+      if (!this._currentEl) return;
 
-      if (!btn.classList.contains('ds-ep__btn--confirm')) {
-        // First click: ask for confirmation
+      const btn = this._panel.querySelector('[data-action="delete"]');
+      if (!this._deleteConfirm) {
+        this._deleteConfirm = true;
         btn.classList.add('ds-ep__btn--confirm');
-        btn.querySelector('span').textContent = 'Click again to confirm';
+        btn.querySelector('span').textContent = 'Confirm?';
+        
         this._deleteTimer = setTimeout(() => this._resetDelete(), 3000);
         return;
       }
 
-      // Second click: delete
       clearTimeout(this._deleteTimer);
-      if (!this._currentEl) return;
-
       const el = this._currentEl;
+      this.hide();
+      
       const selector = DS.SelectorEngine.generate(el);
       const parent = el.parentElement;
       const parentSelector = parent ? DS.SelectorEngine.generate(parent) : null;
@@ -386,14 +392,56 @@
       };
 
       el.remove();
-
-      await DS.Storage.saveChange(url, change);
-      await DS.History.push(url, change);
-
-      this.hide();
       DS.Selector?.deselect();
 
+      await DS.Storage.saveChange(url, change, isGlobal);
+      await DS.Storage.getHistory(url, isGlobal).then(hist => {
+         hist.undoStack.push(change);
+         hist.redoStack = [];
+         DS.Storage.saveHistory(url, hist, isGlobal);
+      });
+
       DS.Toast?.show('Element deleted', 'danger', {
+        undoCallback: () => DS.Main?.undo()
+      });
+      DS.Main?._afterChange();
+    },
+
+    async _handleHide() {
+      if (!this._currentEl) return;
+
+      const el = this._currentEl;
+      this.hide();
+
+      const url = window.location.origin + window.location.pathname;
+      const isGlobal = this._panel.querySelector('#ds-ep-scope').value === 'domain';
+      const selector = DS.SelectorEngine.generate(el);
+      const oldOp = el.style.opacity;
+
+      const change = {
+        id: _uid(),
+        selector,
+        type: 'resize', // hack to store style props similar to main.js context menu
+        property: 'opacity',
+        original: oldOp,
+        modified: '0',
+        isGlobal,
+        fingerprint: DS.Main._fingerprint(el),
+        timestamp: Date.now()
+      };
+
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      DS.Selector?.deselect();
+
+      await DS.Storage.saveChange(url, change, isGlobal);
+      await DS.Storage.getHistory(url, isGlobal).then(hist => {
+         hist.undoStack.push(change);
+         hist.redoStack = [];
+         DS.Storage.saveHistory(url, hist, isGlobal);
+      });
+
+      DS.Toast?.show('Element hidden', 'success', {
         undoCallback: () => DS.Main?.undo()
       });
       DS.Main?._afterChange();

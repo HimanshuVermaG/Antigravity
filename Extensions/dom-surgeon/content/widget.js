@@ -226,7 +226,7 @@
               Redo
             </button>
             <button class="ds-w-btn ds-w-btn--danger" id="ds-w-reset" title="Reset all changes on this page">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5L4 2.5M4 2.5L5.5 4.5M4 2.5V9C4 11.2 5.8 13 8 13C10.2 13 12 11.2 12 9C12 6.8 10.2 5 8 5H6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               Reset
             </button>
           </div>
@@ -285,13 +285,13 @@
           btnReset.innerHTML = 'Confirm';
           resetTimer = setTimeout(() => {
             btnReset.classList.remove('ds-w-btn--confirm');
-            btnReset.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5L4 2.5M4 2.5L5.5 4.5M4 2.5V9C4 11.2 5.8 13 8 13C10.2 13 12 11.2 12 9C12 6.8 10.2 5 8 5H6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Reset';
+            btnReset.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>Reset';
           }, 3000);
           return;
         }
         clearTimeout(resetTimer);
         btnReset.classList.remove('ds-w-btn--confirm');
-        btnReset.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5L4 2.5M4 2.5L5.5 4.5M4 2.5V9C4 11.2 5.8 13 8 13C10.2 13 12 11.2 12 9C12 6.8 10.2 5 8 5H6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Reset';
+        btnReset.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>Reset';
         DS.Main?.reset().then(() => this.refresh());
       });
 

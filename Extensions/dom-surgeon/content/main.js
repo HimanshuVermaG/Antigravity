@@ -169,6 +169,20 @@
           sendResponse({ ok: true });
           return true;
 
+        case 'dashboard-preview':
+          this.previewChange(msg.changeId);
+          sendResponse({ ok: true });
+          return true;
+
+        case 'dashboard-revert':
+          if (msg.change) {
+            this._revert(msg.change);
+            this._afterChange();
+            DS.Toast?.show('Change undone via dashboard', 'info');
+          }
+          sendResponse({ ok: true });
+          return true;
+
         case 'context-action': {
           if (!this._contextMenuTarget) {
             sendResponse({ ok: false, error: 'No target found' });

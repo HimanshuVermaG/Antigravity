@@ -3,97 +3,186 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const statSites = document.getElementById('stat-sites');
   const statChanges = document.getElementById('stat-changes');
-  const tbody = document.getElementById('sites-list');
+  const sitesListContainer = document.getElementById('sites-list');
   const emptyState = document.getElementById('empty-state');
   const btnClearAll = document.getElementById('btn-clear-all');
 
   async function loadData() {
     const data = await chrome.storage.local.get(null);
-    const sites = [];
-    let totalChanges = 0;
+    const groups = {}; // hostname -> { hostname, totalCount, items: [] }
+    let totalChangesGlobal = 0;
 
     for (const [key, value] of Object.entries(data)) {
-      if (key.startsWith('ds_site_')) {
-        const url = key.replace('ds_site_', '');
-        const count = value.changes?.length || 0;
-        if (count > 0) {
-          sites.push({ url, key, count });
-          totalChanges += count;
-        }
-      } else if (key === 'domSurgeonData' && value.sites) {
-        // Handle legacy data format
-        for (const [url, siteData] of Object.entries(value.sites)) {
-          const count = siteData.changes?.length || 0;
-          if (count > 0) {
-            sites.push({ url, key: 'legacy_' + url, count });
-            totalChanges += count;
+      if (key.startsWith('ds_site_') || key.startsWith('ds_domain_')) {
+        const changes = value.changes || [];
+        if (changes.length === 0) continue;
+
+        let hostname = '';
+        let isDomain = key.startsWith('ds_domain_');
+        let originUrl = '';
+
+        if (isDomain) {
+          hostname = key.replace('ds_domain_', '');
+          originUrl = 'https://' + hostname;
+        } else {
+          originUrl = key.replace('ds_site_', '');
+          try {
+             hostname = new URL(originUrl).hostname;
+          } catch(e) {
+             hostname = originUrl;
           }
         }
+
+        if (!groups[hostname]) {
+          groups[hostname] = { hostname, totalCount: 0, items: [] };
+        }
+
+        groups[hostname].totalCount += changes.length;
+        totalChangesGlobal += changes.length;
+
+        changes.forEach(ch => {
+          groups[hostname].items.push({
+             ...ch,
+             urlContext: originUrl,
+             storageKey: key
+          });
+        });
       }
     }
 
-    // Update stats
-    statSites.textContent = sites.length;
-    statChanges.textContent = totalChanges;
+    const hostnames = Object.keys(groups);
+    statSites.textContent = hostnames.length;
+    statChanges.textContent = totalChangesGlobal;
 
-    // Render table
-    tbody.innerHTML = '';
-    
-    if (sites.length === 0) {
+    sitesListContainer.innerHTML = '';
+
+    if (hostnames.length === 0) {
       emptyState.style.display = 'block';
-      document.querySelector('table').style.display = 'none';
+      sitesListContainer.style.display = 'none';
       return;
     }
 
     emptyState.style.display = 'none';
-    document.querySelector('table').style.display = 'table';
+    sitesListContainer.style.display = 'block';
 
-    // Sort by count descending
-    sites.sort((a, b) => b.count - a.count);
+    const sortedGroups = Object.values(groups).sort((a, b) => b.totalCount - a.totalCount);
 
-    sites.forEach(site => {
-      const tr = document.createElement('tr');
+    sortedGroups.forEach(group => {
+      group.items.sort((a, b) => b.timestamp - a.timestamp);
+
+      const div = document.createElement('div');
+      div.className = 'accordion-item';
       
-      let faviconUrl = '';
-      try {
-        const u = new URL(site.url);
-        faviconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${u.hostname}`;
-      } catch(e) {}
+      const faviconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${group.hostname}`;
 
-      tr.innerHTML = `
-        <td>
-          <div class="site-url">
-            ${faviconUrl ? `<img src="${faviconUrl}" alt="">` : ''}
-            <span>${site.url}</span>
+      div.innerHTML = `
+        <div class="accordion-header">
+          <div class="accordion-header__left">
+            <div class="accordion-header__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="site-url">
+              <img src="${faviconUrl}" alt="">
+              <span>${group.hostname}</span>
+            </div>
           </div>
-        </td>
-        <td><span class="badge">${site.count} changes</span></td>
-        <td>
-          <button class="btn btn--icon btn-delete" title="Wipe data for this site" data-key="${site.key}">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5L4 2.5M4 2.5L5.5 4.5M4 2.5V9C4 11.2 5.8 13 8 13C10.2 13 12 11.2 12 9C12 6.8 10.2 5 8 5H6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </td>
+          <div class="accordion-header__right">
+            <span class="badge">${group.totalCount} changes</span>
+            <button class="btn btn--icon btn-wipe-site" title="Wipe all data for this site" data-hostname="${group.hostname}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18 M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="accordion-body">
+          <div class="change-list">
+            ${group.items.map(ch => `
+              <div class="change-item">
+                <div class="change-item__info">
+                  <div class="change-item__title">
+                    <span class="change-item__type ${ch.type === 'delete' ? 'change-item__type--delete' : ''}">${ch.type}</span>
+                    <span class="change-item__selector" title="${ch.selector}">${truncate(ch.selector, 35)}</span>
+                    ${ch.isGlobal ? '<span class="site-domain-badge">Global</span>' : ''}
+                  </div>
+                  <div class="change-item__date">
+                    ${new Date(ch.timestamp).toLocaleString()} • ${ch.isGlobal ? 'Applies to entire site' : `<a href="${ch.urlContext}" target="_blank" style="color:inherit;text-decoration:none;border-bottom:1px dotted #666;">${truncate(ch.urlContext, 50)}</a>`}
+                  </div>
+                </div>
+                <div class="change-item__actions">
+                  <button class="btn btn--secondary btn-preview-change" style="background: rgba(255,255,255,0.05); color:#fff;" data-url="${ch.urlContext}" data-id="${ch.id}">Preview</button>
+                  <button class="btn btn--danger btn-undo-change" data-key="${ch.storageKey}" data-id="${ch.id}">Undo</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
       `;
-      tbody.appendChild(tr);
+
+      const header = div.querySelector('.accordion-header');
+      header.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-wipe-site')) return;
+        div.classList.toggle('is-open');
+      });
+
+      sitesListContainer.appendChild(div);
     });
 
-    // Attach delete handlers
-    document.querySelectorAll('.btn-delete').forEach(btn => {
+    // Attach listeners
+    document.querySelectorAll('.btn-wipe-site').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const hostname = e.currentTarget.dataset.hostname;
+        if (confirm(`Wipe all modifications for ${hostname}?`)) {
+          const keysToRemove = [];
+          for (const key of Object.keys(data)) {
+            if (key.includes(hostname)) {
+               keysToRemove.push(key);
+            }
+          }
+          await chrome.storage.local.remove(keysToRemove);
+          loadData();
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-undo-change').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const key = e.currentTarget.dataset.key;
-        if (confirm('Are you sure you want to wipe all modifications for this site?')) {
-          if (key.startsWith('legacy_')) {
-             const url = key.replace('legacy_', '');
-             const data = await chrome.storage.local.get('domSurgeonData');
-             if (data.domSurgeonData?.sites?.[url]) {
-               delete data.domSurgeonData.sites[url];
-               await chrome.storage.local.set({ domSurgeonData: data.domSurgeonData });
-             }
-          } else {
-             await chrome.storage.local.remove(key);
+        const changeId = e.currentTarget.dataset.id;
+        
+        const siteData = data[key];
+        if (siteData && siteData.changes) {
+          const removedChange = siteData.changes.find(c => c.id === changeId);
+          siteData.changes = siteData.changes.filter(c => c.id !== changeId);
+          await chrome.storage.local.set({ [key]: siteData });
+          
+          if (removedChange) {
+            chrome.tabs.query({}, tabs => {
+               tabs.forEach(tab => chrome.tabs.sendMessage(tab.id, { type: 'dashboard-revert', change: removedChange }));
+            });
           }
           loadData();
         }
+      });
+    });
+
+    document.querySelectorAll('.btn-preview-change').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const url = e.currentTarget.dataset.url;
+        const changeId = e.currentTarget.dataset.id;
+        
+        chrome.tabs.create({ url, active: true }, (tab) => {
+          const checkReady = setInterval(() => {
+             chrome.tabs.sendMessage(tab.id, { type: 'dashboard-preview', changeId }, (response) => {
+                if (!chrome.runtime.lastError && response?.ok) {
+                   clearInterval(checkReady);
+                }
+             });
+          }, 500);
+          
+          setTimeout(() => clearInterval(checkReady), 10000);
+        });
       });
     });
   }
@@ -104,6 +193,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadData();
     }
   });
+
+  function truncate(str, max) {
+    if (!str) return '';
+    return str.length > max ? str.substring(0, max) + '...' : str;
+  }
 
   loadData();
 });
