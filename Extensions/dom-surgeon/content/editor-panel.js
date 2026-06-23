@@ -33,8 +33,11 @@
     },
 
     hide() {
+      if (!this._panel) return;
+      this._revertPreview();
       this._panel.classList.remove('ds-ep--open');
       this._currentEl = null;
+      this._originalStyles = null;
       this._resetDelete();
     },
 
@@ -93,9 +96,25 @@
               </select>
             </div>
 
-            <button class="ds-ep__btn ds-ep__btn--primary" data-action="apply">
-              Apply
-            </button>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button class="ds-ep__btn ds-ep__btn--secondary" data-action="preview" style="flex:1; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                Preview
+              </button>
+              <button class="ds-ep__btn ds-ep__btn--primary" data-action="apply" style="flex:1">
+                Apply
+              </button>
+            </div>
+          </div>
+
+          <div class="ds-ep__hr"></div>
+
+          <!-- Scope -->
+          <div class="ds-ep__sec">
+            <div class="ds-ep__sec-title">Scope</div>
+            <select class="ds-ep__input" id="ds-ep-scope" style="width:100%; margin-bottom: 8px;">
+              <option value="page">This Page Only (Default)</option>
+              <option value="domain">Entire Website</option>
+            </select>
           </div>
 
           <div class="ds-ep__hr"></div>
@@ -117,6 +136,10 @@
       p.querySelector('.ds-ep__close').addEventListener('click', () => {
         this.hide();
         DS.Selector?.deselect();
+      });
+
+      p.querySelector('[data-action="preview"]').addEventListener('click', () => {
+        this._previewDimensions();
       });
 
       p.querySelector('[data-action="apply"]').addEventListener('click', () => {
@@ -199,6 +222,11 @@
       pathEl.textContent = selector;
       pathEl.title = selector;
 
+      this._originalStyles = {
+        width: el.style.width || '',
+        height: el.style.height || ''
+      };
+
       // Width
       this._fillInput('width', el.style.width, comp.width);
       // Height
@@ -227,7 +255,41 @@
       return m ? { num: m[1], unit: m[2] || 'px' } : { num: '', unit: 'px' };
     },
 
-    // ── Apply dimensions ───────────────────────────────
+    // ── Apply & Preview ───────────────────────────────
+
+    _previewDimensions() {
+      if (!this._currentEl) return;
+
+      for (const prop of ['width', 'height']) {
+        const input = this._panel.querySelector(`.ds-ep__input[data-prop="${prop}"]`);
+        const unit = this._panel.querySelector(`.ds-ep__unit[data-prop="${prop}"]`);
+        const newVal = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
+        
+        if (input.value !== '' || unit.value === 'auto') {
+          this._currentEl.style[prop] = newVal;
+        }
+      }
+      DS.Selector?.refreshSelection();
+    },
+
+    _revertPreview() {
+      if (this._currentEl && this._originalStyles) {
+        for (const prop of ['width', 'height']) {
+           const current = this._currentEl.style[prop] || '';
+           const input = this._panel.querySelector(`.ds-ep__input[data-prop="${prop}"]`);
+           const unit = this._panel.querySelector(`.ds-ep__unit[data-prop="${prop}"]`);
+           const valInUI = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
+           
+           if (current === valInUI && valInUI !== this._originalStyles[prop]) {
+              if (this._originalStyles[prop]) {
+                 this._currentEl.style[prop] = this._originalStyles[prop];
+              } else {
+                 this._currentEl.style.removeProperty(prop);
+              }
+           }
+        }
+      }
+    },
 
     async _applyDimensions() {
       if (!this._currentEl) return;
@@ -242,21 +304,25 @@
         const unit = this._panel.querySelector(`.ds-ep__unit[data-prop="${prop}"]`);
 
         const newVal = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
-        const oldVal = this._currentEl.style[prop] || '';
+        const oldVal = this._originalStyles[prop];
 
         if (newVal !== oldVal) {
           changesMap[prop] = { original: oldVal, modified: newVal };
           this._currentEl.style[prop] = newVal;
+          this._originalStyles[prop] = newVal; // Update original so further changes work
           madeChange = true;
         }
       }
 
       if (madeChange) {
+        const isGlobal = this._panel.querySelector('#ds-ep-scope').value === 'domain';
         const change = {
           id: _uid(),
           selector,
           type: 'resize',
           styles: changesMap,
+          isGlobal,
+          fingerprint: DS.Main._fingerprint(this._currentEl),
           timestamp: Date.now()
         };
 
@@ -305,6 +371,7 @@
       const parentSelector = parent ? DS.SelectorEngine.generate(parent) : null;
       const childIndex = parent ? Array.from(parent.children).indexOf(el) : 0;
       const url = window.location.origin + window.location.pathname;
+      const isGlobal = this._panel.querySelector('#ds-ep-scope').value === 'domain';
 
       const change = {
         id: _uid(),
@@ -313,6 +380,8 @@
         outerHTML: el.outerHTML,
         parentSelector,
         childIndex,
+        isGlobal,
+        fingerprint: DS.Main._fingerprint(el),
         timestamp: Date.now()
       };
 

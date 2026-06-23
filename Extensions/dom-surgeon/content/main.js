@@ -15,6 +15,32 @@
     _previewOriginalStyle: null,
     _previewChange: null,
 
+    /** Create a semantic fingerprint to ensure a selector matches the correct element across pages */
+    _fingerprint(el) {
+      if (!el) return null;
+      return {
+        tag: el.tagName.toLowerCase(),
+        classes: Array.from(el.classList).sort()
+      };
+    },
+
+    /** Validate if the found element matches the fingerprint of the originally modified element */
+    _validateFingerprint(el, fp) {
+      if (!fp) return true; // Legacy changes have no fingerprint
+      if (el.tagName.toLowerCase() !== fp.tag) return false;
+      
+      // Strict class match is too brittle because active states change classes.
+      // We just ensure the original classes are a subset of the current classes, or close enough.
+      // Actually, matching tag name + the specific selector is usually 99% accurate.
+      // We will just do a simple intersection check. If it shares at least one class (if it had classes), good.
+      if (fp.classes.length > 0) {
+         const currentClasses = Array.from(el.classList);
+         const hasSharedClass = fp.classes.some(c => currentClasses.includes(c));
+         if (!hasSharedClass && currentClasses.length > 0) return false;
+      }
+      return true;
+    },
+
     // ── Bootstrap ──────────────────────────────────────
 
     async init() {
@@ -164,6 +190,8 @@
               outerHTML: el.outerHTML,
               parentSelector,
               childIndex,
+              isGlobal: false,
+              fingerprint: this._fingerprint(el),
               timestamp: Date.now()
             };
             
@@ -213,7 +241,7 @@
       }
 
       const target = this._revert(change);
-      await DS.Storage.removeChange(url, change.id);
+      await DS.Storage.removeChange(url, change.id, change.isGlobal);
       DS.Toast.show('Change undone', 'info');
       this._afterChange();
 
@@ -277,13 +305,13 @@
       const target = this._revert(change);
 
       // Remove from storage
-      await DS.Storage.removeChange(url, changeId);
+      await DS.Storage.removeChange(url, changeId, change.isGlobal);
 
       // Remove from undoStack, but PUSH to redoStack so it can be redone
-      const history = await DS.Storage.getHistory(url);
+      const history = await DS.Storage.getHistory(url, change.isGlobal);
       history.undoStack = history.undoStack.filter(c => c.id !== changeId);
       history.redoStack.push(change);
-      await DS.Storage.saveHistory(url, history);
+      await DS.Storage.saveHistory(url, history, change.isGlobal);
 
       DS.Toast.show('Change undone', 'info');
       this._afterChange();
@@ -420,6 +448,13 @@
 
     _apply(ch) {
       const el = DS.SelectorEngine.find(ch.selector);
+      
+      if (el && ch.isGlobal) {
+         if (!this._validateFingerprint(el, ch.fingerprint)) {
+            console.warn(`[DOM Surgeon] Global rule skipped due to fingerprint mismatch on ${ch.selector}`);
+            return null;
+         }
+      }
 
       switch (ch.type) {
         case 'delete':

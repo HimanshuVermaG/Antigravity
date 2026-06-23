@@ -12,51 +12,57 @@
 
     /** Append a change record for the given URL. */
     async saveChange(url, change) {
-      const site = await this._loadSite(url);
+      const storageKey = change.isGlobal ? this._domainKey(url) : this._key(url);
+      const site = await this._loadData(storageKey, url);
       site.changes.push(change);
-      await this._saveSite(url, site);
+      await this._saveData(storageKey, site);
       this._emitBadgeUpdate(url);
     },
 
-    /** Get all change records for a URL. */
+    /** Get all change records for a URL (both global and local). */
     async getChanges(url) {
-      const site = await this._loadSite(url);
-      return site.changes;
+      const local = await this._loadData(this._key(url), url);
+      const global = await this._loadData(this._domainKey(url), url);
+      return [...global.changes, ...local.changes];
     },
 
     /** Remove a specific change by ID. */
-    async removeChange(url, changeId) {
-      const site = await this._loadSite(url);
+    async removeChange(url, changeId, isGlobal = false) {
+      const storageKey = isGlobal ? this._domainKey(url) : this._key(url);
+      const site = await this._loadData(storageKey, url);
       site.changes = site.changes.filter(c => c.id !== changeId);
 
-      // Clean up if completely empty
       if (site.changes.length === 0 &&
           site.history.undoStack.length === 0 &&
           site.history.redoStack.length === 0) {
-        await this._deleteSite(url);
+        await this._deleteData(storageKey);
       } else {
-        await this._saveSite(url, site);
+        await this._saveData(storageKey, site);
       }
       this._emitBadgeUpdate(url);
     },
 
     /** Clear all changes and history for a URL. */
     async clearChanges(url) {
-      await this._deleteSite(url);
+      await this._deleteData(this._key(url));
+      // Optionally could clear domain key, but usually reset just means this page.
+      // We will leave domain key intact on "reset this page".
       this._emitBadgeUpdate(url);
     },
 
     /** Get undo/redo history stacks for a URL. */
-    async getHistory(url) {
-      const site = await this._loadSite(url);
+    async getHistory(url, isGlobal = false) {
+      const storageKey = isGlobal ? this._domainKey(url) : this._key(url);
+      const site = await this._loadData(storageKey, url);
       return site.history;
     },
 
     /** Save undo/redo history stacks for a URL. */
-    async saveHistory(url, history) {
-      const site = await this._loadSite(url);
+    async saveHistory(url, history, isGlobal = false) {
+      const storageKey = isGlobal ? this._domainKey(url) : this._key(url);
+      const site = await this._loadData(storageKey, url);
       site.history = history;
-      await this._saveSite(url, site);
+      await this._saveData(storageKey, site);
     },
 
     /** Count of changes for a URL. */
@@ -76,11 +82,11 @@
             Object.assign(sites, items.domSurgeonData.sites);
           }
 
-          // Gather all per-URL keys
+          // Gather all per-URL and per-Domain keys
           for (const key in items) {
-            if (key.startsWith('ds_site_')) {
-              const url = key.replace('ds_site_', '');
-              sites[url] = items[key];
+            if (key.startsWith('ds_site_') || key.startsWith('ds_domain_')) {
+              const urlOrDomain = key.replace('ds_site_', '').replace('ds_domain_', '');
+              sites[urlOrDomain] = items[key]; // For dashboard purposes
             }
           }
 
@@ -116,52 +122,59 @@
       return 'ds_site_' + url;
     },
 
-    async _loadSite(url) {
+    _domainKey(url) {
+      try {
+        return 'ds_domain_' + new URL(url).hostname;
+      } catch(e) {
+        return 'ds_domain_local';
+      }
+    },
+
+    async _loadData(storageKey, urlForLegacyFallback) {
       return new Promise(resolve => {
         try {
-          chrome.storage.local.get([this._key(url), 'domSurgeonData'], result => {
+          chrome.storage.local.get([storageKey, 'domSurgeonData'], result => {
             if (chrome.runtime.lastError) {
               return resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
             }
-            if (result[this._key(url)]) {
-              return resolve(result[this._key(url)]);
+            if (result[storageKey]) {
+              return resolve(result[storageKey]);
             }
-            if (result.domSurgeonData?.sites?.[url]) {
-              return resolve(result.domSurgeonData.sites[url]);
+            if (urlForLegacyFallback && storageKey.startsWith('ds_site_') && result.domSurgeonData?.sites?.[urlForLegacyFallback]) {
+              return resolve(result.domSurgeonData.sites[urlForLegacyFallback]);
             }
             resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
           });
         } catch (e) {
-          // Extension context invalidated (e.g. extension was reloaded)
-          console.warn('[DOM Surgeon] Extension context invalidated. Please refresh the page.');
+          console.warn('[DOM Surgeon] Extension context invalidated.');
           resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
         }
       });
     },
 
-    async _saveSite(url, siteData) {
+    async _saveData(storageKey, siteData) {
       return new Promise(resolve => {
         try {
-          chrome.storage.local.set({ [this._key(url)]: siteData }, () => {
+          chrome.storage.local.set({ [storageKey]: siteData }, () => {
             if (chrome.runtime.lastError) console.warn(chrome.runtime.lastError);
             resolve();
           });
         } catch (e) {
-          console.warn('[DOM Surgeon] Extension context invalidated. Please refresh the page.');
+          console.warn('[DOM Surgeon] Extension context invalidated.');
           resolve();
         }
       });
     },
 
-    async _deleteSite(url) {
+    async _deleteData(storageKey) {
       return new Promise(resolve => {
         try {
-          chrome.storage.local.remove([this._key(url)], () => {
+          chrome.storage.local.remove([storageKey], () => {
             if (chrome.runtime.lastError) console.warn(chrome.runtime.lastError);
             resolve();
           });
         } catch (e) {
-          console.warn('[DOM Surgeon] Extension context invalidated. Please refresh the page.');
+          console.warn('[DOM Surgeon] Extension context invalidated.');
           resolve();
         }
       });
