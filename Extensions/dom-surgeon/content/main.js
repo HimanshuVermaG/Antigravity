@@ -105,6 +105,18 @@
           });
           return true;
         }
+
+        case 'get-changes': {
+          const url = this._pageKey();
+          DS.Storage.getChanges(url).then((changes) => {
+            sendResponse({ changes });
+          });
+          return true;
+        }
+
+        case 'undo-specific':
+          this.undoSpecific(msg.changeId).then(() => sendResponse({ ok: true }));
+          return true;
       }
     },
 
@@ -153,6 +165,33 @@
       DS.Selector.deselect();
       DS.Toast.show('All changes reset', 'success');
       this._syncBadge();
+    },
+
+    /** Undo a single specific change by ID (from history list). */
+    async undoSpecific(changeId) {
+      const url = this._pageKey();
+      const changes = await DS.Storage.getChanges(url);
+      const change = changes.find(c => c.id === changeId);
+
+      if (!change) {
+        DS.Toast.show('Change not found', 'warning');
+        return;
+      }
+
+      // Revert this change on the DOM
+      this._revert(change);
+
+      // Remove from storage
+      await DS.Storage.removeChange(url, changeId);
+
+      // Also remove from history stacks so it doesn't reappear on redo
+      const history = await DS.Storage.getHistory(url);
+      history.undoStack = history.undoStack.filter(c => c.id !== changeId);
+      history.redoStack = history.redoStack.filter(c => c.id !== changeId);
+      await DS.Storage.saveHistory(url, history);
+
+      DS.Toast.show('Change undone', 'info');
+      this._afterChange();
     },
 
     // ── Replay saved changes on page load ──────────────

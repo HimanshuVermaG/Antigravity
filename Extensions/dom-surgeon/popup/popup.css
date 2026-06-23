@@ -238,6 +238,151 @@ body {
   opacity: 1 !important;
 }
 
+/* ── History Section ──────────────────────────────── */
+
+.section--history {
+  padding: 12px 16px;
+}
+
+.section--history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.badge--sm {
+  min-width: 18px;
+  height: 18px;
+  font-size: 10px;
+  padding: 0 5px;
+}
+
+.history-list {
+  max-height: 130px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Thin scrollbar */
+.history-list::-webkit-scrollbar {
+  width: 4px;
+}
+.history-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 0;
+  color: var(--text-3);
+  font-size: 11px;
+}
+.history-empty svg {
+  opacity: 0.35;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition),
+              opacity 250ms ease,
+              transform 250ms ease;
+}
+
+.history-item:hover {
+  background: var(--bg-hover);
+}
+
+.history-item--removing {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.history-item__icon {
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.history-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-item__desc {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item__detail {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  margin-top: 1px;
+}
+
+.history-item__time {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.history-item__undo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition),
+              background var(--transition),
+              border-color var(--transition),
+              color var(--transition);
+}
+
+.history-item:hover .history-item__undo {
+  opacity: 1;
+}
+
+.history-item__undo:hover {
+  background: var(--accent-muted);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--accent);
+}
+
+.history-item__undo:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 /* ── Shortcuts Section ────────────────────────────── */
 
 .section--shortcuts {
