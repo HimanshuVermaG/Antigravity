@@ -130,10 +130,14 @@
         return;
       }
 
-      this._revert(change);
+      const target = this._revert(change);
       await DS.Storage.removeChange(url, change.id);
       DS.Toast.show('Change undone', 'info');
       this._afterChange();
+
+      if (target && DS.Selector.flashHighlight) {
+        DS.Selector.flashHighlight(target);
+      }
     },
 
     async redo() {
@@ -144,10 +148,14 @@
         return;
       }
 
-      this._apply(change);
+      const target = this._apply(change);
       await DS.Storage.saveChange(url, change);
       DS.Toast.show('Change reapplied', 'info');
       this._afterChange();
+
+      if (target && DS.Selector.flashHighlight) {
+        DS.Selector.flashHighlight(target);
+      }
     },
 
     async reset() {
@@ -179,19 +187,23 @@
       }
 
       // Revert this change on the DOM
-      this._revert(change);
+      const target = this._revert(change);
 
       // Remove from storage
       await DS.Storage.removeChange(url, changeId);
 
-      // Also remove from history stacks so it doesn't reappear on redo
+      // Remove from undoStack, but PUSH to redoStack so it can be redone
       const history = await DS.Storage.getHistory(url);
       history.undoStack = history.undoStack.filter(c => c.id !== changeId);
-      history.redoStack = history.redoStack.filter(c => c.id !== changeId);
+      history.redoStack.push(change);
       await DS.Storage.saveHistory(url, history);
 
       DS.Toast.show('Change undone', 'info');
       this._afterChange();
+
+      if (target && DS.Selector.flashHighlight) {
+        DS.Selector.flashHighlight(target);
+      }
     },
 
     // ── Replay saved changes on page load ──────────────
@@ -217,18 +229,18 @@
 
       switch (ch.type) {
         case 'delete':
-          if (el) { el.remove(); return true; }
+          if (el) { el.remove(); return el; }
           console.warn('[DOM Surgeon] Delete target not found:', ch.selector);
-          return false;
+          return null;
 
         case 'resize':
-          if (el) { el.style[ch.property] = ch.modified; return true; }
+          if (el) { el.style[ch.property] = ch.modified; return el; }
           console.warn('[DOM Surgeon] Resize target not found:', ch.selector);
-          return false;
+          return null;
 
         default:
           console.warn('[DOM Surgeon] Unknown change type:', ch.type);
-          return false;
+          return null;
       }
     },
 
@@ -239,12 +251,12 @@
           const parent = DS.SelectorEngine.find(ch.parentSelector);
           if (!parent || !ch.outerHTML) {
             console.warn('[DOM Surgeon] Cannot restore deleted element — parent not found');
-            return;
+            return null;
           }
           const tmp = document.createElement('div');
           tmp.innerHTML = ch.outerHTML;
           const restored = tmp.firstElementChild;
-          if (!restored) return;
+          if (!restored) return null;
 
           const children = Array.from(parent.children);
           if (ch.childIndex < children.length) {
@@ -252,20 +264,21 @@
           } else {
             parent.appendChild(restored);
           }
-          break;
+          return restored;
         }
 
         case 'resize': {
           const el = DS.SelectorEngine.find(ch.selector);
-          if (!el) return;
+          if (!el) return null;
           if (ch.original) {
             el.style[ch.property] = ch.original;
           } else {
             el.style.removeProperty(ch.property);
           }
-          break;
+          return el;
         }
       }
+      return null;
     },
 
     // ── Helpers ─────────────────────────────────────────

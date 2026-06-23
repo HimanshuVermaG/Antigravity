@@ -106,6 +106,44 @@
       }
     },
 
+    /** Briefly highlight an element to show it was undone/redone. */
+    flashHighlight(el) {
+      if (!el || !document.body.contains(el)) return;
+      
+      const overlay = this._makeOverlay('dom-surgeon-flash-' + Date.now());
+      this._positionOverlay(overlay, el, false);
+      
+      overlay.style.border = '2px solid #22C55E';
+      overlay.style.background = 'rgba(34, 197, 94, 0.2)';
+      overlay.style.boxShadow = '0 0 12px rgba(34, 197, 94, 0.4)';
+      overlay.style.transition = 'opacity 300ms ease-out, transform 300ms ease-out';
+      overlay.style.zIndex = '2147483649';
+      overlay.style.display = 'block';
+      overlay.style.opacity = '1';
+
+      // Reposition dynamically if page scrolls while flashing
+      const scrollHandler = () => {
+        if (document.body.contains(el)) {
+           this._positionOverlay(overlay, el, false);
+           overlay.style.border = '2px solid #22C55E';
+           overlay.style.background = 'rgba(34, 197, 94, 0.2)';
+        }
+      };
+      window.addEventListener('scroll', scrollHandler, true);
+
+      // Start fade out
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        overlay.style.transform = 'scale(1.02)';
+      }, 1000);
+
+      // Cleanup
+      setTimeout(() => {
+        overlay.remove();
+        window.removeEventListener('scroll', scrollHandler, true);
+      }, 1400);
+    },
+
     // ── Event Handlers ─────────────────────────────────
 
     _handleMove(e) {
@@ -146,6 +184,18 @@
     _handleKey(e) {
       // Ignore if typing in our own inputs
       if (e.target.closest?.('#dom-surgeon-host')) return;
+
+      // Undo / Redo shortcuts (Cmd+Z / Cmd+Shift+Z)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.shiftKey) {
+          DS.Main?.redo();
+        } else {
+          DS.Main?.undo();
+        }
+        return;
+      }
 
       switch (e.key) {
         case 'Escape':
