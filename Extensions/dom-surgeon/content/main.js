@@ -11,6 +11,10 @@
     _host: null,
     _shadow: null,
 
+    _previewNode: null,
+    _previewOriginalStyle: null,
+    _previewChange: null,
+
     // ── Bootstrap ──────────────────────────────────────
 
     async init() {
@@ -117,12 +121,22 @@
         case 'undo-specific':
           this.undoSpecific(msg.changeId).then(() => sendResponse({ ok: true }));
           return true;
+
+        case 'preview-change':
+          this.previewChange(msg.changeId).then(() => sendResponse({ ok: true }));
+          return true;
+
+        case 'clear-preview':
+          this.clearPreview();
+          sendResponse({ ok: true });
+          return true;
       }
     },
 
     // ── Undo / Redo / Reset ────────────────────────────
 
     async undo() {
+      this.clearPreview();
       const url = this._pageKey();
       const change = await DS.History.undo(url);
       if (!change) {
@@ -136,11 +150,13 @@
       this._afterChange();
 
       if (target && DS.Selector.flashHighlight) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         DS.Selector.flashHighlight(target);
       }
     },
 
     async redo() {
+      this.clearPreview();
       const url = this._pageKey();
       const change = await DS.History.redo(url);
       if (!change) {
@@ -154,11 +170,13 @@
       this._afterChange();
 
       if (target && DS.Selector.flashHighlight) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         DS.Selector.flashHighlight(target);
       }
     },
 
     async reset() {
+      this.clearPreview();
       const url = this._pageKey();
       const changes = await DS.Storage.getChanges(url);
 
@@ -177,6 +195,7 @@
 
     /** Undo a single specific change by ID (from history list). */
     async undoSpecific(changeId) {
+      this.clearPreview();
       const url = this._pageKey();
       const changes = await DS.Storage.getChanges(url);
       const change = changes.find(c => c.id === changeId);
@@ -202,8 +221,94 @@
       this._afterChange();
 
       if (target && DS.Selector.flashHighlight) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         DS.Selector.flashHighlight(target);
       }
+    },
+
+    // ── Preview Logic ──────────────────────────────────
+
+    async previewChange(changeId) {
+      this.clearPreview();
+
+      const url = this._pageKey();
+      const changes = await DS.Storage.getChanges(url);
+      const change = changes.find(c => c.id === changeId);
+      if (!change) return;
+
+      this._previewChange = change;
+
+      switch (change.type) {
+        case 'delete': {
+          const parent = DS.SelectorEngine.find(change.parentSelector);
+          if (!parent) return;
+
+          const tmp = document.createElement('div');
+          tmp.innerHTML = change.outerHTML;
+          const restored = tmp.firstElementChild;
+          if (!restored) return;
+
+          const children = Array.from(parent.children);
+          if (change.childIndex < children.length) {
+            parent.insertBefore(restored, children[change.childIndex]);
+          } else {
+            parent.appendChild(restored);
+          }
+
+          restored.style.opacity = '0.7';
+          restored.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
+          restored.style.pointerEvents = 'none';
+          restored.style.transition = 'all 0.2s ease';
+          
+          this._previewNode = restored;
+          restored.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+
+        case 'resize': {
+          const el = DS.SelectorEngine.find(change.selector);
+          if (!el) return;
+
+          this._previewOriginalStyle = el.style[change.property] || '';
+
+          if (change.original) {
+            el.style[change.property] = change.original;
+          } else {
+            el.style.removeProperty(change.property);
+          }
+
+          el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
+          el.style.transition = 'all 0.2s ease';
+          
+          this._previewNode = el;
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+      }
+    },
+
+    clearPreview() {
+      if (!this._previewChange) return;
+
+      const ch = this._previewChange;
+      const el = this._previewNode;
+
+      if (el) {
+        if (ch.type === 'delete') {
+          el.remove();
+        } else if (ch.type === 'resize') {
+          if (this._previewOriginalStyle) {
+             el.style[ch.property] = this._previewOriginalStyle;
+          } else {
+             el.style.removeProperty(ch.property);
+          }
+          el.style.boxShadow = '';
+        }
+      }
+
+      this._previewNode = null;
+      this._previewOriginalStyle = null;
+      this._previewChange = null;
     },
 
     // ── Replay saved changes on page load ──────────────

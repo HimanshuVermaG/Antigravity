@@ -118,33 +118,52 @@
 
     async _loadSite(url) {
       return new Promise(resolve => {
-        chrome.storage.local.get([this._key(url), 'domSurgeonData'], result => {
-          // Check for new per-URL format first
-          if (result[this._key(url)]) {
-            resolve(result[this._key(url)]);
-            return;
-          }
-          
-          // Fallback to legacy format if it exists (transparent migration)
-          if (result.domSurgeonData?.sites?.[url]) {
-            resolve(result.domSurgeonData.sites[url]);
-            return;
-          }
-          
+        try {
+          chrome.storage.local.get([this._key(url), 'domSurgeonData'], result => {
+            if (chrome.runtime.lastError) {
+              return resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
+            }
+            if (result[this._key(url)]) {
+              return resolve(result[this._key(url)]);
+            }
+            if (result.domSurgeonData?.sites?.[url]) {
+              return resolve(result.domSurgeonData.sites[url]);
+            }
+            resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
+          });
+        } catch (e) {
+          // Extension context invalidated (e.g. extension was reloaded)
+          console.warn('[DOM Surgeon] Extension context invalidated. Please refresh the page.');
           resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
-        });
+        }
       });
     },
 
     async _saveSite(url, siteData) {
       return new Promise(resolve => {
-        chrome.storage.local.set({ [this._key(url)]: siteData }, resolve);
+        try {
+          chrome.storage.local.set({ [this._key(url)]: siteData }, () => {
+            if (chrome.runtime.lastError) console.warn(chrome.runtime.lastError);
+            resolve();
+          });
+        } catch (e) {
+          console.warn('[DOM Surgeon] Extension context invalidated. Please refresh the page.');
+          resolve();
+        }
       });
     },
 
     async _deleteSite(url) {
       return new Promise(resolve => {
-        chrome.storage.local.remove([this._key(url)], resolve);
+        try {
+          chrome.storage.local.remove([this._key(url)], () => {
+            if (chrome.runtime.lastError) console.warn(chrome.runtime.lastError);
+            resolve();
+          });
+        } catch (e) {
+          console.warn('[DOM Surgeon] Extension context invalidated. Please refresh the page.');
+          resolve();
+        }
       });
     },
 

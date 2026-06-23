@@ -300,14 +300,22 @@ body {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
+  cursor: pointer;
   transition: background var(--transition),
+              border-color var(--transition),
               opacity 250ms ease,
               transform 250ms ease;
 }
 
 .history-item:hover {
   background: var(--bg-hover);
+}
+
+.history-item--previewing {
+  background: rgba(234, 179, 8, 0.08) !important;
+  border-color: rgba(234, 179, 8, 0.3);
 }
 
 .history-item--removing {

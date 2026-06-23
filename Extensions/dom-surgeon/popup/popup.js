@@ -26,7 +26,7 @@ async function sendToContent(message) {
 // ── DOM refs ─────────────────────────────────────────
 
 const toggleInput = document.querySelector('#toggle-selector .toggle__input');
-const changeCount = document.getElementById('change-count');
+
 const btnUndo     = document.getElementById('btn-undo');
 const btnRedo     = document.getElementById('btn-redo');
 const btnReset    = document.getElementById('btn-reset');
@@ -40,7 +40,7 @@ const historyEmpty = document.getElementById('history-empty');
   const status = await sendToContent({ type: 'get-status' });
   if (status) {
     toggleInput.checked = status.active;
-    changeCount.textContent = status.changeCount || 0;
+
 
     if (status.active) {
       toggleInput.closest('.toggle').classList.add('toggle--on');
@@ -121,7 +121,7 @@ async function loadHistory() {
 
   // Update count badge
   historyCount.textContent = changes.length;
-  changeCount.textContent = changes.length;
+
 
   // Clear old items (keep empty state element)
   historyList.querySelectorAll('.history-item').forEach(el => el.remove());
@@ -179,6 +179,23 @@ function createHistoryItem(change) {
     </button>
   `;
 
+  // Toggle preview on click
+  el.addEventListener('click', async () => {
+    const isPreviewing = el.classList.contains('history-item--previewing');
+    
+    // Clear other previews
+    document.querySelectorAll('.history-item--previewing').forEach(node => {
+      node.classList.remove('history-item--previewing');
+    });
+
+    if (isPreviewing) {
+      await sendToContent({ type: 'clear-preview' });
+    } else {
+      el.classList.add('history-item--previewing');
+      await sendToContent({ type: 'preview-change', changeId: change.id });
+    }
+  });
+
   // Undo this specific change
   el.querySelector('.history-item__undo').addEventListener('click', async (e) => {
     e.stopPropagation();
@@ -186,6 +203,7 @@ function createHistoryItem(change) {
     btn.disabled = true;
     el.classList.add('history-item--removing');
 
+    await sendToContent({ type: 'clear-preview' });
     await sendToContent({ type: 'undo-specific', changeId: change.id });
 
     // Remove with animation then refresh
@@ -212,9 +230,7 @@ function formatRelativeTime(timestamp) {
 
 async function refreshAll() {
   const status = await sendToContent({ type: 'get-status' });
-  if (status) {
-    changeCount.textContent = status.changeCount || 0;
-  }
+
   await loadHistory();
 }
 

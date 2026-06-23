@@ -108,7 +108,7 @@
 
     /** Briefly highlight an element to show it was undone/redone. */
     flashHighlight(el) {
-      if (!el || !document.body.contains(el)) return;
+      if (!el || !(el instanceof Node) || !document.body.contains(el)) return;
       
       const overlay = this._makeOverlay('dom-surgeon-flash-' + Date.now());
       this._positionOverlay(overlay, el, false);
@@ -135,13 +135,13 @@
       setTimeout(() => {
         overlay.style.opacity = '0';
         overlay.style.transform = 'scale(1.02)';
-      }, 1000);
+      }, 3000);
 
       // Cleanup
       setTimeout(() => {
         overlay.remove();
         window.removeEventListener('scroll', scrollHandler, true);
-      }, 1400);
+      }, 3400);
     },
 
     // ── Event Handlers ─────────────────────────────────
