@@ -27,6 +27,7 @@
 
     show(element) {
       this._currentEl = element;
+      this._isBatchMode = DS.MultiSelect?.isActive() || false;
       this._pendingStyles = {}; // reset staged changes on each new selection
       this._populate(element);
       this._resetDelete();
@@ -233,6 +234,13 @@
               <span>Delete</span>
             </button>
           </div>
+
+          <!-- Selected Elements List (Batch Mode Only) -->
+          <div class="ds-ep__hr" id="ds-ep-list-hr" style="display:none"></div>
+          <div class="ds-ep__sec" id="ds-ep-selected-list-sec" style="display:none; max-height: 150px; overflow-y: auto;">
+            <div class="ds-ep__sec-title" style="margin-bottom: 8px;">Selected Elements</div>
+            <div id="ds-ep-selected-list" style="display: flex; flex-direction: column; gap: 4px;"></div>
+          </div>
         </div>
       `;
 
@@ -423,15 +431,82 @@
       const rect = el.getBoundingClientRect();
       const comp = getComputedStyle(el);
 
-      this._panel.querySelector('.ds-ep__tag').textContent = tag + cls;
-      this._panel.querySelector('.ds-ep__dims').textContent =
-        Math.round(rect.width) + ' × ' + Math.round(rect.height);
+      if (this._isBatchMode) {
+        const count = DS.MultiSelect.getSelection().length;
+        this._panel.querySelector('.ds-ep__tag').textContent = `${count} elements selected`;
+        this._panel.querySelector('.ds-ep__dims').textContent = 'Batch Mode';
+        
+        const pathEl = this._panel.querySelector('.ds-ep__path');
+        pathEl.textContent = 'Multi-Select';
+        pathEl.title = '';
+        
+        this._panel.querySelector('#ds-ep-hide-label').textContent = 'Hide All';
+        this._panel.querySelector('[data-action="delete"] span').textContent = 'Delete All';
 
-      // Selector path
-      const selector = DS.SelectorEngine.generate(el);
-      const pathEl = this._panel.querySelector('.ds-ep__path');
-      pathEl.textContent = selector;
-      pathEl.title = selector;
+        // Populate Selected Elements List
+        const listSec = this._panel.querySelector('#ds-ep-selected-list-sec');
+        const listHr = this._panel.querySelector('#ds-ep-list-hr');
+        const listCont = this._panel.querySelector('#ds-ep-selected-list');
+        listSec.style.display = 'block';
+        listHr.style.display = 'block';
+        listCont.innerHTML = '';
+
+        DS.MultiSelect.getSelection().forEach((selEl, idx) => {
+          const sTag = selEl.tagName.toLowerCase();
+          let sCls = '';
+          if (typeof selEl.className === 'string' && selEl.className.trim()) {
+            sCls = '.' + selEl.className.trim().split(/\s+/).slice(0, 2).join('.');
+          }
+          
+          const item = document.createElement('div');
+          item.style.cssText = `
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 4px;
+            font-size: 11px; border: 1px solid rgba(255,255,255,0.05);
+          `;
+          
+          item.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
+              <span style="background: #6366F1; color: #fff; width: 14px; height: 14px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; flex-shrink: 0;">${idx + 1}</span>
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #EDEDEF;">${sTag}${sCls}</span>
+            </div>
+            <button class="ds-ep-remove-btn" style="background: transparent; border: none; color: #8B8B96; cursor: pointer; padding: 2px; flex-shrink: 0;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          `;
+
+          // Remove button logic
+          item.querySelector('.ds-ep-remove-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            DS.MultiSelect.remove(selEl);
+          });
+
+          // Optional: highlight element on hover
+          item.addEventListener('mouseenter', () => {
+            DS.Selector?.flashHighlight(selEl);
+          });
+
+          listCont.appendChild(item);
+        });
+
+      } else {
+        const listSec = this._panel.querySelector('#ds-ep-selected-list-sec');
+        const listHr = this._panel.querySelector('#ds-ep-list-hr');
+        if (listSec) listSec.style.display = 'none';
+        if (listHr) listHr.style.display = 'none';
+        this._panel.querySelector('.ds-ep__tag').textContent = tag + cls;
+        this._panel.querySelector('.ds-ep__dims').textContent =
+          Math.round(rect.width) + ' × ' + Math.round(rect.height);
+
+        // Selector path
+        const selector = DS.SelectorEngine.generate(el);
+        const pathEl = this._panel.querySelector('.ds-ep__path');
+        pathEl.textContent = selector;
+        pathEl.title = selector;
+        
+        this._panel.querySelector('#ds-ep-hide-label').textContent = 'Hide';
+        this._panel.querySelector('[data-action="delete"] span').textContent = 'Delete';
+      }
 
       this._originalStyles = {
         width: el.style.width || '',
@@ -587,13 +662,16 @@
       }
 
       // Revert all staged (unsaved) style changes
-      if (this._currentEl && this._pendingStyles) {
+      if (this._pendingStyles) {
+        const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
         for (const [prop, record] of Object.entries(this._pendingStyles)) {
-          if (record.original !== undefined && record.original !== '') {
-            this._currentEl.style[prop] = record.original;
-          } else {
-            this._currentEl.style.removeProperty(prop);
-          }
+          elements.forEach(element => {
+            if (record.original !== undefined && record.original !== '') {
+              element.style[prop] = record.original;
+            } else {
+              element.style.removeProperty(prop);
+            }
+          });
         }
       }
     },
@@ -606,74 +684,108 @@
     },
 
     async _applyDimensions() {
-      if (!this._currentEl) return;
+      const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
+      if (elements.length === 0) return;
 
       const url = window.location.origin + window.location.pathname;
-      const selector = DS.SelectorEngine.generate(this._currentEl);
       const isGlobal = this._panel.querySelector('#ds-ep-scope').value === 'domain';
       let madeChange = false;
+      const batchChanges = [];
 
-      // ── 1. Dimensions ─────────────────────────────────
-      const changesMap = {};
+      for (const element of elements) {
+        const selector = DS.SelectorEngine.generate(element);
+        
+        // ── 1. Dimensions ─────────────────────────────────
+        const changesMap = {};
+        let elementMadeChange = false;
 
-      for (const prop of ['width', 'height']) {
-        const input = this._panel.querySelector(`.ds-ep__input[data-prop="${prop}"]`);
-        const unit = this._panel.querySelector(`.ds-ep__unit[data-prop="${prop}"]`);
+        for (const prop of ['width', 'height']) {
+          const input = this._panel.querySelector(`.ds-ep__input[data-prop="${prop}"]`);
+          const unit = this._panel.querySelector(`.ds-ep__unit[data-prop="${prop}"]`);
 
-        const newVal = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
-        const oldVal = this._originalStyles[prop];
+          const newVal = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
+          const oldVal = element.style[prop] || '';
 
-        if (newVal !== oldVal) {
-          changesMap[prop] = { original: oldVal, modified: newVal };
-          this._currentEl.style[prop] = newVal;
-          this._originalStyles[prop] = newVal;
-          madeChange = true;
+          if (newVal !== oldVal && (input.value !== '' || unit.value === 'auto')) {
+            changesMap[prop] = { original: oldVal, modified: newVal };
+            element.style[prop] = newVal;
+            elementMadeChange = true;
+          }
+        }
+
+        if (elementMadeChange) {
+          const change = {
+            id: _uid(),
+            selector,
+            type: 'resize',
+            styles: changesMap,
+            isGlobal,
+            fingerprint: DS.Main._fingerprint(element),
+            timestamp: Date.now()
+          };
+
+          const propsChanged = Object.keys(changesMap);
+          if (propsChanged.length === 1) {
+            change.property = propsChanged[0];
+            change.original = changesMap[propsChanged[0]].original;
+            change.modified = changesMap[propsChanged[0]].modified;
+          } else {
+            change.property = 'dimensions';
+            change.modified = 'updated';
+          }
+          batchChanges.push(change);
+        }
+
+        // ── 2. Flush all pending (Appearance + Typography) styles ─
+        const pendingEntries = Object.entries(this._pendingStyles);
+        for (const [cssProp, record] of pendingEntries) {
+          const styleChange = {
+            id: _uid(),
+            selector,
+            type: 'style',
+            property: cssProp,
+            original: record.original,
+            modified: record.current,
+            isGlobal,
+            fingerprint: DS.Main._fingerprint(element),
+            timestamp: Date.now()
+          };
+          batchChanges.push(styleChange);
         }
       }
 
-      if (madeChange) {
-        const change = {
-          id: _uid(),
-          selector,
-          type: 'resize',
-          styles: changesMap,
-          isGlobal,
-          fingerprint: DS.Main._fingerprint(this._currentEl),
-          timestamp: Date.now()
-        };
-
-        const propsChanged = Object.keys(changesMap);
-        if (propsChanged.length === 1) {
-          change.property = propsChanged[0];
-          change.original = changesMap[propsChanged[0]].original;
-          change.modified = changesMap[propsChanged[0]].modified;
+      if (batchChanges.length > 0) {
+        let finalChange;
+        if (this._isBatchMode) {
+           finalChange = {
+             id: _uid(),
+             type: 'batch',
+             batchAction: 'Style / Resize',
+             changes: batchChanges,
+             isGlobal,
+             timestamp: Date.now()
+           };
         } else {
-          change.property = 'dimensions';
-          change.modified = 'updated';
+           // Single element: either 1 change, or bundle as batch if multiple properties changed
+           if (batchChanges.length === 1) {
+             finalChange = batchChanges[0];
+           } else {
+             finalChange = {
+               id: _uid(),
+               type: 'batch',
+               batchAction: 'Multiple Styles',
+               changes: batchChanges,
+               isGlobal,
+               timestamp: Date.now()
+             };
+           }
         }
-
-        await DS.Storage.saveChange(url, change);
-        await DS.History.push(url, change);
-      }
-
-      // ── 2. Flush all pending (Appearance + Typography) styles ─
-      const pendingEntries = Object.entries(this._pendingStyles);
-      for (const [cssProp, record] of pendingEntries) {
-        const styleChange = {
-          id: _uid(),
-          selector,
-          type: 'style',
-          property: cssProp,
-          original: record.original,
-          modified: record.current,
-          isGlobal,
-          fingerprint: DS.Main._fingerprint(this._currentEl),
-          timestamp: Date.now()
-        };
-        await DS.Storage.saveChange(url, styleChange, isGlobal);
-        await DS.History.push(url, styleChange);
+        
+        await DS.Storage.saveChange(url, finalChange, isGlobal);
+        await DS.History.push(url, finalChange);
         madeChange = true;
       }
+
       // Clear pending after save — they're now committed
       this._pendingStyles = {};
 
@@ -751,7 +863,8 @@
     // ── Delete ─────────────────────────────────────────
 
     async _handleDelete() {
-      if (!this._currentEl) return;
+      const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
+      if (elements.length === 0) return;
 
       const btn = this._panel.querySelector('[data-action="delete"]');
       if (!this._deleteConfirm) {
@@ -764,111 +877,132 @@
       }
 
       clearTimeout(this._deleteTimer);
-      const el = this._currentEl;
       this.hide();
-      
-      const selector = DS.SelectorEngine.generate(el);
-      const parent = el.parentElement;
-      const parentSelector = parent ? DS.SelectorEngine.generate(parent) : null;
-      const childIndex = parent ? Array.from(parent.children).indexOf(el) : 0;
+
       const url = window.location.origin + window.location.pathname;
       const isGlobal = this._panel.querySelector('#ds-ep-scope').value === 'domain';
+      const batchChanges = [];
 
-      const change = {
-        id: _uid(),
-        selector,
-        type: 'delete',
-        outerHTML: el.outerHTML,
-        parentSelector,
-        childIndex,
-        isGlobal,
-        fingerprint: DS.Main._fingerprint(el),
-        timestamp: Date.now()
-      };
+      for (const el of elements) {
+        const selector = DS.SelectorEngine.generate(el);
+        const parent = el.parentElement;
+        const parentSelector = parent ? DS.SelectorEngine.generate(parent) : null;
+        const childIndex = parent ? Array.from(parent.children).indexOf(el) : 0;
 
-      el.remove();
-      DS.Selector?.deselect();
+        const change = {
+          id: _uid(),
+          selector,
+          type: 'delete',
+          outerHTML: el.outerHTML,
+          parentSelector,
+          childIndex,
+          isGlobal,
+          fingerprint: DS.Main._fingerprint(el),
+          timestamp: Date.now()
+        };
+        batchChanges.push(change);
+        el.remove();
+      }
 
-      await DS.Storage.saveChange(url, change, isGlobal);
+      let finalChange;
+      if (this._isBatchMode) {
+         finalChange = {
+           id: _uid(),
+           type: 'batch',
+           batchAction: 'Delete',
+           changes: batchChanges,
+           isGlobal,
+           timestamp: Date.now()
+         };
+      } else {
+         finalChange = batchChanges[0];
+      }
+
+      await DS.Storage.saveChange(url, finalChange, isGlobal);
       await DS.Storage.getHistory(url, isGlobal).then(hist => {
-         hist.undoStack.push(change);
+         hist.undoStack.push(finalChange);
          hist.redoStack = [];
          DS.Storage.saveHistory(url, hist, isGlobal);
       });
 
-      DS.Toast?.show('Element deleted', 'danger', {
+      DS.Selector?.deselect();
+      DS.Toast?.show(`${elements.length > 1 ? elements.length + ' elements' : 'Element'} deleted`, 'danger', {
         undoCallback: () => DS.Main?.undo()
       });
       DS.Main?._afterChange();
     },
 
     async _handleHide() {
-      if (!this._currentEl) return;
+      const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
+      if (elements.length === 0) return;
 
-      const el = this._currentEl;
       const url = window.location.origin + window.location.pathname;
       const isGlobal = this._panel.querySelector('#ds-ep-scope').value === 'domain';
-      const selector = DS.SelectorEngine.generate(el);
+      const batchChanges = [];
+      let isShowing = false;
 
-      // ── Toggle: if element is already hidden, show it ──
-      const isHidden = el.dataset.dsHidden === 'true';
-      if (isHidden) {
-        const originalDisplay = el.dataset.dsOriginalDisplay || '';
-        el.style.display = originalDisplay;
-        el.style.removeProperty('pointer-events');
-        // Remove from DOM dataset
-        delete el.dataset.dsHidden;
-        delete el.dataset.dsOriginalDisplay;
+      for (const el of elements) {
+        const selector = DS.SelectorEngine.generate(el);
+        const isHidden = el.dataset.dsHidden === 'true';
+        
+        if (isHidden) {
+          isShowing = true;
+          const originalDisplay = el.dataset.dsOriginalDisplay || '';
+          el.style.display = originalDisplay;
+          el.style.removeProperty('pointer-events');
+          delete el.dataset.dsHidden;
+          delete el.dataset.dsOriginalDisplay;
 
-        const change = {
-          id: _uid(),
-          selector,
-          type: 'show',
-          original: 'none',
-          modified: originalDisplay,
-          isGlobal,
-          fingerprint: DS.Main._fingerprint(el),
-          timestamp: Date.now()
-        };
+          batchChanges.push({
+            id: _uid(),
+            selector,
+            type: 'show',
+            original: 'none',
+            modified: originalDisplay,
+            isGlobal,
+            fingerprint: DS.Main._fingerprint(el),
+            timestamp: Date.now()
+          });
+        } else {
+          const originalDisplay = el.style.display || '';
+          el.dataset.dsHidden = 'true';
+          el.dataset.dsOriginalDisplay = originalDisplay;
+          el.style.display = 'none';
 
-        await DS.Storage.saveChange(url, change, isGlobal);
-        await DS.History.push(url, change);
-        DS.Toast?.show('Element shown', 'success', { undoCallback: () => DS.Main?.undo() });
-        DS.Main?._afterChange();
-        this.hide(); // close the panel
-        DS.Selector?.deselect();
-        return;
+          batchChanges.push({
+            id: _uid(),
+            selector,
+            type: 'hide',
+            original: originalDisplay,
+            modified: 'none',
+            isGlobal,
+            fingerprint: DS.Main._fingerprint(el),
+            timestamp: Date.now()
+          });
+        }
       }
 
-      // ── Hide the element ───────────────────────────────
-      const originalDisplay = el.style.display || '';
-      const preHideRect = el.getBoundingClientRect(); // Capture rect BEFORE setting display: none
-      
-      el.dataset.dsHidden = 'true';
-      el.dataset.dsOriginalDisplay = originalDisplay;
-      el.style.display = 'none';
+      let finalChange;
+      if (this._isBatchMode) {
+         finalChange = {
+           id: _uid(),
+           type: 'batch',
+           batchAction: isShowing ? 'Show' : 'Hide',
+           changes: batchChanges,
+           isGlobal,
+           timestamp: Date.now()
+         };
+      } else {
+         finalChange = batchChanges[0];
+      }
 
-      const change = {
-        id: _uid(),
-        selector,
-        type: 'hide',
-        original: originalDisplay,
-        modified: 'none',
-        isGlobal,
-        fingerprint: DS.Main._fingerprint(el),
-        timestamp: Date.now()
-      };
+      await DS.Storage.saveChange(url, finalChange, isGlobal);
+      await DS.History.push(url, finalChange);
 
-      this.hide();
-      DS.Selector?.deselect();
-
-      await DS.Storage.saveChange(url, change, isGlobal);
-      await DS.History.push(url, change);
-
-      DS.Toast?.show('Element hidden — click placeholder to re-show', 'success', {
-        undoCallback: () => DS.Main?.undo()
-      });
+      DS.Toast?.show(`${elements.length > 1 ? elements.length + ' elements' : 'Element'} updated`, 'success', { undoCallback: () => DS.Main?.undo() });
       DS.Main?._afterChange();
+      this.hide(); // close the panel
+      DS.Selector?.deselect();
     },
 
     _resetDelete() {

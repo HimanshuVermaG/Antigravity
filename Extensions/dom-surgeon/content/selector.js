@@ -88,10 +88,12 @@
     },
 
     deselect() {
+      if (!this._selectedEl) return;
       this._selectedEl = null;
       this._hide(this._selectOverlay);
-      if (DS.EditorPanel) DS.EditorPanel.hide();
-      if (DS.Breadcrumb) DS.Breadcrumb.hide();
+      DS.EditorPanel?.hide();
+      DS.MultiSelect?.clear();
+      DS.Breadcrumb?.hide();
     },
 
     getSelectedElement() {
@@ -166,7 +168,7 @@
       this._hoveredEl = target;
 
       // Don't show hover overlay on the already-selected element
-      if (target === this._selectedEl) {
+      if (target === this._selectedEl || DS.MultiSelect?.getSelection().includes(target)) {
         this._hide(this._hoverOverlay);
         this._hide(this._infoTag);
         return;
@@ -188,7 +190,13 @@
       e.stopImmediatePropagation();
 
       this._clearHover();
-      this.selectElement(target);
+      
+      if (e.metaKey || e.ctrlKey) {
+        DS.MultiSelect?.toggle(target);
+      } else {
+        DS.MultiSelect?.clear();
+        this.selectElement(target);
+      }
     },
 
     _handleKey(e) {
@@ -269,7 +277,10 @@
       switch (e.key) {
         case 'Escape':
           e.preventDefault();
-          if (this._selectedEl) {
+          if (DS.MultiSelect?.isActive()) {
+            DS.MultiSelect?.clear();
+            DS.EditorPanel?.hide();
+          } else if (this._selectedEl) {
             this.deselect();
           } else {
             this.deactivate();

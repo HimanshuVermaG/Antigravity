@@ -10,7 +10,9 @@
     delete: { icon: '🔴', label: 'Deleted' },
     resize: { icon: '🔵', label: 'Resized' },
     hide:   { icon: '🟣', label: 'Hidden' },
-    style:  { icon: '🟡', label: 'Styled' }
+    show:   { icon: '🟢', label: 'Shown' },
+    style:  { icon: '🟡', label: 'Styled' },
+    batch:  { icon: '📦', label: 'Batch' }
   };
 
   const ChangeSidebar = {
@@ -331,17 +333,23 @@
       
       const info = CHANGE_ICONS[change.type] || { icon: '⚪', label: change.type };
       let desc = info.label;
-      const sel = change.selector || '';
-      const shortSel = sel.split(' > ').pop() || sel;
-      desc += ` ${shortSel}`;
-
+      let sel = '';
       let detail = '';
-      if (change.type === 'resize') {
-        detail = `${change.property}: ${change.modified}`;
-      } else if (change.type === 'style') {
-        detail = `${change.property}: ${change.modified}`;
-      } else if (change.type === 'hide') {
-        detail = `display: none`;
+
+      if (change.type === 'batch') {
+        sel = `${change.changes.length} elements`;
+        desc = `${change.batchAction} ${sel}`;
+        detail = `${change.changes.length} items grouped`;
+      } else {
+        sel = change.selector || '';
+        const shortSel = sel.split(' > ').pop() || sel;
+        desc += ` ${shortSel}`;
+
+        if (change.type === 'resize' || change.type === 'style') {
+          detail = `${change.property}: ${change.modified}`;
+        } else if (change.type === 'hide') {
+          detail = `display: none`;
+        }
       }
 
       const diff = Math.floor((Date.now() - change.timestamp) / 1000);

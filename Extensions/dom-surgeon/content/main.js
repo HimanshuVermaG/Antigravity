@@ -88,6 +88,7 @@
       DS.Widget.init(this._shadow);
       DS.ChangeSidebar?.init(this._shadow);
       DS.Breadcrumb?.init(this._shadow);
+      DS.MultiSelect?.init(this._shadow);
       DS.Selector.init();
 
       // Before/After badge in shadow DOM
@@ -396,7 +397,16 @@
       const change = changes.find(c => c.id === changeId);
       if (!change) return;
 
-      this._previewChange = change;
+      this._previewNodes = [];
+      this._doPreview(change);
+    },
+
+    _doPreview(change) {
+      if (change.type === 'batch') {
+        change.changes.forEach(c => this._doPreview(c));
+        return;
+      }
+
 
       switch (change.type) {
         case 'delete': {
@@ -420,7 +430,7 @@
           restored.style.pointerEvents = 'none';
           restored.style.transition = 'all 0.2s ease';
           
-          this._previewNode = restored;
+          this._previewNodes.push({ el: restored, change: change, isRestored: true });
           restored.scrollIntoView({ behavior: 'smooth', block: 'center' });
           break;
         }
@@ -451,7 +461,7 @@
           el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
           el.style.transition = 'all 0.2s ease';
           
-          this._previewNode = el;
+          this._previewNodes.push({ el, change, originalStyle: this._previewOriginalStyle });
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           break;
         }
@@ -470,7 +480,7 @@
           el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
           el.style.transition = 'all 0.2s ease';
           
-          this._previewNode = el;
+          this._previewNodes.push({ el, change, originalStyle: this._previewOriginalStyle });
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           break;
         }
@@ -484,7 +494,7 @@
           el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
           el.style.transition = 'all 0.2s ease';
           
-          this._previewNode = el;
+          this._previewNodes.push({ el, change });
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           break;
         }
@@ -494,54 +504,51 @@
           if (!el) return;
 
           // Showing means original was hidden. We preview the original hidden state.
-          el.style.display = 'none';
+          el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
+          el.style.transition = 'all 0.2s ease';
           
-          this._previewNode = el;
+          this._previewNodes.push({ el, change });
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           break;
         }
       }
     },
 
     clearPreview() {
-      if (!this._previewChange) return;
+      if (!this._previewNodes || this._previewNodes.length === 0) return;
 
-      const ch = this._previewChange;
-      const el = this._previewNode;
-
-      if (el) {
-        if (ch.type === 'delete') {
+      for (const { el, change, originalStyle, isRestored } of this._previewNodes) {
+        if (!el) continue;
+        
+        if (change.type === 'delete' && isRestored) {
           el.remove();
-        } else if (ch.type === 'resize' || ch.type === 'style') {
-          if (ch.styles && this._previewOriginalStyle && typeof this._previewOriginalStyle === 'object') {
-            for (const p in ch.styles) {
-              if (ch.styles[p].modified !== undefined && ch.styles[p].modified !== '') {
-                el.style[p] = ch.styles[p].modified;
+        } else if (change.type === 'resize' || change.type === 'style') {
+          if (change.styles && originalStyle && typeof originalStyle === 'object') {
+            for (const p in change.styles) {
+              if (change.styles[p].modified !== undefined && change.styles[p].modified !== '') {
+                el.style[p] = change.styles[p].modified;
               } else {
                 el.style.removeProperty(p);
               }
             }
           } else {
-            if (ch.modified !== undefined && ch.modified !== '') {
-               el.style[ch.property] = ch.modified;
+            if (change.modified !== undefined && change.modified !== '') {
+               el.style[change.property] = change.modified;
             } else {
-               el.style.removeProperty(ch.property);
+               el.style.removeProperty(change.property);
             }
           }
           el.style.boxShadow = '';
-        } else if (ch.type === 'hide') {
-          // Put back the applied "hide" state
+        } else if (change.type === 'hide') {
           el.style.display = 'none';
           el.style.boxShadow = '';
-        } else if (ch.type === 'show') {
-          // Put back the applied "show" state
-          el.style.display = ch.modified || '';
+        } else if (change.type === 'show') {
+          el.style.display = change.modified || '';
           el.style.boxShadow = '';
         }
       }
 
-      this._previewNode = null;
-      this._previewOriginalStyle = null;
-      this._previewChange = null;
+      this._previewNodes = [];
     },
 
     // ── Replay saved changes on page load ──────────────
@@ -563,6 +570,11 @@
     // ── Apply / Revert a single change ─────────────────
 
     _apply(ch) {
+      if (ch.type === 'batch') {
+        ch.changes.forEach(sub => this._apply(sub));
+        return null; // Not returning an element for batches
+      }
+
       const el = DS.SelectorEngine.find(ch.selector);
       
       if (el && ch.isGlobal) {
@@ -633,6 +645,16 @@
     },
 
     _revert(ch) {
+      if (ch.type === 'batch') {
+        let firstTarget = null;
+        // Revert in reverse order
+        for (let i = ch.changes.length - 1; i >= 0; i--) {
+          const t = this._revert(ch.changes[i]);
+          if (!firstTarget) firstTarget = t;
+        }
+        return firstTarget;
+      }
+
       switch (ch.type) {
         case 'delete': {
           // Re-insert from stored outerHTML
