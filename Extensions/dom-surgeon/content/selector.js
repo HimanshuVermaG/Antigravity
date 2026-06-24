@@ -23,6 +23,8 @@
     _onClick: null,
     _onKey: null,
     _onScroll: null,
+    _onMouseDown: null,
+    _onMouseUp: null,
 
     // ── Public API ─────────────────────────────────────
 
@@ -47,6 +49,16 @@
       this._onClick = this._handleClick.bind(this);
       this._onKey = this._handleKey.bind(this);
       this._onScroll = this._handleScroll.bind(this);
+      this._onMouseDown = this._handleMouseDown.bind(this);
+      this._onMouseUp = this._handleMouseUp.bind(this);
+
+      this._marqueeBox = document.createElement('div');
+      this._marqueeBox.id = 'ds-marquee-box';
+      this._marqueeBox.style.cssText = `
+        position: fixed; border: 1px dashed #6366F1; background: rgba(99, 102, 241, 0.1);
+        pointer-events: none; z-index: 2147483647; display: none;
+      `;
+      document.documentElement.appendChild(this._marqueeBox);
     },
 
     setMode(mode) {
@@ -77,6 +89,8 @@
       setTimeout(() => {
         if (this._active) {
           document.addEventListener('click', this._onClick, true);
+          document.addEventListener('mousedown', this._onMouseDown, true);
+          document.addEventListener('mouseup', this._onMouseUp, true);
         }
       }, 50);
       window.addEventListener('scroll', this._onScroll, true);
@@ -92,6 +106,8 @@
       document.removeEventListener('mousemove', this._onMove, true);
       document.removeEventListener('click', this._onClick, true);
       document.removeEventListener('keydown', this._onKey, true);
+      document.removeEventListener('mousedown', this._onMouseDown, true);
+      document.removeEventListener('mouseup', this._onMouseUp, true);
       window.removeEventListener('scroll', this._onScroll, true);
       window.removeEventListener('resize', this._onScroll, true);
 
@@ -181,6 +197,18 @@
     // ── Event Handlers ─────────────────────────────────
 
     _handleMove(e) {
+      if (this._marqueeActive) {
+        const left = Math.min(e.clientX, this._marqueeStart.x);
+        const top = Math.min(e.clientY, this._marqueeStart.y);
+        const width = Math.abs(e.clientX - this._marqueeStart.x);
+        const height = Math.abs(e.clientY - this._marqueeStart.y);
+        this._marqueeBox.style.left = left + 'px';
+        this._marqueeBox.style.top = top + 'px';
+        this._marqueeBox.style.width = width + 'px';
+        this._marqueeBox.style.height = height + 'px';
+        return;
+      }
+
       const target = document.elementFromPoint(e.clientX, e.clientY);
       if (!target || target === this._hoveredEl) return;
       if (this._isOwn(target)) return;
@@ -204,6 +232,11 @@
 
     _handleClick(e) {
       if (!e.isTrusted) return; // Ignore programmatic clicks
+
+      if (this._wasMarqueeing) {
+        this._wasMarqueeing = false;
+        return;
+      }
 
       const target = document.elementFromPoint(e.clientX, e.clientY);
       if (!target || this._isOwn(target)) return;
@@ -249,7 +282,8 @@
         };
 
         switch (e.key.toLowerCase()) {
-          case 'q': { // Parent
+          case 'q':
+          case 'arrowup': { // Parent
             let p = this._selectedEl.parentElement;
             while (p && p !== document.body && p !== document.documentElement && !isValid(p)) {
               p = p.parentElement;
@@ -261,7 +295,8 @@
             }
             break;
           }
-          case 'w': { // First child element (or last visited child)
+          case 'w':
+          case 'arrowdown': { // First child element (or last visited child)
             const children = Array.from(this._selectedEl.children).filter(isValid);
             if (children.length > 0) {
               this._navHistory = this._navHistory || new WeakMap();
@@ -274,13 +309,15 @@
             }
             break;
           }
-          case 'a': { // Previous sibling element
+          case 'a':
+          case 'arrowleft': { // Previous sibling element
             let prev = this._selectedEl.previousElementSibling;
             while (prev && !isValid(prev)) prev = prev.previousElementSibling;
             if (prev) next = prev;
             break;
           }
-          case 'd': { // Next sibling element
+          case 'd':
+          case 'arrowright': { // Next sibling element
             let sib = this._selectedEl.nextElementSibling;
             while (sib && !isValid(sib)) sib = sib.nextElementSibling;
             if (sib) next = sib;
@@ -460,18 +497,61 @@
 
     /** Check if an element belongs to our own injected UI. */
     _isOwn(el) {
-      let cur = el;
-      while (cur) {
-        const id = cur.id;
-        if (id === 'dom-surgeon-host' ||
-            id === 'dom-surgeon-hover' ||
-            id === 'dom-surgeon-select' ||
-            id === 'dom-surgeon-info') {
-          return true;
+      return el.closest?.('#dom-surgeon-host') || 
+             el.classList?.contains('ds-ms-badge') ||
+             el.classList?.contains('ds-ms-overlay') ||
+             el.id === 'dom-surgeon-hover' || 
+             el.id === 'dom-surgeon-select' || 
+             el.id === 'ds-selector-info' ||
+             el.id === 'ds-marquee-box';
+    },
+
+    _handleMouseDown(e) {
+      if (this.mode !== 'marquee') return;
+      if (!e.isTrusted || this._isOwn(e.target)) return;
+      this._marqueeStart = { x: e.clientX, y: e.clientY };
+      this._marqueeActive = true;
+      this._marqueeBox.style.display = 'block';
+      this._marqueeBox.style.left = e.clientX + 'px';
+      this._marqueeBox.style.top = e.clientY + 'px';
+      this._marqueeBox.style.width = '0px';
+      this._marqueeBox.style.height = '0px';
+      e.preventDefault();
+    },
+
+    _handleMouseUp(e) {
+      if (this.mode !== 'marquee' || !this._marqueeActive) return;
+      this._marqueeActive = false;
+      this._marqueeBox.style.display = 'none';
+      
+      const left = Math.min(e.clientX, this._marqueeStart.x);
+      const top = Math.min(e.clientY, this._marqueeStart.y);
+      const right = Math.max(e.clientX, this._marqueeStart.x);
+      const bottom = Math.max(e.clientY, this._marqueeStart.y);
+      
+      if (right - left > 5 && bottom - top > 5) {
+        this._wasMarqueeing = true;
+        const all = document.body.getElementsByTagName('*');
+        const matches = [];
+        for (let el of all) {
+          if (this._isOwn(el)) continue;
+          const rect = el.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            // Check if element is FULLY covered by the marquee box
+            if (rect.left >= left && rect.right <= right && rect.top >= top && rect.bottom <= bottom) {
+               matches.push(el);
+            }
+          }
         }
-        cur = cur.parentElement;
+        
+        if (matches.length > 0) {
+          if (!DS.MultiSelect.isActive()) {
+            DS.MultiSelect.add(matches[0]);
+          }
+          matches.forEach(m => DS.MultiSelect.add(m));
+          DS.Toast?.show(`Marquee selected ${matches.length} elements`, 'success');
+        }
       }
-      return false;
     }
   };
 

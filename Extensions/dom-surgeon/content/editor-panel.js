@@ -16,6 +16,7 @@
     _dragOff: { x: 0, y: 0 },
     _deleteTimer: null,
     _pendingStyles: {}, // { cssProp: { original, current } } — staged but not saved
+    _pendingContent: {}, // { property: { original, current } }
 
     // ── Public API ─────────────────────────────────────
 
@@ -30,6 +31,7 @@
       this._editChange = editChange;
       this._isBatchMode = DS.MultiSelect?.isActive() || false;
       this._pendingStyles = {}; // reset staged changes on each new selection
+      this._pendingContent = {};
       this._populate(element);
       this._resetDelete();
       
@@ -49,6 +51,7 @@
       this._editChange = null;
       this._originalStyles = null;
       this._pendingStyles = {};
+      this._pendingContent = {};
       this._resetDelete();
     },
 
@@ -77,6 +80,15 @@
 
         <!-- Selector path -->
         <div class="ds-ep__path"></div>
+        
+        <!-- Action Row: Magic Wand -->
+        <div class="ds-ep__action-row" style="padding: 0 16px 12px 16px; display: flex; gap: 8px;">
+          <button class="ds-ep__btn ds-ep__btn--secondary" id="ds-ep-magic-wand" style="flex:1; font-size: 11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: text-bottom;">
+              <path d="M15 4V2 M15 16v-2 M8 9h2 M20 9h2 M14.2 4.2l1.4-1.4 M19.8 9.8l1.4 1.4 M14.2 13.8l1.4 1.4 M19.8 4.2l1.4-1.4 M3 21l9-9" />
+            </svg> Select Similar
+          </button>
+        </div>
 
         <!-- Body -->
         <div class="ds-ep__body">
@@ -119,7 +131,23 @@
 
           <div class="ds-ep__hr"></div>
 
-          <div class="ds-ep__hr"></div>
+          <!-- Content Accordion -->
+          <div class="ds-ep__accordion" id="ds-ep-content-acc" style="display:none">
+            <div class="ds-ep__accordion-head" data-target="content">
+              <span class="ds-ep__sec-title" style="margin:0">Content</span>
+              <svg class="ds-ep__chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="ds-ep__accordion-body" id="ds-ep-content" style="display:none; padding-top: 16px;">
+              <div class="ds-ep__row" id="ds-ep-text-row" style="display:none; flex-direction:column; align-items:flex-start;">
+                <span class="ds-ep__lbl" style="margin-bottom:4px; width:auto">Text Content</span>
+                <textarea class="ds-ep__input" id="ds-ep-text-content" style="width:100%; min-height:60px; resize:vertical; padding:4px;"></textarea>
+              </div>
+              <div class="ds-ep__row" id="ds-ep-img-row" style="display:none; flex-direction:column; align-items:flex-start; margin-top:8px;">
+                <span class="ds-ep__lbl" style="margin-bottom:4px; width:auto">Image URL (src)</span>
+                <input type="text" class="ds-ep__input" id="ds-ep-img-src" style="width:100%;">
+              </div>
+            </div>
+          </div>
 
           <!-- Layout Accordion -->
           <div class="ds-ep__accordion">
@@ -161,6 +189,14 @@
                   <span class="ds-ep__slider-val" id="ds-ep-opacity-val">100%</span>
                 </div>
                 <input type="range" class="ds-ep__slider" id="ds-ep-opacity" min="0" max="100" value="100" data-style="opacity">
+              </div>
+
+              <!-- Kill Animations -->
+              <div class="ds-ep__row" style="margin-top: 8px;">
+                <button class="ds-ep__btn ds-ep__btn--secondary" id="ds-ep-kill-anim-btn" style="width: 100%; font-size: 11px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: text-bottom;"><path d="M10 9l-6 6 6 6 M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+                  Kill Animations & Transitions
+                </button>
               </div>
 
               <!-- Blur -->
@@ -209,6 +245,14 @@
               <div class="ds-ep__row">
                 <span class="ds-ep__lbl" style="font-size:10px">LH</span>
                 <input type="number" class="ds-ep__input" id="ds-ep-line-height" placeholder="1.5" step="0.1" min="0.5" max="5">
+              </div>
+
+              <!-- Font Swapper -->
+              <div class="ds-ep__row" style="margin-top: 8px;">
+                <button class="ds-ep__btn ds-ep__btn--secondary" id="ds-ep-font-swap-btn" style="width: 100%; font-size: 11px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: text-bottom;"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                  Force Readable Font
+                </button>
               </div>
 
               <!-- Text align -->
@@ -388,6 +432,72 @@
         });
       });
 
+      // Quick actions
+      const killAnimBtn = p.querySelector('#ds-ep-kill-anim-btn');
+      if (killAnimBtn) {
+        killAnimBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._applyLivePreview('animation', 'none !important');
+          this._applyLivePreview('transition', 'none !important');
+          this._applyDimensions(); // Save immediately
+        });
+      }
+
+      const fontSwapBtn = p.querySelector('#ds-ep-font-swap-btn');
+      if (fontSwapBtn) {
+        fontSwapBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._applyLivePreview('fontFamily', 'system-ui, -apple-system, sans-serif !important');
+          this._applyDimensions(); // Save immediately
+        });
+      }
+
+      // Select Similar (Magic Wand)
+      const magicWandBtn = p.querySelector('#ds-ep-magic-wand');
+      if (magicWandBtn) {
+        magicWandBtn.addEventListener('click', () => {
+          if (!this._currentEl) return;
+          const tag = this._currentEl.tagName.toLowerCase();
+          const classes = Array.from(this._currentEl.classList).filter(c => !c.startsWith('ds-') && !c.includes(':'));
+          const selector = tag + (classes.length > 0 ? '.' + classes.join('.') : '');
+          try {
+            const matches = document.querySelectorAll(selector);
+            DS.MultiSelect.add(this._currentEl);
+            matches.forEach(m => {
+              if (m !== this._currentEl && !DS.MultiSelect._selected.includes(m)) {
+                if (!DS.MultiSelect._selected.some(sel => sel.contains(m))) {
+                   DS.MultiSelect._selected = DS.MultiSelect._selected.filter(sel => !m.contains(sel));
+                   DS.MultiSelect._selected.push(m);
+                }
+              }
+            });
+            DS.MultiSelect._render();
+            if (!DS.MultiSelect._rafId) DS.MultiSelect._rafId = requestAnimationFrame(DS.MultiSelect._loop);
+            this.show(this._currentEl);
+            DS.Toast?.show(`Selected ${DS.MultiSelect._selected.length} elements`, 'success');
+          } catch(e) { console.error(e); }
+        });
+      }
+
+      // ── Content live preview ──────────────────────────
+      const textContentInp = p.querySelector('#ds-ep-text-content');
+      if (textContentInp) {
+        textContentInp.addEventListener('input', (e) => {
+          if (!this._currentEl) return;
+          this._applyLiveContentPreview('innerText', e.target.value);
+        });
+        textContentInp.addEventListener('keydown', (e) => e.stopPropagation());
+      }
+
+      const imgSrcInp = p.querySelector('#ds-ep-img-src');
+      if (imgSrcInp) {
+        imgSrcInp.addEventListener('input', (e) => {
+          if (!this._currentEl) return;
+          this._applyLiveContentPreview('src', e.target.value);
+        });
+        imgSrcInp.addEventListener('keydown', (e) => e.stopPropagation());
+      }
+
       // ── Dimensions live preview ─────────────────────
       p.querySelectorAll('.ds-ep__input[data-prop]').forEach(inp => {
         inp.addEventListener('input', () => this._previewDimensions());
@@ -516,6 +626,37 @@
         this._panel.querySelector('.ds-ep__tag').textContent = tag + cls;
         this._panel.querySelector('.ds-ep__dims').textContent =
           Math.round(rect.width) + ' × ' + Math.round(rect.height);
+
+        // Content Accordion Logic
+        const contentAcc = this._panel.querySelector('#ds-ep-content-acc');
+        const textRow = this._panel.querySelector('#ds-ep-text-row');
+        const imgRow = this._panel.querySelector('#ds-ep-img-row');
+        const textInp = this._panel.querySelector('#ds-ep-text-content');
+        const imgInp = this._panel.querySelector('#ds-ep-img-src');
+        
+        let showContentAcc = false;
+        if (tag === 'img' || tag === 'video' || tag === 'audio' || tag === 'iframe') {
+          imgRow.style.display = 'flex';
+          imgInp.value = el.getAttribute('src') || '';
+          showContentAcc = true;
+        } else {
+          imgRow.style.display = 'none';
+        }
+
+        if (el.children.length === 0 || (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3)) {
+          // It's a leaf node containing only text (or empty)
+          textRow.style.display = 'flex';
+          textInp.value = el.innerText || '';
+          showContentAcc = true;
+        } else {
+          textRow.style.display = 'none';
+        }
+        
+        if (showContentAcc) {
+          contentAcc.style.display = 'block';
+        } else {
+          contentAcc.style.display = 'none';
+        }
 
         // Selector path
         const selector = DS.SelectorEngine.generate(el);
@@ -713,12 +854,23 @@
           });
         }
       }
+      // Revert all staged (unsaved) content changes
+      if (this._pendingContent && this._currentEl) {
+        for (const [prop, record] of Object.entries(this._pendingContent)) {
+          if (prop === 'innerText') {
+            this._currentEl.innerText = record.original;
+          } else {
+            this._currentEl.setAttribute(prop, record.original);
+          }
+        }
+      }
     },
 
     _handleReset() {
       if (!this._currentEl) return;
       this._revertPreview();
       this._pendingStyles = {};
+      this._pendingContent = {};
       this._populate(this._currentEl);
     },
 
@@ -747,10 +899,16 @@
 
           if (newVal !== oldVal && (input.value !== '' || unit.value === 'auto')) {
             changesMap[prop] = { original: oldVal, modified: newVal };
-            element.style[prop] = newVal;
-            elementMadeChange = true;
           }
         }
+
+        for (const prop in changesMap) {
+            const newVal = changesMap[prop].modified;
+            if (element.style[prop] !== newVal) {
+              this._setStyleProp(element, prop, newVal);
+              elementMadeChange = true;
+            }
+          }
 
         if (elementMadeChange) {
           const change = {
@@ -790,6 +948,23 @@
             timestamp: Date.now()
           };
           batchChanges.push(styleChange);
+        }
+
+        // ── 3. Flush all pending Content changes ─
+        const pendingContentEntries = Object.entries(this._pendingContent);
+        for (const [prop, record] of pendingContentEntries) {
+          const contentChange = {
+            id: _uid(),
+            selector,
+            type: 'content',
+            property: prop,
+            original: record.original,
+            modified: record.current,
+            isGlobal,
+            fingerprint: DS.Main._fingerprint(element),
+            timestamp: Date.now()
+          };
+          batchChanges.push(contentChange);
         }
       }
 
@@ -832,6 +1007,8 @@
 
       // Clear pending after save — they're now committed
       this._pendingStyles = {};
+      this._pendingContent = {};
+      this._editChange = null;
 
       if (madeChange) {
         DS.Toast?.show('Changes applied', 'success', {
@@ -864,13 +1041,24 @@
       }
     },
 
+    /** Helper to set style with optional !important support */
+    _setStyleProp(el, cssProp, value) {
+      const valStr = String(value || '').trim();
+      const kebabProp = cssProp.replace(/([A-Z])/g, '-$1').toLowerCase();
+      if (valStr.endsWith('!important')) {
+        el.style.setProperty(kebabProp, valStr.replace('!important', '').trim(), 'important');
+      } else {
+        el.style.setProperty(kebabProp, valStr);
+      }
+    },
+
     /**
      * Applies a style change immediately to all selected elements for live preview,
      * and stages it in _pendingStyles for the final Apply.
      */
     _applyLivePreview(cssProp, value) {
       const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
-      elements.forEach(el => el.style[cssProp] = value);
+      elements.forEach(el => this._setStyleProp(el, cssProp, value));
       this._stageStyle(cssProp, value);
     },
 
@@ -882,6 +1070,30 @@
       return '#' + [m[1], m[2], m[3]].map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
     },
 
+    /**
+     * Applies a content change immediately for live preview,
+     * and stages it in _pendingContent for the final Apply.
+     */
+    _applyLiveContentPreview(prop, value) {
+      if (this._isBatchMode) return; // Content changes don't support batch editing currently
+      if (!this._currentEl) return;
+
+      if (!this._pendingContent[prop]) {
+        this._pendingContent[prop] = {
+          original: prop === 'innerText' ? this._currentEl.innerText : this._currentEl.getAttribute(prop),
+          current: value
+        };
+      } else {
+        this._pendingContent[prop].current = value;
+      }
+
+      if (prop === 'innerText') {
+        this._currentEl.innerText = value;
+      } else {
+        this._currentEl.setAttribute(prop, value);
+      }
+    },
+
     /** Apply a single CSS style property, save to storage + history */
     async _applyStyle(cssProp, value) {
       if (!this._currentEl) return;
@@ -891,7 +1103,7 @@
       const original = this._currentEl.style[cssProp] || '';
 
       // Apply live (already done by input handler, but ensure it's set)
-      this._currentEl.style[cssProp] = value;
+      this._setStyleProp(this._currentEl, cssProp, value);
 
       const change = {
         id: _uid(),

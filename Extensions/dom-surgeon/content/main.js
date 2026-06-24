@@ -320,7 +320,7 @@
       DS.Toast.show('Change undone', 'info');
       this._afterChange();
 
-      if (target && DS.Selector.flashHighlight) {
+      if (target && typeof target.scrollIntoView === 'function' && DS.Selector.flashHighlight) {
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         DS.Selector.flashHighlight(target);
       }
@@ -344,7 +344,7 @@
       DS.Toast.show('Change reapplied', 'info');
       this._afterChange();
 
-      if (target && DS.Selector.flashHighlight) {
+      if (target && typeof target.scrollIntoView === 'function' && DS.Selector.flashHighlight) {
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         DS.Selector.flashHighlight(target);
       }
@@ -398,7 +398,7 @@
       DS.Toast.show('Change undone', 'info');
       this._afterChange();
 
-      if (target && DS.Selector.flashHighlight) {
+      if (target && typeof target.scrollIntoView === 'function' && DS.Selector.flashHighlight) {
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         DS.Selector.flashHighlight(target);
       }
@@ -468,7 +468,7 @@
             for (const p in change.styles) {
               this._previewOriginalStyle[p] = el.style[p] || '';
               if (change.styles[p].original) {
-                el.style[p] = change.styles[p].original;
+                this._setStyleProp(el, p, change.styles[p].original);
               } else {
                 el.style.removeProperty(p);
               }
@@ -476,7 +476,7 @@
           } else {
             this._previewOriginalStyle = el.style[change.property] || '';
             if (change.original) {
-              el.style[change.property] = change.original;
+              this._setStyleProp(el, change.property, change.original);
             } else {
               el.style.removeProperty(change.property);
             }
@@ -496,7 +496,7 @@
 
           this._previewOriginalStyle = el.style[change.property] || '';
           if (change.original !== undefined && change.original !== '') {
-            el.style[change.property] = change.original;
+            this._setStyleProp(el, change.property, change.original);
           } else {
             el.style.removeProperty(change.property);
           }
@@ -505,6 +505,26 @@
           el.style.transition = 'all 0.2s ease';
           
           this._previewNodes.push({ el, change, originalStyle: this._previewOriginalStyle });
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+
+        case 'content': {
+          const el = DS.SelectorEngine.find(change.selector);
+          if (!el) return;
+
+          this._previewOriginalContent = change.property === 'innerText' ? el.innerText : el.getAttribute(change.property);
+          
+          if (change.property === 'innerText') {
+            el.innerText = change.modified || '';
+          } else {
+            el.setAttribute(change.property, change.modified || '');
+          }
+
+          el.style.boxShadow = '0 0 0 2px #EAB308, 0 0 20px rgba(234, 179, 8, 0.4)';
+          el.style.transition = 'all 0.2s ease';
+          
+          this._previewNodes.push({ el, change, originalContent: this._previewOriginalContent });
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           break;
         }
@@ -548,6 +568,19 @@
           injectedStyle.remove();
         } else if (change.type === 'delete' && isRestored) {
           el.remove();
+        } else if (change.type === 'content') {
+          if (change.property === 'innerText') {
+             el.innerText = this._previewNodes.find(n => n.el === el).originalContent || '';
+          } else {
+             const orig = this._previewNodes.find(n => n.el === el).originalContent;
+             if (orig === null || orig === undefined) {
+               el.removeAttribute(change.property);
+             } else {
+               el.setAttribute(change.property, orig);
+             }
+          }
+          el.style.removeProperty('box-shadow');
+          el.style.removeProperty('transition');
         } else if (change.type === 'resize' || change.type === 'style') {
           if (change.styles && originalStyle && typeof originalStyle === 'object') {
             for (const p in change.styles) {
@@ -722,11 +755,12 @@
 
     _apply(ch) {
       if (ch.type === 'batch') {
-        let anyApplied = false;
+        let firstTarget = null;
         ch.changes.forEach(sub => {
-          if (this._apply(sub)) anyApplied = true;
+          const t = this._apply(sub);
+          if (t && !firstTarget) firstTarget = t;
         });
-        return anyApplied ? true : null;
+        return firstTarget;
       }
 
       const el = DS.SelectorEngine.find(ch.selector);
@@ -769,11 +803,11 @@
               if (alreadyApplied) return el;
               
               for (const p in ch.styles) {
-                el.style[p] = ch.styles[p].modified;
+                this._setStyleProp(el, p, ch.styles[p].modified);
               }
             } else {
               if (el.style[ch.property] === ch.modified) return el;
-              el.style[ch.property] = ch.modified;
+              this._setStyleProp(el, ch.property, ch.modified);
             }
             return el;
           }
@@ -805,10 +839,23 @@
           if (el) {
             if (ch.modified !== undefined && ch.modified !== '') {
               if (el.style[ch.property] === ch.modified) return el;
-              el.style[ch.property] = ch.modified;
+              this._setStyleProp(el, ch.property, ch.modified);
             } else {
               if (!el.style[ch.property]) return el;
               el.style.removeProperty(ch.property);
+            }
+            return el;
+          }
+          return el;
+
+        case 'content':
+          if (el) {
+            if (ch.modified !== undefined && ch.modified !== '') {
+              if (ch.property === 'innerText') el.innerText = ch.modified;
+              else el.setAttribute(ch.property, ch.modified);
+            } else {
+              if (ch.property === 'innerText') el.innerText = '';
+              else el.removeAttribute(ch.property);
             }
             return el;
           }
@@ -860,36 +907,51 @@
         }
 
         case 'resize': {
-          const el = DS.SelectorEngine.find(ch.selector);
-          if (!el) return null;
+          const restored = DS.SelectorEngine.find(ch.selector);
+          if (!restored) return null;
           
           if (ch.styles) {
             for (const p in ch.styles) {
               if (ch.styles[p].original) {
-                el.style[p] = ch.styles[p].original;
+                this._setStyleProp(restored, p, ch.styles[p].original);
               } else {
-                el.style.removeProperty(p);
+                restored.style.removeProperty(p);
               }
             }
           } else {
             if (ch.original) {
-              el.style[ch.property] = ch.original;
+              this._setStyleProp(restored, ch.property, ch.original);
             } else {
-              el.style.removeProperty(ch.property);
+              restored.style.removeProperty(ch.property);
             }
           }
-          return el;
+          return restored;
         }
 
         case 'style': {
-          const el = DS.SelectorEngine.find(ch.selector);
-          if (!el) return null;
-          if (ch.original) {
-            el.style[ch.property] = ch.original;
+          const restored = DS.SelectorEngine.find(ch.selector);
+          if (!restored) return null;
+          const property = ch.property;
+          if (ch.original !== undefined && ch.original !== '') {
+            this._setStyleProp(restored, property, ch.original);
           } else {
-            el.style.removeProperty(ch.property);
+            restored.style.removeProperty(property);
           }
-          return el;
+          return restored;
+        }
+
+        case 'content': {
+          const restored = DS.SelectorEngine.find(ch.selector);
+          if (!restored) return null;
+          
+          if (ch.original !== undefined && ch.original !== '') {
+            if (ch.property === 'innerText') restored.innerText = ch.original;
+            else restored.setAttribute(ch.property, ch.original);
+          } else {
+            if (ch.property === 'innerText') restored.innerText = '';
+            else restored.removeAttribute(ch.property);
+          }
+          return restored;
         }
 
         case 'hide': {
@@ -1043,6 +1105,17 @@
 }
 `;
       return css;
+    },
+
+    /** Helper to set style with optional !important support */
+    _setStyleProp(el, cssProp, value) {
+      const valStr = String(value || '').trim();
+      const kebabProp = cssProp.replace(/([A-Z])/g, '-$1').toLowerCase();
+      if (valStr.endsWith('!important')) {
+        el.style.setProperty(kebabProp, valStr.replace('!important', '').trim(), 'important');
+      } else {
+        el.style.setProperty(kebabProp, valStr);
+      }
     }
   };
 

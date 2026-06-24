@@ -61,19 +61,19 @@
               <h3>Navigation</h3>
               <div class="ds-so-grid">
                 <div class="ds-so-item">
-                  <div class="ds-so-keys"><kbd>Q</kbd></div>
+                  <div class="ds-so-keys"><kbd>Q</kbd> / <kbd>↑</kbd></div>
                   <span>Select parent</span>
                 </div>
                 <div class="ds-so-item">
-                  <div class="ds-so-keys"><kbd>W</kbd></div>
+                  <div class="ds-so-keys"><kbd>W</kbd> / <kbd>↓</kbd></div>
                   <span>Select first child</span>
                 </div>
                 <div class="ds-so-item">
-                  <div class="ds-so-keys"><kbd>A</kbd></div>
+                  <div class="ds-so-keys"><kbd>A</kbd> / <kbd>←</kbd></div>
                   <span>Previous sibling</span>
                 </div>
                 <div class="ds-so-item">
-                  <div class="ds-so-keys"><kbd>D</kbd></div>
+                  <div class="ds-so-keys"><kbd>D</kbd> / <kbd>→</kbd></div>
                   <span>Next sibling</span>
                 </div>
               </div>

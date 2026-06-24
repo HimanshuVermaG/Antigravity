@@ -290,6 +290,7 @@
               <select id="ds-w-highlight-mode" style="background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;">
                 <option value="xray">X-Ray (Default)</option>
                 <option value="depth">Depth</option>
+                <option value="marquee">Marquee Mode</option>
               </select>
             </div>
           </section>
