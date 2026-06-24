@@ -27,7 +27,7 @@ chrome.action.onClicked.addListener((tab) => {
 // Context Menu (Right Click)
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'force-sync-cloud') {
-    SyncManager.syncAll({ chrome: true, github: true, force: true }).catch(err => console.error('[Background] Manual Sync failed:', err));
+    SyncManager.syncAll({ github: true, force: true }).catch(err => console.error('[Background] Manual Sync failed:', err));
   } else if (info.menuItemId === 'open-dashboard') {
     chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html') });
   }
@@ -49,23 +49,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
     }
 
-    case 'forward-to-tab': {
-      // Popup wants to send a message to the active tab's content script
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(tabs[0].id, message.payload)
-            .then(sendResponse)
-            .catch(() => sendResponse({ error: 'Content script not available' }));
-        } else {
-          sendResponse({ error: 'No active tab' });
-        }
-      });
-      return true; // async response
-    }
 
     case 'force-sync': {
       // Manual trigger from options dashboard
-      SyncManager.syncAll({ chrome: true, github: true, force: message.force }).then(response => {
+      SyncManager.syncAll({ github: true, force: message.force }).then(response => {
         sendResponse(response);
       }).catch(err => {
         sendResponse({ ok: false, error: err.message });
@@ -75,7 +62,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-let chromeSyncTimeout = null;
 let isSyncPaused = false;
 chrome.storage.local.get('ds_sync_paused', data => { isSyncPaused = !!data.ds_sync_paused; });
 
@@ -95,18 +81,11 @@ chrome.storage.local.onChanged.addListener((changes) => {
       return;
     }
 
-    console.log('[Background] Local rule data changed. Scheduling tiered syncs...');
+    console.log('[Background] Local rule data changed. Scheduling debounced GitHub sync...');
     
-    // Fast Tier: Chrome Sync (3s debounce)
-    if (chromeSyncTimeout) clearTimeout(chromeSyncTimeout);
-    chromeSyncTimeout = setTimeout(() => {
-      console.log('[Background] Fast Tier: Triggering Chrome Sync...');
-      SyncManager.syncAll({ chrome: true, github: false }).catch(err => console.error('[Background] Chrome Sync failed:', err));
-    }, 3000);
-
-    // Heavy Tier: GitHub Sync (5m alarm)
-    // This safely persists even if the browser closes.
-    chrome.alarms.create('github-sync-timer', { delayInMinutes: 5 });
+    // 1-Minute Debounce: Clear existing alarm and set a new one
+    chrome.alarms.clear('github-sync-timer');
+    chrome.alarms.create('github-sync-timer', { delayInMinutes: 1 });
   }
 });
 
@@ -116,8 +95,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       console.log('[Background] GitHub timer fired, but sync is PAUSED. Skipping.');
       return;
     }
-    console.log('[Background] Heavy Tier: Triggering GitHub Sync...');
-    SyncManager.syncAll({ chrome: false, github: true }).catch(err => console.error('[Background] GitHub Sync failed:', err));
+    console.log('[Background] Triggering GitHub Sync...');
+    SyncManager.syncAll({ github: true }).catch(err => console.error('[Background] GitHub Sync failed:', err));
   }
 });
 
@@ -125,12 +104,12 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.runtime.onStartup.addListener(() => {
   if (isSyncPaused) return console.log('[Background] Browser started, but sync is PAUSED.');
   console.log('[Background] Browser started. Triggering startup cloud sync...');
-  SyncManager.syncAll({ chrome: true, github: true }).catch(err => console.error('[Background] Startup sync failed:', err));
+  SyncManager.syncAll({ github: true }).catch(err => console.error('[Background] Startup sync failed:', err));
 });
 chrome.runtime.onInstalled.addListener(() => {
   if (isSyncPaused) return console.log('[Background] Extension installed/reloaded, but sync is PAUSED.');
   console.log('[Background] Extension installed/reloaded. Triggering startup cloud sync...');
-  SyncManager.syncAll({ chrome: true, github: true }).catch(err => console.error('[Background] Startup sync failed:', err));
+  SyncManager.syncAll({ github: true }).catch(err => console.error('[Background] Startup sync failed:', err));
 });
 
 // Set default badge style on install

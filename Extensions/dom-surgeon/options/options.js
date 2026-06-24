@@ -337,8 +337,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ── Sync Logic ──────────────────────────────────────────
-
-  const chkChromeSync = document.getElementById('sync-chrome-toggle');
   const inpGithubPat = document.getElementById('sync-github-pat');
   const inpGithubGist = document.getElementById('sync-github-gist');
   const btnSyncNow = document.getElementById('btn-sync-now');
@@ -351,8 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let isSyncPaused = false;
 
   async function loadSyncSettings() {
-    const data = await chrome.storage.local.get(['ds_sync_chrome', 'ds_sync_github_pat', 'ds_sync_github_gist', 'ds_sync_paused']);
-    chkChromeSync.checked = !!data.ds_sync_chrome;
+    const data = await chrome.storage.local.get(['ds_sync_github_pat', 'ds_sync_github_gist', 'ds_sync_paused']);
     inpGithubPat.value = data.ds_sync_github_pat || '';
     inpGithubGist.value = data.ds_sync_github_gist || '';
     isSyncPaused = !!data.ds_sync_paused;
@@ -385,13 +382,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function saveSyncSettings() {
     await chrome.storage.local.set({
-      ds_sync_chrome: chkChromeSync.checked,
       ds_sync_github_pat: inpGithubPat.value.trim(),
       ds_sync_github_gist: inpGithubGist.value.trim()
     });
   }
 
-  chkChromeSync.addEventListener('change', saveSyncSettings);
+
   inpGithubPat.addEventListener('input', saveSyncSettings);
   inpGithubGist.addEventListener('input', saveSyncSettings);
 

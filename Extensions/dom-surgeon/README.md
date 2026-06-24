@@ -12,8 +12,7 @@
 * 🌲 **Advanced Breadcrumb Traversal:** Click deeply nested wrapper elements precisely by traversing the DOM tree hierarchy in the top popover bar.
 * 💾 **Persistent Local Storage:** Changes survive page reloads and browser restarts. The extension intelligently partitions rules by domain to ensure blazing fast performance.
 * ☁️ **Tiered Cloud Synchronization:** 
-  * *Fast Tier:* Syncs standard configuration across logged-in Chrome browsers seamlessly.
-  * *Heavy Tier:* Securely backs up your unlimited rule payloads directly to a GitHub Gist using a Personal Access Token.
+  * *1-Minute Debounce:* Syncs securely back up your unlimited rule payloads directly to a GitHub Gist using a Personal Access Token without hitting rate limits.
 * ⏳ **Cloud Time Machine:** Made a massive mistake? Use the native Git version-history built into GitHub Gists to roll back your entire extension state to any previous snapshot.
 
 ---
@@ -91,7 +90,7 @@ For developers looking to contribute, fork, or understand the internals of DOM S
 * `activeTab`: To inject the DOM manipulation content scripts into the active page when you click the extension icon.
 * `storage`: To save your customized CSS selectors and rules locally.
 * `contextMenus`: To provide the "Sync Cloud Now" and "Dashboard" quick actions.
-* `alarms`: To run the highly efficient, batched 5-minute background timer for the GitHub Gist synchronization.
+* `alarms`: To run the highly efficient, batched 1-minute background timer for the GitHub Gist synchronization.
 
 ---
 

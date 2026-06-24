@@ -3,7 +3,7 @@
  * Handles syncing rules to Chrome Sync and GitHub Gists.
  */
 class SyncManager {
-  static async syncAll(options = { chrome: true, github: true, force: false }) {
+  static async syncAll(options = { github: true, force: false }) {
     if (this._isSyncing) {
       console.log('[SyncManager] Sync already in progress, skipping...');
       return { ok: false, error: 'Sync in progress' };
@@ -11,7 +11,7 @@ class SyncManager {
     this._isSyncing = true;
 
     try {
-      console.log(`[SyncManager] Starting sync... (Chrome: ${options.chrome}, GitHub: ${options.github}, Force: ${options.force})`);
+      console.log(`[SyncManager] Starting sync... (GitHub: ${options.github}, Force: ${options.force})`);
       const data = await chrome.storage.local.get(null);
 
       if (data.ds_sync_paused && !options.force) {
@@ -29,16 +29,6 @@ class SyncManager {
 
       let gistId = data.ds_sync_github_gist;
       let localNeedsUpdate = false;
-
-      // Pull and Merge from Chrome Sync
-      if (options.chrome && data.ds_sync_chrome) {
-        const remoteChrome = await this.pullFromChrome();
-        const { merged, hasChanges } = this._mergeData(rulesData, remoteChrome);
-        if (hasChanges) {
-          rulesData = merged;
-          localNeedsUpdate = true;
-        }
-      }
 
       // Pull and Merge from GitHub
       if (options.github && data.ds_sync_github_pat && gistId) {
@@ -59,10 +49,6 @@ class SyncManager {
       }
 
       // Push merged data back to clouds
-      if (options.chrome && data.ds_sync_chrome) {
-        await this.syncToChrome(rulesData);
-      }
-
       if (options.github && data.ds_sync_github_pat) {
         gistId = await this.syncToGitHub(rulesData, data.ds_sync_github_pat, gistId);
         if (gistId && gistId !== data.ds_sync_github_gist) {
@@ -111,21 +97,6 @@ class SyncManager {
 
   // ── Pulling Logic ────────────────────────────────────────────────────────
 
-  static async pullFromChrome() {
-    try {
-      const data = await chrome.storage.sync.get(null);
-      if (data.ds_chunk_count === undefined) return null;
-      let payloadStr = '';
-      for (let i = 0; i <= data.ds_chunk_count; i++) {
-        payloadStr += data[`ds_chunk_${i}`] || '';
-      }
-      return JSON.parse(payloadStr);
-    } catch (e) {
-      console.warn('[SyncManager] Failed to pull from Chrome Sync:', e);
-      return null;
-    }
-  }
-
   static async pullFromGitHub(pat, gistId) {
     if (!gistId) return null;
     try {
@@ -142,50 +113,6 @@ class SyncManager {
       console.warn('[SyncManager] Failed to pull from GitHub:', e);
     }
     return null;
-  }
-
-  // ── Chrome Sync ──────────────────────────────────────────────────────────
-
-  static async syncToChrome(rulesData) {
-    console.log('[SyncManager] Syncing to Chrome Sync...');
-    
-    // Deep clone and strip 'history' from the payload. History is only useful 
-    // for local undo/redo in the active tab, and wastes massive amounts of Cloud quota!
-    const payloadData = {};
-    for (const [k, v] of Object.entries(rulesData)) {
-      payloadData[k] = { ...v };
-      delete payloadData[k].history;
-    }
-
-    const payloadStr = JSON.stringify(payloadData);
-    
-    if (payloadStr.length > 90000) {
-      throw new Error('Your DOM Surgeon rules have exceeded Chrome Sync\'s 100KB limit! Please disable Chrome Sync in the Options Dashboard and use GitHub Gist Sync for unlimited storage.');
-    }
-    
-    // Decrease chunk size to 3000 characters. 
-    // Chrome Sync has a hard limit of 8192 bytes per item (including the key).
-    // Because some characters (like emojis or foreign languages) can be 2-4 bytes,
-    // 3000 characters gives us a very safe buffer below the 8KB limit.
-    const CHUNK_SIZE = 3000;
-    const chunks = {};
-    for (let i = 0; i < payloadStr.length; i += CHUNK_SIZE) {
-      chunks[`ds_chunk_${i / CHUNK_SIZE}`] = payloadStr.slice(i, i + CHUNK_SIZE);
-    }
-    chunks['ds_chunk_count'] = Object.keys(chunks).length - 1; // Store how many chunks
-
-    try {
-      // Clear old chunks first
-      const existing = await chrome.storage.sync.get(null);
-      const keysToRemove = Object.keys(existing).filter(k => k.startsWith('ds_chunk_'));
-      await chrome.storage.sync.remove(keysToRemove);
-      
-      await chrome.storage.sync.set(chunks);
-      console.log('[SyncManager] Chrome Sync successful.', Object.keys(chunks).length, 'chunks written.');
-    } catch (e) {
-      console.error('[SyncManager] Chrome Sync failed:', e);
-      throw e;
-    }
   }
 
   // ── GitHub Gist Sync ─────────────────────────────────────────────────────
