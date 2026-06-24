@@ -360,45 +360,11 @@
             </button>
           </section>
           <!-- Shortcuts -->
-          <section class="section section--shortcuts">
-            <div class="section__label ds-shortcut-toggle" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              Keyboard Shortcuts
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ds-shortcut-icon" style="transition: transform 200ms;"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div class="shortcut-grid" style="display: none; margin-top: 10px;">
-              <div class="shortcut">
-                <kbd>Esc</kbd>
-                <span>Exit selector</span>
-              </div>
-              <div class="shortcut">
-                <kbd>Alt</kbd><kbd>S</kbd>
-                <span>Toggle mode</span>
-              </div>
-              <div class="shortcut">
-                <kbd>Cmd</kbd><kbd>Z</kbd>
-                <span>Undo change</span>
-              </div>
-              <div class="shortcut">
-                <kbd>Cmd</kbd><kbd>⇧</kbd><kbd>Z</kbd>
-                <span>Redo change</span>
-              </div>
-              <div class="shortcut" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
-                <kbd>Q</kbd>
-                <span>Select parent</span>
-              </div>
-              <div class="shortcut">
-                <kbd>W</kbd>
-                <span>Select first child</span>
-              </div>
-              <div class="shortcut">
-                <kbd>A</kbd>
-                <span>Previous sibling</span>
-              </div>
-              <div class="shortcut">
-                <kbd>D</kbd>
-                <span>Next sibling</span>
-              </div>
-            </div>
+          <section class="section section--shortcuts" style="padding-top: 0; border-top: none;">
+            <button class="action-btn" id="ds-w-open-shortcuts" style="flex-direction: row; gap: 8px; justify-content: center; width: 100%;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <span>Keyboard Shortcuts (?)</span>
+            </button>
           </section>
 
           <!-- Export / Import Footer -->
@@ -584,14 +550,9 @@
         }
       });
 
-      // Shortcut accordion
-      const shortcutToggle = w.querySelector('.ds-shortcut-toggle');
-      const shortcutGrid = w.querySelector('.shortcut-grid');
-      const shortcutIcon = w.querySelector('.ds-shortcut-icon');
-      shortcutToggle.addEventListener('click', () => {
-        const isHidden = shortcutGrid.style.display === 'none';
-        shortcutGrid.style.display = isHidden ? 'flex' : 'none';
-        shortcutIcon.style.transform = isHidden ? 'rotate(180deg)' : '';
+      // Open shortcuts modal
+      w.querySelector('#ds-w-open-shortcuts')?.addEventListener('click', () => {
+        DS.ShortcutOverlay?.open();
       });
 
       // Dragging logic

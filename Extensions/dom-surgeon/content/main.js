@@ -92,6 +92,7 @@
       DS.ChangeSidebar?.init(this._shadow);
       DS.Breadcrumb?.init(this._shadow);
       DS.MultiSelect?.init(this._shadow);
+      DS.ShortcutOverlay?.init(this._shadow);
       DS.Selector.init();
 
       // Before/After badge in shadow DOM
@@ -904,6 +905,7 @@
       if (DS.Widget?.getStyles) css += DS.Widget.getStyles();
       if (DS.Breadcrumb?.getStyles) css += DS.Breadcrumb.getStyles();
       if (DS.BoxModel?.getStyles) css += DS.BoxModel.getStyles();
+      if (DS.ShortcutOverlay?.getStyles) css += DS.ShortcutOverlay.getStyles();
       css += `
 /* ── Before/After Badge ───────────────────────────── */
 .ds-ba-badge {

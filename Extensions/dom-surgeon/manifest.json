@@ -35,6 +35,7 @@
         "content/multi-select.js",
         "content/box-model.js",
         "content/smart-suggestions.js",
+        "content/shortcut-overlay.js",
         "content/main.js"
       ],
       "run_at": "document_idle"
