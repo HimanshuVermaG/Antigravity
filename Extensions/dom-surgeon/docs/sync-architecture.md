@@ -26,7 +26,7 @@ Because we use `chrome.alarms`, the timer safely persists. The very next time yo
 ## 4. The SyncManager Engine (Functions & Gatekeepers)
 When the timers actually fire, they hand the task off to the `SyncManager` class, which applies several strict rules:
 
-* **The Pause Gatekeeper:** It checks the `ds_sync_paused` flag. If the user toggled "Pause Sync" in the dashboard, it immediately aborts network activity.
+* **The Pause Gatekeeper:** It checks the `ds_sync_paused` flag. If the user toggled "Pause Sync" in the dashboard, the background script immediately aborts all automatic network activity. However, the user can still bypass this lock for a one-off backup by manually clicking "Sync Now" or the context menu, which sends a `force: true` override to the `SyncManager`.
 * **The Concurrency Lock:** It checks an `_isSyncing` variable. If a sync is already running, it drops the new request to prevent two network calls from colliding and corrupting data.
 * **Payload Stripping:** Before pushing to the Chrome Sync API, the manager automatically strips out all of the `history` (Undo/Redo) arrays. History data is massive, and stripping it ensures the core DOM rules easily fit inside Chrome's tiny 100KB limit.
 * **Two-Way Tombstone Merging:** It never blindly overwrites the cloud. It first pulls the cloud data down, compares the `lastModified` timestamps against the local data, resolves conflicts (using `deletedAt` tombstones to track deletions properly), updates the local browser, and *then* pushes the final merged JSON back to the cloud.
