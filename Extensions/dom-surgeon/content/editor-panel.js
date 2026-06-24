@@ -112,6 +112,19 @@
 
           <div class="ds-ep__hr"></div>
 
+          <div class="ds-ep__hr"></div>
+
+          <!-- Layout Accordion -->
+          <div class="ds-ep__accordion">
+            <div class="ds-ep__accordion-head" data-target="layout">
+              <span class="ds-ep__sec-title" style="margin:0">Layout (Box Model)</span>
+              <svg class="ds-ep__chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="ds-ep__accordion-body" id="ds-ep-layout" style="display:none; padding-top: 16px;">
+              <div id="ds-ep-box-model-container"></div>
+            </div>
+          </div>
+
           <!-- Appearance Accordion -->
           <div class="ds-ep__accordion">
             <div class="ds-ep__accordion-head" data-target="appearance">
@@ -389,6 +402,11 @@
         sel.addEventListener('click', (e) => e.stopPropagation());
       });
 
+      if (DS.BoxModel) {
+        const bmContainer = p.querySelector('#ds-ep-box-model-container');
+        if (bmContainer) DS.BoxModel.renderInto(bmContainer);
+      }
+
       this._panel = p;
       this._shadowRoot.appendChild(p);
     },
@@ -500,6 +518,10 @@
         this._panel.querySelector('[data-action="delete"] span').textContent = 'Delete';
       }
 
+      if (DS.BoxModel) {
+        DS.BoxModel.populate(el);
+      }
+
       this._originalStyles = {
         width: el.style.width || '',
         height: el.style.height || ''
@@ -592,6 +614,12 @@
           hideBtn.style.borderColor = 'rgba(255,255,255,0.1)';
           hideBtn.style.color = '#fff';
         }
+      }
+    },
+
+    _stageBoxModelChange(cssProp, val) {
+      if (this._currentEl) {
+        this._applyLivePreview(cssProp, val);
       }
     },
 

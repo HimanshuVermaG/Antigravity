@@ -33,6 +33,7 @@
         "content/widget.js",
         "content/change-sidebar.js",
         "content/multi-select.js",
+        "content/box-model.js",
         "content/smart-suggestions.js",
         "content/main.js"
       ],

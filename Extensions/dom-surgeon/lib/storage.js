@@ -65,6 +65,25 @@
       await this._saveData(storageKey, site);
     },
 
+    /** Get extension settings. */
+    async getSettings() {
+      return new Promise(resolve => {
+        chrome.storage.local.get(['ds_settings'], res => {
+          resolve(res.ds_settings || { highlightMode: 'xray' });
+        });
+      });
+    },
+
+    /** Save extension settings. */
+    async saveSettings(settings) {
+      return new Promise(resolve => {
+        chrome.storage.local.get(['ds_settings'], res => {
+          const newSettings = { ...(res.ds_settings || {}), ...settings };
+          chrome.storage.local.set({ ds_settings: newSettings }, resolve);
+        });
+      });
+    },
+
     /** Count of changes for a URL. */
     async getChangeCount(url) {
       const changes = await this.getChanges(url);

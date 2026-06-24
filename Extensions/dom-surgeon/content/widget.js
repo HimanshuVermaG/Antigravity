@@ -274,14 +274,23 @@
           </header>
 
           <!-- Selector toggle -->
-          <section class="section section--toggle">
-            <span class="section__label">Element Selector</span>
-            <label class="toggle">
-              <input type="checkbox" class="toggle__input">
-              <span class="toggle__track">
-                <span class="toggle__thumb"></span>
-              </span>
-            </label>
+          <section class="section section--toggle" style="flex-direction: column; align-items: stretch; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="section__label">Element Selector</span>
+              <label class="toggle">
+                <input type="checkbox" class="toggle__input">
+                <span class="toggle__track">
+                  <span class="toggle__thumb"></span>
+                </span>
+              </label>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 12px;">
+              <span class="section__label" style="color: var(--text-2); font-weight: normal;">Highlight Mode</span>
+              <select id="ds-w-highlight-mode" style="background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;">
+                <option value="xray">X-Ray (Default)</option>
+                <option value="depth">Depth</option>
+              </select>
+            </div>
           </section>
 
           <!-- Quick Clean -->
@@ -417,6 +426,19 @@
     _bindEvents() {
       const w = this._container;
       
+      // Highlight mode
+      const modeSelect = w.querySelector('#ds-w-highlight-mode');
+      if (modeSelect) {
+        DS.Storage.getSettings().then(settings => {
+          modeSelect.value = settings.highlightMode || 'xray';
+        });
+        modeSelect.addEventListener('change', (e) => {
+          if (DS.Selector) {
+            DS.Selector.setMode(e.target.value);
+          }
+        });
+      }
+
       // Toggle logic
       w.querySelector('.toggle__input').addEventListener('change', async () => {
         const on = DS.Selector?.toggle();

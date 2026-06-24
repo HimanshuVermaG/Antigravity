@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sitesListContainer = document.getElementById('sites-list');
   const emptyState = document.getElementById('empty-state');
   const btnClearAll = document.getElementById('btn-clear-all');
+  const btnImport = document.getElementById('btn-import');
+  const btnExport = document.getElementById('btn-export');
+  const importFile = document.getElementById('import-file');
 
   async function loadData() {
     const data = await chrome.storage.local.get(null);
@@ -192,6 +195,66 @@ document.addEventListener('DOMContentLoaded', async () => {
       await chrome.storage.local.clear();
       loadData();
     }
+  });
+
+  btnExport.addEventListener('click', async () => {
+    const data = await chrome.storage.local.get(null);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dom-surgeon-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  btnImport.addEventListener('click', () => {
+    importFile.click();
+  });
+
+  importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        console.log('[DOM Surgeon] Parsed import data:', importedData);
+        if (typeof importedData !== 'object' || importedData === null) {
+          throw new Error('Invalid JSON format: Not an object');
+        }
+        
+        // Ensure chrome.storage.local.set resolves properly
+        await new Promise((resolve, reject) => {
+          chrome.storage.local.set(importedData, () => {
+            if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+            else resolve();
+          });
+        });
+        
+        console.log('[DOM Surgeon] Import saved to storage.');
+        // alert('Data imported successfully!'); // alert might get suppressed or block
+        
+        // Show temporary success state on the button
+        const originalText = btnImport.innerHTML;
+        btnImport.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg> Imported';
+        setTimeout(() => btnImport.innerHTML = originalText, 2000);
+        
+        loadData();
+      } catch (err) {
+        console.error('[DOM Surgeon] Import failed:', err);
+        alert('Failed to import data: ' + err.message);
+      } finally {
+        importFile.value = ''; // Reset
+      }
+    };
+    reader.onerror = (err) => {
+      console.error('[DOM Surgeon] FileReader error:', err);
+      alert('Failed to read file.');
+      importFile.value = '';
+    };
+    reader.readAsText(file);
   });
 
   function truncate(str, max) {

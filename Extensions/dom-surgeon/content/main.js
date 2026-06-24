@@ -903,6 +903,7 @@
       if (DS.EditorPanel?.getStyles) css += DS.EditorPanel.getStyles();
       if (DS.Widget?.getStyles) css += DS.Widget.getStyles();
       if (DS.Breadcrumb?.getStyles) css += DS.Breadcrumb.getStyles();
+      if (DS.BoxModel?.getStyles) css += DS.BoxModel.getStyles();
       css += `
 /* ── Before/After Badge ───────────────────────────── */
 .ds-ba-badge {

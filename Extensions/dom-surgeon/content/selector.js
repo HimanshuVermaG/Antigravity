@@ -27,6 +27,18 @@
     // ── Public API ─────────────────────────────────────
 
     init() {
+      // Inject highlight mode CSS into document head
+      if (!document.getElementById('ds-selector-styles')) {
+        const style = document.createElement('style');
+        style.id = 'ds-selector-styles';
+        style.textContent = ``;
+        document.head.appendChild(style);
+      }
+
+      DS.Storage.getSettings().then(settings => {
+        this.mode = settings.highlightMode || 'xray';
+      });
+
       this._hoverOverlay = this._makeOverlay('dom-surgeon-hover');
       this._selectOverlay = this._makeOverlay('dom-surgeon-select');
       this._infoTag = this._makeInfoTag();
@@ -35,6 +47,18 @@
       this._onClick = this._handleClick.bind(this);
       this._onKey = this._handleKey.bind(this);
       this._onScroll = this._handleScroll.bind(this);
+    },
+
+    setMode(mode) {
+      this.mode = mode;
+      DS.Storage.saveSettings({ highlightMode: mode });
+      // Refresh current overlays if active
+      if (this._hoveredEl && this._hoverOverlay.style.display !== 'none') {
+        this._positionOverlay(this._hoverOverlay, this._hoveredEl, false);
+      }
+      if (this._selectedEl && this._selectOverlay.style.display !== 'none') {
+        this._positionOverlay(this._selectOverlay, this._selectedEl, true);
+      }
     },
 
     toggle() {
@@ -359,17 +383,36 @@
         top: r.top + 'px',
         left: r.left + 'px',
         width: r.width + 'px',
-        height: r.height + 'px'
+        height: r.height + 'px',
+        border: '',
+        background: '',
+        boxShadow: '',
+        animation: ''
       });
 
-      if (isSelected) {
-        overlay.style.border = '2px solid #6366F1';
-        overlay.style.background = 'rgba(99,102,241,0.08)';
-        overlay.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.25)';
-      } else {
-        overlay.style.border = '1.5px dashed rgba(99,102,241,0.55)';
-        overlay.style.background = 'rgba(99,102,241,0.05)';
-        overlay.style.boxShadow = 'none';
+      overlay.className = '';
+
+      const mode = this.mode || 'xray';
+
+      if (mode === 'xray') {
+        const hasShadow = isSelected || (!isSelected && !this._selectedEl);
+        overlay.style.border = isSelected ? '2px solid #6366F1' : '1.5px dashed rgba(255,255,255,0.8)';
+        overlay.style.background = isSelected ? 'transparent' : (hasShadow ? 'transparent' : 'rgba(255,255,255,0.1)');
+        overlay.style.boxShadow = hasShadow ? '0 0 0 9999px rgba(0,0,0,0.8)' : 'none';
+      } else if (mode === 'depth') {
+         let depth = 0;
+         let cur = el;
+         while(cur && cur !== document.body && cur !== document.documentElement) { depth++; cur = cur.parentElement; }
+         const hue = Math.max(30, 220 - depth * 15);
+         if (isSelected) {
+             overlay.style.border = `2px solid hsl(${hue}, 90%, 60%)`;
+             overlay.style.background = `hsla(${hue}, 90%, 60%, 0.25)`;
+             overlay.style.boxShadow = `0 0 0 1px hsla(${hue}, 90%, 60%, 0.4)`;
+         } else {
+             overlay.style.border = `1.5px dashed hsla(${hue}, 90%, 60%, 0.7)`;
+             overlay.style.background = `hsla(${hue}, 90%, 60%, 0.15)`;
+             overlay.style.boxShadow = 'none';
+         }
       }
     },
 
