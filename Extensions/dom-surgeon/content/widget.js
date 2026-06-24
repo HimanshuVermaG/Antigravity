@@ -304,28 +304,31 @@
           </section>
 
           <!-- Quick Clean -->
-          <section class="section section--quick-clean" id="ds-w-qc-section">
-            <div class="qc-header">
+          <details class="section section--quick-clean" id="ds-w-qc-section">
+            <summary class="qc-header" style="cursor: pointer; user-select: none;">
               <div class="qc-header__left">
+                <svg class="dropdown-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
                 <span class="section__label">Quick Clean</span>
               </div>
               <span class="badge badge--sm" id="ds-w-qc-count">—</span>
-            </div>
-            <div class="qc-list" id="ds-w-qc-list"></div>
-            <div class="qc-empty" id="ds-w-qc-empty" style="display:none;">
+            </summary>
+            <div class="qc-list" id="ds-w-qc-list" style="margin-top: 8px;"></div>
+            <div class="qc-empty" id="ds-w-qc-empty" style="display:none; margin-top: 8px;">
               <span class="qc-empty__icon">✨</span>
               <span>Page looks clean!</span>
             </div>
-            <button class="qc-clean-btn" id="ds-w-qc-clean" style="display:none;">
+            <button class="qc-clean-btn" id="ds-w-qc-clean" style="display:none; margin-top: 8px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
               </svg>
               <span>Clean Selected</span>
             </button>
-          </section>
+          </details>
 
           <!-- Actions -->
           <section class="section section--actions">
@@ -350,12 +353,17 @@
           </section>
 
           <!-- History -->
-          <section class="section section--history" id="history-section">
-            <div class="section--history__header">
-              <span class="section__label">History</span>
+          <details class="section section--history" id="history-section">
+            <summary class="section--history__header" style="cursor: pointer; user-select: none;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <svg class="dropdown-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-2);">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+                <span class="section__label">History</span>
+              </div>
               <span class="badge badge--sm" id="ds-w-history-count">0</span>
-            </div>
-            <div class="history-list" id="ds-w-history-list">
+            </summary>
+            <div class="history-list" id="ds-w-history-list" style="margin-top: 8px;">
               <div class="history-empty" id="ds-w-history-empty">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/>
@@ -368,7 +376,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="21 3 14 10"/><polyline points="21 3 15 3"/><polyline points="21 3 21 9"/></svg>
               <span>View All Changes (C)</span>
             </button>
-          </section>
+          </details>
           <!-- Shortcuts -->
           <section class="section section--shortcuts" style="padding-top: 0; border-top: none;">
             <button class="action-btn" id="ds-w-open-shortcuts" style="flex-direction: row; gap: 8px; justify-content: center; width: 100%;">
@@ -379,6 +387,12 @@
 
           <!-- Export / Import Footer -->
           <footer class="ds-w-footer-actions">
+            <button class="footer-btn" id="ds-w-open-dashboard" title="Open Dashboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              <span>Dashboard</span>
+            </button>
             <button class="footer-btn" id="ds-w-export">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
@@ -597,6 +611,14 @@
         }
       });
 
+      // Dashboard logic
+      const dashboardBtn = w.querySelector('#ds-w-open-dashboard');
+      if (dashboardBtn) {
+        dashboardBtn.addEventListener('click', () => {
+          chrome.runtime.sendMessage({ type: 'open-dashboard' });
+        });
+      }
+
       // Export logic
       w.querySelector('#ds-w-export').addEventListener('click', async () => {
         try {
@@ -684,6 +706,20 @@
     opacity: 0;
     transform: scale(0.96) translateY(10px);
   }
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dropdown-icon {
+  transition: transform 150ms ease;
+}
+details[open] > summary .dropdown-icon {
+  transform: rotate(90deg);
 }
 
 .ds-widget--minimized {

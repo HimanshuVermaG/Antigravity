@@ -536,6 +536,14 @@
         if (bmContainer) DS.BoxModel.renderInto(bmContainer);
       }
 
+      // Enter to apply
+      p.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          this._applyDimensions();
+        }
+      });
+
       this._panel = p;
       this._shadowRoot.appendChild(p);
     },
@@ -925,11 +933,9 @@
 
         for (const prop in changesMap) {
             const newVal = changesMap[prop].modified;
-            if (element.style[prop] !== newVal) {
-              this._setStyleProp(element, prop, newVal);
-              elementMadeChange = true;
-            }
-          }
+            this._setStyleProp(element, prop, newVal);
+            elementMadeChange = true;
+        }
 
         if (elementMadeChange) {
           const change = {
@@ -989,41 +995,93 @@
         }
       }
 
+      if (batchChanges.length === 0 && this._editChange) {
+        const isGlobal = this._panel.querySelector('#ds-ep-scope').value === 'domain';
+        if (isGlobal !== !!this._editChange.isGlobal) {
+          const updatedChange = { ...this._editChange, isGlobal };
+          await DS.Storage.updateChange(url, updatedChange.id, updatedChange, this._editChange.isGlobal);
+          DS.Toast?.show('Scope updated', 'success');
+          DS.Main?._afterChange();
+          DS.Selector?.refreshSelection();
+        }
+        this.hide();
+        return;
+      }
+
       if (batchChanges.length > 0) {
         let finalChange;
-        if (this._isBatchMode) {
-           finalChange = {
-             id: _uid(),
-             type: 'batch',
-             batchAction: 'Style / Resize',
-             changes: batchChanges,
-             isGlobal,
-             timestamp: Date.now()
-           };
+        
+        if (this._editChange && !this._isBatchMode) {
+          // Merge with existing change to prevent destroying unmodified properties
+          let existingChanges = [];
+          if (this._editChange.type === 'batch') {
+            existingChanges = [...this._editChange.changes];
+          } else {
+            existingChanges = [this._editChange];
+          }
+          
+          for (const newCh of batchChanges) {
+            const existingIdx = existingChanges.findIndex(c => c.property === newCh.property && c.type === newCh.type);
+            if (existingIdx >= 0) {
+              existingChanges[existingIdx] = newCh;
+            } else {
+              existingChanges.push(newCh);
+            }
+          }
+          
+          if (existingChanges.length === 1) {
+             finalChange = existingChanges[0];
+             finalChange.isGlobal = isGlobal;
+             finalChange.id = this._editChange.id;
+          } else {
+             finalChange = {
+               id: this._editChange.id,
+               type: 'batch',
+               batchAction: 'Multiple Styles',
+               changes: existingChanges,
+               isGlobal,
+               timestamp: Date.now()
+             };
+          }
+          
+          await DS.Storage.updateChange(url, finalChange.id, finalChange, this._editChange.isGlobal);
+          madeChange = true;
+          
         } else {
-           // Single element: either 1 change, or bundle as batch if multiple properties changed
-           if (batchChanges.length === 1) {
-             finalChange = batchChanges[0];
-           } else {
+          // Original logic for new changes or batch mode
+          if (this._isBatchMode) {
              finalChange = {
                id: _uid(),
                type: 'batch',
-               batchAction: 'Multiple Styles',
+               batchAction: 'Style / Resize',
                changes: batchChanges,
                isGlobal,
                timestamp: Date.now()
              };
-           }
+          } else {
+             if (batchChanges.length === 1) {
+               finalChange = batchChanges[0];
+             } else {
+               finalChange = {
+                 id: _uid(),
+                 type: 'batch',
+                 batchAction: 'Multiple Styles',
+                 changes: batchChanges,
+                 isGlobal,
+                 timestamp: Date.now()
+               };
+             }
+          }
+          
+          if (this._editChange) {
+            finalChange.id = this._editChange.id;
+            await DS.Storage.updateChange(url, finalChange.id, finalChange, this._editChange.isGlobal);
+          } else {
+            await DS.Storage.saveChange(url, finalChange);
+            await DS.History.push(url, finalChange);
+          }
+          madeChange = true;
         }
-        
-        if (this._editChange) {
-          finalChange.id = this._editChange.id;
-          await DS.Storage.updateChange(url, finalChange.id, finalChange, this._editChange.isGlobal);
-        } else {
-          await DS.Storage.saveChange(url, finalChange);
-          await DS.History.push(url, finalChange);
-        }
-        madeChange = true;
       }
 
       // Clear pending after save — they're now committed

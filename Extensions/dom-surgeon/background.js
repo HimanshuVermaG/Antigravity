@@ -58,6 +58,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       return true; // async response
     }
+    case 'open-dashboard': {
+      chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html') });
+      break;
+    }
   }
 });
 
