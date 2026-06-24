@@ -74,6 +74,12 @@
 
       this._shadow = this._host.attachShadow({ mode: 'closed' });
 
+      // Stop keyboard events from bubbling to the parent document.
+      // This prevents the website's own global shortcuts from triggering when typing in our UI.
+      ['keydown', 'keyup', 'keypress'].forEach(evt => {
+        this._host.addEventListener(evt, e => e.stopPropagation());
+      });
+
       // 2. Inject styles into shadow
       const style = document.createElement('style');
       style.textContent = this._collectStyles();

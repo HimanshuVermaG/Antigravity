@@ -26,7 +26,7 @@
       this._bindDrag();
     },
 
-    show(element, editChange = null) {
+    show(element, editChange = null, isPreview = false) {
       if (this._currentEl) {
         this._currentEl.style.removeProperty('anchor-name');
       }
@@ -34,9 +34,22 @@
       this._currentEl.style.setProperty('anchor-name', '--ds-target', 'important');
       
       this._editChange = editChange;
+      this._isPreview = isPreview;
       this._isBatchMode = DS.MultiSelect?.isActive() || false;
       this._pendingStyles = {}; // reset staged changes on each new selection
       this._pendingContent = {};
+
+      const banner = this._panel.querySelector('#ds-ep-preview-banner');
+      if (banner) {
+        banner.style.display = isPreview ? 'flex' : 'none';
+        if (isPreview) {
+          const toggleBtn = this._panel.querySelector('#ds-ep-preview-toggle');
+          const toggleLbl = this._panel.querySelector('#ds-ep-preview-label');
+          if (toggleBtn) toggleBtn.textContent = 'View New State';
+          if (toggleLbl) toggleLbl.textContent = 'Previewing Original State';
+        }
+      }
+
       this._populate(element);
       this._resetDelete();
       
@@ -100,6 +113,12 @@
               <path d="M15 4V2 M15 16v-2 M8 9h2 M20 9h2 M14.2 4.2l1.4-1.4 M19.8 9.8l1.4 1.4 M14.2 13.8l1.4 1.4 M19.8 4.2l1.4-1.4 M3 21l9-9" />
             </svg> Select Similar
           </button>
+        </div>
+
+        <!-- Preview Banner -->
+        <div id="ds-ep-preview-banner" style="display: none; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); border-radius: 6px; padding: 8px 12px; margin: 0 16px 12px 16px; justify-content: space-between; align-items: center;">
+          <span id="ds-ep-preview-label" style="color: #FDE047; font-size: 11px; font-weight: 500;">Previewing Original State</span>
+          <button id="ds-ep-preview-toggle" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; transition: all 150ms;">View New State</button>
         </div>
 
         <!-- Body -->
@@ -288,6 +307,31 @@
 
           <div class="ds-ep__hr"></div>
 
+          <!-- Code / Advanced -->
+          <div class="ds-ep__accordion">
+            <div class="ds-ep__accordion-head" data-target="code">
+              Code / Advanced
+              <svg class="ds-ep__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg);"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="ds-ep__accordion-body" id="ds-ep-code" style="display:none;">
+              
+              <!-- Classes -->
+              <div class="ds-ep__row" style="flex-direction: column; align-items: stretch; gap: 4px; margin-bottom: 8px;">
+                <span class="ds-ep__lbl" style="width: 100%; text-align: left;">Classes</span>
+                <input type="text" class="ds-ep__input" id="ds-ep-custom-classes" placeholder="e.g., flex justify-center" style="width: 100%; font-family: monospace; font-size: 11px;">
+              </div>
+
+              <!-- Raw CSS -->
+              <div class="ds-ep__row" style="flex-direction: column; align-items: stretch; gap: 4px;">
+                <span class="ds-ep__lbl" style="width: 100%; text-align: left;">Raw CSS (Inline Styles)</span>
+                <textarea class="ds-ep__input" id="ds-ep-custom-css" placeholder="color: red;&#10;display: flex;" rows="4" style="width: 100%; height: auto; min-height: 60px; font-family: monospace; font-size: 11px; resize: vertical; padding: 6px;"></textarea>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="ds-ep__hr"></div>
+
           <!-- Scope -->
           <div class="ds-ep__sec">
             <div class="ds-ep__sec-title">Scope</div>
@@ -338,6 +382,33 @@
           chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
         });
       });
+
+      // Preview toggle banner
+      const previewToggleBtn = p.querySelector('#ds-ep-preview-toggle');
+      if (previewToggleBtn) {
+        previewToggleBtn.addEventListener('click', (e) => {
+          if (!this._isPreview || !this._editChange) return;
+          const btn = e.target;
+          const showingNew = btn.textContent === 'View Original State';
+          
+          if (showingNew) {
+            // Switch to Original
+            DS.Main?.previewChange(this._editChange.id).then(() => {
+              btn.textContent = 'View New State';
+              const lbl = p.querySelector('#ds-ep-preview-label');
+              if (lbl) lbl.textContent = 'Previewing Original State';
+              this._populate(this._currentEl);
+            });
+          } else {
+            // Switch to New
+            DS.Main?.clearPreview();
+            btn.textContent = 'View Original State';
+            const lbl = p.querySelector('#ds-ep-preview-label');
+            if (lbl) lbl.textContent = 'Previewing New State';
+            this._populate(this._currentEl);
+          }
+        });
+      }
 
       p.querySelector('[data-action="reset"]').addEventListener('click', () => {
         this._handleReset();
@@ -530,6 +601,26 @@
         });
         sel.addEventListener('click', (e) => e.stopPropagation());
       });
+
+      // ── Code / Advanced live preview ──────────────────
+      const customClassesInp = p.querySelector('#ds-ep-custom-classes');
+      if (customClassesInp) {
+        customClassesInp.addEventListener('input', (e) => {
+          if (!this._currentEl) return;
+          this._applyLiveContentPreview('class', e.target.value);
+        });
+        customClassesInp.addEventListener('keydown', (e) => e.stopPropagation());
+      }
+
+      const customCssInp = p.querySelector('#ds-ep-custom-css');
+      if (customCssInp) {
+        customCssInp.addEventListener('input', (e) => {
+          if (!this._currentEl) return;
+          this._currentEl.style.cssText = e.target.value;
+          DS.Selector?.refreshSelection();
+        });
+        customCssInp.addEventListener('keydown', (e) => e.stopPropagation());
+      }
 
       if (DS.BoxModel) {
         const bmContainer = p.querySelector('#ds-ep-box-model-container');
@@ -803,6 +894,20 @@
       if (scopeSel && this._editChange) {
         scopeSel.value = this._editChange.isGlobal ? 'domain' : 'page';
       }
+
+      // ── Populate Code / Advanced ──────────────────────
+      const customClassesInp = this._panel.querySelector('#ds-ep-custom-classes');
+      if (customClassesInp) {
+        this._originalClassName = el.className || '';
+        // className might be an SVGAnimatedString, handle carefully
+        customClassesInp.value = typeof el.className === 'string' ? el.className : (el.getAttribute('class') || '');
+      }
+
+      const customCssInp = this._panel.querySelector('#ds-ep-custom-css');
+      if (customCssInp) {
+        this._originalCssText = this._getAppliedCSS(el);
+        customCssInp.value = this._formatCssText(this._originalCssText);
+      }
     },
 
     _stageBoxModelChange(cssProp, val) {
@@ -831,6 +936,93 @@
       if (val === 'auto') return { num: '', unit: 'auto' };
       const m = val.match(/^([\d.]+)(px|%|vw|vh)?$/);
       return m ? { num: m[1], unit: m[2] || 'px' } : { num: '', unit: 'px' };
+    },
+    _getAppliedCSS(el) {
+      const styles = new Map();
+
+      try {
+        for (let sheet of document.styleSheets) {
+          try {
+            if (!sheet.cssRules) continue;
+            for (let rule of sheet.cssRules) {
+              if (rule.type === CSSRule.STYLE_RULE) {
+                let matches = false;
+                try { matches = el.matches(rule.selectorText); } catch(e) {}
+                if (matches) {
+                  for (let i = 0; i < rule.style.length; i++) {
+                    const prop = rule.style[i];
+                    styles.set(prop, rule.style.getPropertyValue(prop));
+                  }
+                }
+              } else if (rule.type === CSSRule.MEDIA_RULE) {
+                if (window.matchMedia(rule.conditionText).matches) {
+                  for (let mRule of rule.cssRules) {
+                    if (mRule.type === CSSRule.STYLE_RULE) {
+                      let mMatches = false;
+                      try { mMatches = el.matches(mRule.selectorText); } catch(e) {}
+                      if (mMatches) {
+                        for (let i = 0; i < mRule.style.length; i++) {
+                          const prop = mRule.style[i];
+                          styles.set(prop, mRule.style.getPropertyValue(prop));
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+        }
+      } catch (e) {}
+
+      // 2. CORS Fallback: Computed Style Dummy Filter
+      // If stylesheets are blocked by CORS (e.g., Tailwind CDN), we extract the computed styles
+      // and compare them against a "dummy" element to isolate explicitly applied properties.
+      try {
+        const comp = window.getComputedStyle(el);
+        const dummy = document.createElement(el.tagName);
+        document.body.appendChild(dummy);
+        const dummyComp = window.getComputedStyle(dummy);
+
+        for (let i = 0; i < comp.length; i++) {
+          const prop = comp[i];
+          if (!styles.has(prop)) {
+            const val = comp.getPropertyValue(prop);
+            const dummyVal = dummyComp.getPropertyValue(prop);
+            if (val !== dummyVal) {
+              // Whitelist layout and design properties to avoid cluttering with pixel-resolved dimensions
+              if (prop.startsWith('background-color') || prop.startsWith('border-radius') || 
+                  prop.startsWith('font-') || prop.startsWith('text-') ||
+                  prop.startsWith('flex-') || prop.startsWith('grid-') ||
+                  prop.startsWith('padding') || prop.startsWith('margin') ||
+                  ['display', 'position', 'color', 'opacity', 'gap', 'z-index', 'align-items', 'justify-content', 'flex-wrap', 'cursor'].includes(prop)) {
+                  styles.set(prop, val);
+              }
+            }
+          }
+        }
+        document.body.removeChild(dummy);
+      } catch (e) {}
+
+      // 3. Inline styles ALWAYS override everything
+      for (let i = 0; i < el.style.length; i++) {
+        const prop = el.style[i];
+        styles.set(prop, el.style.getPropertyValue(prop));
+      }
+
+      let cssText = '';
+      for (const [prop, val] of styles.entries()) {
+        cssText += `${prop}: ${val};\n`;
+      }
+      return cssText;
+    },
+    _formatCssText(cssText) {
+      if (!cssText) return '';
+      return cssText.split(';')
+        .map(rule => rule.trim())
+        .filter(rule => rule.length > 0)
+        .map(rule => rule + ';')
+        .join('\n');
     },
 
     // ── Apply & Preview ───────────────────────────────
@@ -993,6 +1185,50 @@
           };
           batchChanges.push(contentChange);
         }
+        // ── 4. Flush Raw CSS changes ─
+        const customCssInp = this._panel.querySelector('#ds-ep-custom-css');
+        if (customCssInp && !this._isBatchMode && this._originalCssText !== undefined) {
+          const newCssText = this._formatCssText(customCssInp.value);
+          const oldCssText = this._formatCssText(this._originalCssText);
+          if (newCssText !== oldCssText) {
+            const dummyOld = document.createElement('div');
+            dummyOld.style.cssText = this._originalCssText;
+            const dummyNew = document.createElement('div');
+            dummyNew.style.cssText = customCssInp.value;
+            
+            const allProps = new Set([...Array.from(dummyOld.style), ...Array.from(dummyNew.style)]);
+            allProps.forEach(prop => {
+              const oldVal = dummyOld.style.getPropertyValue(prop);
+              const oldPrio = dummyOld.style.getPropertyPriority(prop);
+              const newVal = dummyNew.style.getPropertyValue(prop);
+              const newPrio = dummyNew.style.getPropertyPriority(prop);
+              
+              const finalOld = oldPrio ? `${oldVal} !important` : oldVal;
+              let finalNew = newPrio ? `${newVal} !important` : newVal;
+              
+              if (finalOld !== finalNew) {
+                if (finalNew === '') {
+                  finalNew = 'unset !important';
+                }
+                const camelProp = prop.replace(/-([a-z])/g, g => g[1].toUpperCase());
+                // Avoid duplicating if pendingStyles already has it
+                if (!this._pendingStyles[camelProp]) {
+                  batchChanges.push({
+                    id: _uid(),
+                    selector,
+                    type: 'style',
+                    property: camelProp,
+                    original: finalOld,
+                    modified: finalNew,
+                    isGlobal,
+                    fingerprint: DS.Main._fingerprint(element),
+                    timestamp: Date.now()
+                  });
+                }
+              }
+            });
+          }
+        }
       }
 
       if (batchChanges.length === 0 && this._editChange) {
@@ -1139,6 +1375,14 @@
       const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
       elements.forEach(el => this._setStyleProp(el, cssProp, value));
       this._stageStyle(cssProp, value);
+
+      // Sync raw CSS textarea
+      if (this._currentEl) {
+         const rawCssInput = this._panel.querySelector('#ds-ep-custom-css');
+         if (rawCssInput && document.activeElement !== rawCssInput) {
+            rawCssInput.value = this._formatCssText(this._currentEl.style.cssText);
+         }
+      }
     },
 
     /** Convert rgb/rgba computed color to hex string */

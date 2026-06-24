@@ -400,7 +400,7 @@
                 nodes.forEach(n => {
                    if (n.el && n.el.style) n.el.style.pointerEvents = 'auto'; // ensure we can interact
                 });
-                DS.EditorPanel.show(nodes[0].el, change);
+                DS.EditorPanel.show(nodes[0].el, change, true);
              }
           });
         }
