@@ -493,9 +493,12 @@
         DS.ChangeSidebar?.open();
       });
 
-      let lastRect = null;
+      let lastRect;
+      // Close
+      this._shadow.querySelector('#ds-w-close').addEventListener('click', () => {
+        this.hide();
+      });
 
-      w.querySelector('#ds-w-close').addEventListener('click', () => this.hide());
       w.querySelector('#ds-w-min').addEventListener('click', () => {
         lastRect = w.getBoundingClientRect();
         

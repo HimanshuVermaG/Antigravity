@@ -26,13 +26,14 @@ chrome.action.onClicked.addListener((tab) => {
 
 // Context Menu (Right Click)
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (tab?.id) {
-    chrome.tabs.sendMessage(tab.id, { 
-      type: 'context-action', 
-      action: info.menuItemId 
-    }).catch(() => {});
+  if (info.menuItemId === 'force-sync-cloud') {
+    SyncManager.syncAll({ chrome: true, github: true, force: true }).catch(err => console.error('[Background] Manual Sync failed:', err));
+  } else if (info.menuItemId === 'open-dashboard') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html') });
   }
 });
+
+importScripts('background/sync.js');
 
 // Handle messages from popup and content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -61,7 +62,75 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       return true; // async response
     }
+
+    case 'force-sync': {
+      // Manual trigger from options dashboard
+      SyncManager.syncAll({ chrome: true, github: true, force: message.force }).then(response => {
+        sendResponse(response);
+      }).catch(err => {
+        sendResponse({ ok: false, error: err.message });
+      });
+      return true; // async response
+    }
   }
+});
+
+let chromeSyncTimeout = null;
+let isSyncPaused = false;
+chrome.storage.local.get('ds_sync_paused', data => { isSyncPaused = !!data.ds_sync_paused; });
+
+// Auto-sync in background when rules change locally
+chrome.storage.local.onChanged.addListener((changes) => {
+  if (changes.ds_sync_paused) {
+    isSyncPaused = changes.ds_sync_paused.newValue;
+  }
+  
+  if (SyncManager._ignoreNextLocalChange) return;
+
+  // Check if any rule data changed (ignore sync settings themselves)
+  const ruleChanged = Object.keys(changes).some(key => key.startsWith('ds_site_') || key.startsWith('ds_domain_'));
+  if (ruleChanged) {
+    if (isSyncPaused) {
+      console.log('[Background] Local rules changed, but sync is PAUSED. Skipping timers.');
+      return;
+    }
+
+    console.log('[Background] Local rule data changed. Scheduling tiered syncs...');
+    
+    // Fast Tier: Chrome Sync (3s debounce)
+    if (chromeSyncTimeout) clearTimeout(chromeSyncTimeout);
+    chromeSyncTimeout = setTimeout(() => {
+      console.log('[Background] Fast Tier: Triggering Chrome Sync...');
+      SyncManager.syncAll({ chrome: true, github: false }).catch(err => console.error('[Background] Chrome Sync failed:', err));
+    }, 3000);
+
+    // Heavy Tier: GitHub Sync (5m alarm)
+    // This safely persists even if the browser closes.
+    chrome.alarms.create('github-sync-timer', { delayInMinutes: 5 });
+  }
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'github-sync-timer') {
+    if (isSyncPaused) {
+      console.log('[Background] GitHub timer fired, but sync is PAUSED. Skipping.');
+      return;
+    }
+    console.log('[Background] Heavy Tier: Triggering GitHub Sync...');
+    SyncManager.syncAll({ chrome: false, github: true }).catch(err => console.error('[Background] GitHub Sync failed:', err));
+  }
+});
+
+// Auto-sync automatically when the browser is opened or extension is reloaded
+chrome.runtime.onStartup.addListener(() => {
+  if (isSyncPaused) return console.log('[Background] Browser started, but sync is PAUSED.');
+  console.log('[Background] Browser started. Triggering startup cloud sync...');
+  SyncManager.syncAll({ chrome: true, github: true }).catch(err => console.error('[Background] Startup sync failed:', err));
+});
+chrome.runtime.onInstalled.addListener(() => {
+  if (isSyncPaused) return console.log('[Background] Extension installed/reloaded, but sync is PAUSED.');
+  console.log('[Background] Extension installed/reloaded. Triggering startup cloud sync...');
+  SyncManager.syncAll({ chrome: true, github: true }).catch(err => console.error('[Background] Startup sync failed:', err));
 });
 
 // Set default badge style on install
@@ -69,14 +138,14 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.action.setBadgeBackgroundColor({ color: '#6366F1' });
   
   chrome.contextMenus.create({
-    id: 'delete',
-    title: 'Delete Element',
-    contexts: ['all']
+    id: 'force-sync-cloud',
+    title: 'Sync Cloud Now',
+    contexts: ['action']
   });
-  
+
   chrome.contextMenus.create({
-    id: 'hide',
-    title: 'Hide Element (Visibility)',
-    contexts: ['all']
+    id: 'open-dashboard',
+    title: 'Dashboard',
+    contexts: ['action']
   });
 });

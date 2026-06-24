@@ -6,12 +6,12 @@
   "permissions": [
     "activeTab",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "alarms"
   ],
   "background": {
     "service_worker": "background.js"
   },
-  "options_page": "options/options.html",
   "action": {
     "default_icon": {
       "16": "icons/icon-16.png",

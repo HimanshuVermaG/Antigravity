@@ -30,9 +30,19 @@
     async removeChange(url, changeId, isGlobal = false) {
       const storageKey = isGlobal ? this._domainKey(url) : this._key(url);
       const site = await this._loadData(storageKey, url);
+      
+      const changeToRemove = site.changes.find(c => c.id === changeId);
+      if (changeToRemove) {
+        site.trash = site.trash || [];
+        changeToRemove.deletedAt = Date.now();
+        site.trash.unshift(changeToRemove); // Add to top of trash
+        if (site.trash.length > 20) site.trash = site.trash.slice(0, 20);
+      }
+
       site.changes = site.changes.filter(c => c.id !== changeId);
 
       if (site.changes.length === 0 &&
+          (!site.trash || site.trash.length === 0) &&
           site.history.undoStack.length === 0 &&
           site.history.redoStack.length === 0) {
         await this._deleteData(storageKey);
@@ -40,6 +50,22 @@
         await this._saveData(storageKey, site);
       }
       this._emitBadgeUpdate(url);
+    },
+
+    /** Restore a specific change from trash back to active changes. */
+    async restoreChange(url, changeId, isGlobal = false) {
+      const storageKey = isGlobal ? this._domainKey(url) : this._key(url);
+      const site = await this._loadData(storageKey, url);
+      
+      if (!site.trash) return;
+      const changeToRestore = site.trash.find(c => c.id === changeId);
+      if (changeToRestore) {
+        delete changeToRestore.deletedAt;
+        site.changes.push(changeToRestore);
+        site.trash = site.trash.filter(c => c.id !== changeId);
+        await this._saveData(storageKey, site);
+        this._emitBadgeUpdate(url);
+      }
     },
 
     /** Update an existing change (e.g. editing properties or changing scope). */
@@ -193,6 +219,10 @@
               return resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
             }
             if (result[storageKey]) {
+              if (result[storageKey].deletedAt) {
+                // It's a tombstone, treat as completely empty
+                return resolve({ changes: [], history: { undoStack: [], redoStack: [] } });
+              }
               return resolve(result[storageKey]);
             }
             if (urlForLegacyFallback && storageKey.startsWith('ds_site_') && result.domSurgeonData?.sites?.[urlForLegacyFallback]) {
@@ -210,6 +240,7 @@
     async _saveData(storageKey, siteData) {
       return new Promise(resolve => {
         try {
+          siteData.lastModified = Date.now();
           chrome.storage.local.set({ [storageKey]: siteData }, () => {
             if (chrome.runtime.lastError) console.warn(chrome.runtime.lastError);
             resolve();
@@ -224,7 +255,8 @@
     async _deleteData(storageKey) {
       return new Promise(resolve => {
         try {
-          chrome.storage.local.remove([storageKey], () => {
+          // Instead of chrome.storage.local.remove, write a tombstone
+          chrome.storage.local.set({ [storageKey]: { deletedAt: Date.now() } }, () => {
             if (chrome.runtime.lastError) console.warn(chrome.runtime.lastError);
             resolve();
           });

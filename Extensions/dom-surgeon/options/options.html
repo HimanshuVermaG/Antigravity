@@ -50,6 +50,51 @@
         </div>
       </div>
 
+      <div class="sync-section" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="font-size: 16px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5a4.5 4.5 0 00-4-4.5A7 7 0 007 6.5C4 6.5 1.5 9 1.5 12S4 17.5 7 17.5h10.5z"/></svg>
+            Cloud Sync
+          </h2>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-time-machine" class="btn btn--secondary" style="padding: 6px 12px; font-size: 13px; background: rgba(255,255,255,0.05); color: #fff; display: flex; align-items: center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Time Machine
+            </button>
+            <button id="btn-pause-sync" class="btn btn--secondary" style="padding: 6px 12px; font-size: 13px; display: flex; align-items: center;">
+              <svg id="icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+              <svg id="icon-resume" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; display:none;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span id="txt-pause-sync">Pause Sync</span>
+            </button>
+            <button id="btn-sync-now" class="btn btn--primary" style="padding: 6px 12px; font-size: 13px;">Sync Now</button>
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <!-- Chrome Sync -->
+          <div>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; margin-bottom: 8px; cursor: pointer;">
+              <input type="checkbox" id="sync-chrome-toggle">
+              Enable Chrome Sync
+            </label>
+            <p style="font-size: 12px; color: #888; margin: 0; line-height: 1.4;">
+              Syncs rules across Chrome browsers logged into your Google account. (Limited to 100KB total data).
+            </p>
+          </div>
+
+          <!-- GitHub Sync -->
+          <div>
+            <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">GitHub Gist Sync</label>
+            <input type="password" id="sync-github-pat" placeholder="Personal Access Token (classic, 'gist' scope)" style="width: 100%; background: #18181A; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 13px;">
+            <input type="text" id="sync-github-gist" placeholder="Gist ID (leave empty to auto-create)" style="width: 100%; background: #18181A; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px;">
+            <p style="font-size: 12px; color: #888; margin-top: 8px; line-height: 1.4;">
+              Unlimited storage. Requires a PAT with <code>gist</code> scope. 
+              <span id="sync-status-msg" style="color: #22c55e; margin-left: 8px;"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="table-container">
         <div id="sites-list" class="accordion">
           <!-- Rendered by JS -->
@@ -64,6 +109,22 @@
         </div>
       </div>
     </main>
+
+    <dialog id="time-machine-modal" style="background: #18181b; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 24px; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+      <h2 style="margin: 0 0 16px 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Cloud Time Machine
+      </h2>
+      <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 16px; line-height: 1.5;">
+        Restore your entire extension to a previous backup snapshot. This utilizes GitHub Gist's native version history. Restoring will permanently overwrite your current active configuration across all synced browsers.
+      </p>
+      <div id="tm-loading" style="display:none; color: #a1a1aa; font-size: 13px; padding: 20px; text-align: center;">Fetching revisions from GitHub...</div>
+      <div id="tm-revisions-list" style="display:flex; flex-direction:column; gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 8px;"></div>
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+        <button id="btn-tm-close" class="btn btn--secondary">Cancel</button>
+      </div>
+    </dialog>
+
   </div>
   <script src="options.js"></script>
 </body>
