@@ -597,52 +597,100 @@
         }
       }
 
+      this._activeChanges = changes;
+
       if (applied > 0) {
         console.log(`[DOM Surgeon] Replayed ${applied}/${changes.length} changes`);
       }
 
-      if (this._pendingChanges.length > 0) {
+      if (this._activeChanges.length > 0) {
         this._startObserver();
+        this._startUrlPoller();
+      } else {
+        this._stopObserver();
+        this._stopUrlPoller();
+      }
+    },
+
+    _startUrlPoller() {
+      if (this._urlPoller) return;
+      this._lastUrl = this._pageKey();
+      this._urlPoller = setInterval(() => {
+        const currentUrl = this._pageKey();
+        if (currentUrl !== this._lastUrl) {
+          this._lastUrl = currentUrl;
+          console.log('[DOM Surgeon] URL changed (SPA Navigation detected). Replaying changes.');
+          // Re-fetch and apply new changes for the new URL
+          this._replay();
+        }
+      }, 500);
+    },
+
+    _stopUrlPoller() {
+      if (this._urlPoller) {
+        clearInterval(this._urlPoller);
+        this._urlPoller = null;
+      }
+    },
+
+    _stopObserver() {
+      if (this._observerTimeout) {
+        clearTimeout(this._observerTimeout);
+        this._observerTimeout = null;
+      }
+      if (this._observer) {
+        this._observer.disconnect();
+        this._observer = null;
       }
     },
 
     _startObserver() {
-      if (this._observer) return;
+      if (this._observer) {
+        // If already running, just reset the 30s timeout
+        if (this._observerTimeout) clearTimeout(this._observerTimeout);
+        this._observerTimeout = setTimeout(() => this._stopObserver(), 30000);
+        return;
+      }
+      
+      let debounceTimer = null;
+
       this._observer = new MutationObserver((mutations) => {
-        if (this._pendingChanges.length === 0) {
-          this._observer.disconnect();
-          this._observer = null;
+        if (!this._activeChanges || this._activeChanges.length === 0) {
+          this._stopObserver();
           return;
         }
 
-        const hasAdded = mutations.some(m => m.addedNodes.length > 0);
+        // Ignore mutations inside our own shadow DOM host to prevent infinite loops
+        const validMutations = mutations.filter(m => !m.target.closest('#dom-surgeon-host'));
+        const hasAdded = validMutations.some(m => m.addedNodes.length > 0);
+        
         if (!hasAdded) return;
 
-        const stillPending = [];
-        for (const ch of this._pendingChanges) {
-          if (this._apply(ch)) {
-            console.log(`[DOM Surgeon] Late-applied change: ${ch.selector}`);
-          } else {
-            stillPending.push(ch);
-          }
-        }
-        this._pendingChanges = stillPending;
+        // Debounce to prevent layout thrashing on heavy SPA loads
+        if (debounceTimer) cancelAnimationFrame(debounceTimer);
+        debounceTimer = requestAnimationFrame(() => {
+          this._checkDynamicElements();
+        });
       });
 
       this._observer.observe(document.documentElement, {
         childList: true,
         subtree: true
       });
-
-      // Auto-disconnect after 30s to prevent indefinite performance impact
+      
+      // Auto-disconnect after 30s to save CPU
+      if (this._observerTimeout) clearTimeout(this._observerTimeout);
       this._observerTimeout = setTimeout(() => {
-        if (this._observer) {
-          console.log(`[DOM Surgeon] Observer timed out with ${this._pendingChanges.length} pending changes`);
-          this._observer.disconnect();
-          this._observer = null;
-          this._pendingChanges = [];
-        }
+        console.log('[DOM Surgeon] Observer timed out after 30s to save CPU.');
+        this._stopObserver();
       }, 30000);
+    },
+
+    _checkDynamicElements() {
+      if (!this._activeChanges) return;
+      for (const ch of this._activeChanges) {
+        this._apply(ch);
+      }
     },
 
     // ── Apply / Revert a single change ─────────────────
@@ -679,32 +727,40 @@
 
         case 'delete':
           if (el) { el.remove(); return el; }
-          console.warn('[DOM Surgeon] Delete target not found:', ch.selector);
           return null;
 
         case 'resize':
           if (el) {
             if (ch.styles) {
+              let alreadyApplied = true;
+              for (const p in ch.styles) {
+                if (el.style[p] !== ch.styles[p].modified) {
+                   alreadyApplied = false;
+                   break;
+                }
+              }
+              if (alreadyApplied) return el;
+              
               for (const p in ch.styles) {
                 el.style[p] = ch.styles[p].modified;
               }
             } else {
+              if (el.style[ch.property] === ch.modified) return el;
               el.style[ch.property] = ch.modified;
             }
             return el;
           }
-          console.warn('[DOM Surgeon] Resize target not found:', ch.selector);
           return null;
 
         case 'hide':
           if (el) {
+            if (el.dataset.dsHidden === 'true') return el;
             const origDisplay = ch.original || '';
             el.dataset.dsHidden = 'true';
             el.dataset.dsOriginalDisplay = origDisplay;
             el.style.display = 'none';
             return el;
           }
-          console.warn('[DOM Surgeon] Hide target not found:', ch.selector);
           return null;
 
         case 'show':
@@ -721,13 +777,14 @@
         case 'style':
           if (el) {
             if (ch.modified !== undefined && ch.modified !== '') {
+              if (el.style[ch.property] === ch.modified) return el;
               el.style[ch.property] = ch.modified;
             } else {
+              if (!el.style[ch.property]) return el;
               el.style.removeProperty(ch.property);
             }
             return el;
           }
-          console.warn('[DOM Surgeon] Style target not found:', ch.selector);
           return null;
 
         default:
@@ -835,7 +892,19 @@
 
     // ── Helpers ─────────────────────────────────────────
 
-    _afterChange() {
+    async _afterChange() {
+      const url = this._pageKey();
+      const changes = await DS.Storage.getChanges(url);
+      this._activeChanges = changes;
+      
+      if (changes.length > 0) {
+        this._startObserver();
+        this._startUrlPoller();
+      } else {
+        this._stopObserver();
+        this._stopUrlPoller();
+      }
+
       this._syncBadge();
       const sel = DS.Selector.getSelectedElement();
       if (sel && document.body.contains(sel)) {
@@ -950,10 +1019,35 @@
 
   DS.Main = Main;
 
-  // Auto-init
+  // ── Zero-Impact Boot ──────────────────────────────
+  Main.boot = function() {
+    // 1. Setup message listener for explicit user actions
+    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+      if ((msg.type === 'toggle-widget' || msg.type === 'toggle-selector')) {
+        if (!Main._shadow) {
+          Main.init().then(() => Main._onMessage(msg, sender, sendResponse));
+          return true;
+        }
+      }
+      // other messages handled by Main._onMessage if initialized
+    });
+
+    // 2. Check storage for any rules for this domain to see if we should init immediately
+    chrome.storage.local.get(null, (data) => {
+      const hostname = window.location.hostname;
+      const origin = window.location.origin;
+      const hasChanges = Object.keys(data).some(k => 
+         k.includes(hostname) || k.includes(origin)
+      );
+      if (hasChanges) {
+        Main.init();
+      }
+    });
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => Main.init());
+    document.addEventListener('DOMContentLoaded', () => Main.boot());
   } else {
-    Main.init();
+    Main.boot();
   }
 })();
