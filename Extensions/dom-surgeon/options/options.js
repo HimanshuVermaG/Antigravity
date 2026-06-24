@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               await chrome.storage.local.set(historicRules);
               
               // Force a sync to push the restored state
-              chrome.runtime.sendMessage({ type: 'force-sync' }, () => {
+              chrome.runtime.sendMessage({ type: 'force-sync', force: true }, () => {
                 alert('Successfully restored and synced to cloud!');
                 window.location.reload();
               });

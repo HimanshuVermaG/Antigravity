@@ -470,7 +470,7 @@
         magicWandBtn.addEventListener('click', () => {
           if (!this._currentEl) return;
           const tag = this._currentEl.tagName.toLowerCase();
-          const classes = Array.from(this._currentEl.classList).filter(c => !c.startsWith('ds-') && !c.includes(':'));
+          const classes = Array.from(this._currentEl.classList || []).filter(c => !c.startsWith('ds-') && !c.includes(':'));
           const selector = tag + (classes.length > 0 ? '.' + classes.join('.') : '');
           try {
             const matches = document.querySelectorAll(selector);

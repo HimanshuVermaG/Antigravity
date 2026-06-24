@@ -23,7 +23,7 @@
       if (!el) return null;
       return {
         tag: el.tagName.toLowerCase(),
-        classes: Array.from(el.classList).sort()
+        classes: el.classList ? Array.from(el.classList).sort() : []
       };
     },
 
@@ -131,7 +131,6 @@
         this._contextMenuTarget = e.target;
       }, true);
 
-      // 7. Update badge
       this._syncBadge();
 
       console.log('[DOM Surgeon] Initialized');
@@ -766,12 +765,12 @@
       const el = DS.SelectorEngine.find(ch.selector);
       
       if (el && ch.isGlobal) {
-          if (ch.isGlobal && !this._validateFingerprint(el, ch.fingerprint)) {
-            // Global rule matched the selector path, but the element tag/classes don't match.
-            // This happens often on global rules where paths diverge across pages.
-            // Silently skip to prevent console spam and browser lag.
-            return null;
-          }
+        if (!this._validateFingerprint(el, ch.fingerprint)) {
+          // Global rule matched the selector path, but the element tag/classes don't match.
+          // This happens often on global rules where paths diverge across pages.
+          // Silently skip to prevent console spam and browser lag.
+          return null;
+        }
       }
 
       switch (ch.type) {

@@ -49,7 +49,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
     }
 
-
     case 'force-sync': {
       // Manual trigger from options dashboard
       SyncManager.syncAll({ github: true, force: message.force }).then(response => {

@@ -73,7 +73,12 @@ class SyncManager {
     for (const [key, remoteSite] of Object.entries(remoteData)) {
       const localSite = merged[key];
       if (!localSite) {
-        merged[key] = remoteSite;
+        merged[key] = {
+          ...remoteSite,
+          changes: remoteSite.changes || [],
+          trash: remoteSite.trash || [],
+          history: { undoStack: [], redoStack: [] }
+        };
         hasChanges = true;
       } else {
         // Compare by latest change timestamp (or tombstone deletedAt timestamp)
@@ -87,7 +92,12 @@ class SyncManager {
         const remoteLatest = getLatest(remoteSite);
 
         if (remoteLatest > localLatest) {
-          merged[key] = remoteSite;
+          merged[key] = {
+            ...remoteSite,
+            changes: remoteSite.changes || [],
+            trash: remoteSite.trash || [],
+            history: localSite.history || { undoStack: [], redoStack: [] }
+          };
           hasChanges = true;
         }
       }
@@ -101,7 +111,10 @@ class SyncManager {
     if (!gistId) return null;
     try {
       const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-        headers: { 'Authorization': `token ${pat}` }
+        headers: { 
+          'Authorization': `token ${pat}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
       });
       if (!response.ok) return null;
       const data = await response.json();

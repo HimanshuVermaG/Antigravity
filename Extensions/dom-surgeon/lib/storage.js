@@ -61,6 +61,7 @@
       const changeToRestore = site.trash.find(c => c.id === changeId);
       if (changeToRestore) {
         delete changeToRestore.deletedAt;
+        site.changes = site.changes || [];
         site.changes.push(changeToRestore);
         site.trash = site.trash.filter(c => c.id !== changeId);
         await this._saveData(storageKey, site);
