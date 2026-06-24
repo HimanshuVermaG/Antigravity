@@ -80,6 +80,15 @@
     async saveHistory(url, history, isGlobal = false) {
       const storageKey = isGlobal ? this._domainKey(url) : this._key(url);
       const site = await this._loadData(storageKey, url);
+      
+      // Enforce a maximum history depth of 50 to prevent QUOTA_BYTES_PER_ITEM limit (8MB)
+      if (history.undoStack && history.undoStack.length > 50) {
+        history.undoStack = history.undoStack.slice(-50);
+      }
+      if (history.redoStack && history.redoStack.length > 50) {
+        history.redoStack = history.redoStack.slice(-50);
+      }
+      
       site.history = history;
       await this._saveData(storageKey, site);
     },

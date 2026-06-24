@@ -138,11 +138,9 @@
       const parent = el.parentElement;
 
       if (parent) {
-        const siblings = Array.from(parent.children);
-        // Instead of filtering by tag, we just use the absolute child index.
-        // This makes the selector immune to the element's tag changing dynamically.
+        const siblings = Array.from(parent.children).filter(c => c.tagName === el.tagName);
         const index = siblings.indexOf(el) + 1;
-        segment = `:nth-child(${index})`;
+        segment = `${segment}:nth-of-type(${index})`;
       }
 
       return segment;
@@ -156,8 +154,10 @@
         const parent = current.parentElement;
         if (!parent) break;
 
-        const index = Array.from(parent.children).indexOf(current) + 1;
-        path.unshift(`:nth-child(${index})`);
+        const siblings = Array.from(parent.children).filter(c => c.tagName === current.tagName);
+        const index = siblings.indexOf(current) + 1;
+        const tag = current.tagName.toLowerCase();
+        path.unshift(`${tag}:nth-of-type(${index})`);
         current = parent;
       }
 

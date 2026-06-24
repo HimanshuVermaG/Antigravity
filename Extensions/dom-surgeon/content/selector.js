@@ -336,8 +336,12 @@
 
     // ── Overlay Management ─────────────────────────────
 
+    // ── Private ────────────────────────────────────────
+
     _makeOverlay(id) {
-      const el = document.createElement('div');
+      let el = document.getElementById(id);
+      if (el) return el;
+      el = document.createElement('div');
       el.id = id;
       el.style.cssText = [
         'position:fixed',
@@ -353,7 +357,9 @@
     },
 
     _makeInfoTag() {
-      const el = document.createElement('div');
+      let el = document.getElementById('dom-surgeon-info');
+      if (el) return el;
+      el = document.createElement('div');
       el.id = 'dom-surgeon-info';
       el.style.cssText = [
         'position:fixed',

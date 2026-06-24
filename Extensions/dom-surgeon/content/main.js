@@ -39,7 +39,7 @@
       if (fp.classes.length > 0) {
          const currentClasses = Array.from(el.classList);
          const hasSharedClass = fp.classes.some(c => currentClasses.includes(c));
-         if (!hasSharedClass && currentClasses.length > 0) return false;
+         if (!hasSharedClass) return false;
       }
       return true;
     },
@@ -661,11 +661,28 @@
       }
       
       let debounceTimer = null;
+      let burstCount = 0;
+      let lastBurstTime = Date.now();
 
       this._observer = new MutationObserver((mutations) => {
         if (!this._activeChanges || this._activeChanges.length === 0) {
           this._stopObserver();
           return;
+        }
+
+        const now = Date.now();
+        if (now - lastBurstTime > 1000) {
+          burstCount = 0;
+          lastBurstTime = now;
+        }
+        
+        burstCount += mutations.length;
+        if (burstCount > 500) {
+           console.warn('[DOM Surgeon] Excessive DOM mutations detected. Disconnecting observer temporarily.');
+           this._stopObserver();
+           // Attempt restart after 5 seconds
+           setTimeout(() => this._startObserver(), 5000);
+           return;
         }
 
         // Ignore mutations inside our own shadow DOM host to prevent infinite loops
@@ -715,10 +732,12 @@
       const el = DS.SelectorEngine.find(ch.selector);
       
       if (el && ch.isGlobal) {
-         if (!this._validateFingerprint(el, ch.fingerprint)) {
-            console.warn(`[DOM Surgeon] Global rule skipped due to fingerprint mismatch on ${ch.selector}`);
+          if (ch.isGlobal && !this._validateFingerprint(el, ch.fingerprint)) {
+            // Global rule matched the selector path, but the element tag/classes don't match.
+            // This happens often on global rules where paths diverge across pages.
+            // Silently skip to prevent console spam and browser lag.
             return null;
-         }
+          }
       }
 
       switch (ch.type) {
