@@ -36,7 +36,7 @@
       }
 
       DS.Storage.getSettings().then(settings => {
-        this.mode = settings.highlightMode || 'xray';
+        this.mode = settings.highlightMode || 'depth';
       });
 
       this._hoverOverlay = this._makeOverlay('dom-surgeon-hover');
@@ -392,7 +392,7 @@
 
       overlay.className = '';
 
-      const mode = this.mode || 'xray';
+      const mode = this.mode || 'depth';
 
       if (mode === 'xray') {
         const hasShadow = isSelected || (!isSelected && !this._selectedEl);

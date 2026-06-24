@@ -58,7 +58,8 @@
       // Safety check: if position is wildly off-screen, reset it
       const rect = this._container.getBoundingClientRect();
       if (!this._container.style.left || rect.left > window.innerWidth || rect.top > window.innerHeight) {
-        this._container.style.left = '24px';
+        // Place in top-right corner by default (320px widget width + 24px margin)
+        this._container.style.left = Math.max(24, window.innerWidth - 320 - 24) + 'px';
         this._container.style.top = '24px';
       }
       this.refresh();
@@ -396,7 +397,7 @@
       const modeSelect = w.querySelector('#ds-w-highlight-mode');
       if (modeSelect) {
         DS.Storage.getSettings().then(settings => {
-          modeSelect.value = settings.highlightMode || 'xray';
+          modeSelect.value = settings.highlightMode || 'depth';
         });
         modeSelect.addEventListener('change', (e) => {
           if (DS.Selector) {

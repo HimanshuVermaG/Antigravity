@@ -32,7 +32,12 @@
       this._pendingStyles = {}; // reset staged changes on each new selection
       this._populate(element);
       this._resetDelete();
+      
+      // Temporarily set display block to calculate actual height
+      this._panel.style.display = 'block';
       this._position(element);
+      this._panel.style.display = '';
+      
       this._panel.classList.add('ds-ep--open');
     },
 
@@ -418,7 +423,7 @@
     _position(el) {
       const r = el.getBoundingClientRect();
       const pw = 284; // panel width (280 + borders)
-      const ph = 310; // estimated panel height
+      const ph = this._panel.offsetHeight || 400; // actual panel height
 
       let left = r.right + 12;
       let top = r.top;
@@ -426,7 +431,9 @@
       if (left + pw > window.innerWidth - 16) left = r.left - pw - 12;
       if (left < 16) left = 16;
       if (top + ph > window.innerHeight - 16) top = window.innerHeight - ph - 16;
-      if (top < 16) top = 16;
+      
+      // Breadcrumb bar is ~40px at the top, avoid overlapping it
+      if (top < 56) top = 56;
 
       this._panel.style.left = left + 'px';
       this._panel.style.top = top + 'px';
