@@ -6,6 +6,11 @@
   'use strict';
   const DS = (window.__DOMSurgeon = window.__DOMSurgeon || {});
 
+  function _escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   const CHANGE_ICONS = {
     delete: { icon: '🔴', label: 'Deleted' },
     resize: { icon: '🔵', label: 'Resized' },
@@ -362,8 +367,8 @@
       el.innerHTML = `
         <span class="ds-sidebar-item__icon">${info.icon}</span>
         <div class="ds-sidebar-item__body">
-          <div class="ds-sidebar-item__desc" title="${sel}">${desc}</div>
-          ${detail ? `<div class="ds-sidebar-item__detail">${detail}</div>` : ''}
+          <div class="ds-sidebar-item__desc" title="${_escapeHtml(sel)}">${_escapeHtml(desc)}</div>
+          ${detail ? `<div class="ds-sidebar-item__detail">${_escapeHtml(detail)}</div>` : ''}
           <div class="ds-sidebar-item__time">${timeStr}</div>
         </div>
         <button class="ds-sidebar-item__undo" title="Undo this change">

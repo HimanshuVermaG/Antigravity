@@ -7,11 +7,19 @@
   const DS = (window.__DOMSurgeon = window.__DOMSurgeon || {});
 
   const CHANGE_ICONS = {
-    delete: { icon: '🔴', label: 'Deleted' },
-    resize: { icon: '🔵', label: 'Resized' },
-    hide:   { icon: '🟣', label: 'Hidden' },
-    style:  { icon: '🟡', label: 'Styled' }
+    delete:       { icon: '🔴', label: 'Deleted' },
+    resize:       { icon: '🔵', label: 'Resized' },
+    hide:         { icon: '🟣', label: 'Hidden' },
+    show:         { icon: '🟢', label: 'Shown' },
+    style:        { icon: '🟡', label: 'Styled' },
+    batch:        { icon: '📦', label: 'Batch' },
+    'inject-css': { icon: '🛡️', label: 'CSS Rule' }
   };
+
+  function _escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 
   const Widget = {
     _shadow: null,
@@ -93,6 +101,7 @@
       if (!qcList) return;
 
       const suggestions = DS.SmartSuggestions?.scan() || [];
+      this._lastSuggestions = suggestions;
       qcList.innerHTML = '';
       qcCount.textContent = suggestions.length;
 
@@ -150,10 +159,17 @@
       desc += ` ${shortSel}`;
 
       let detail = '';
-      if (change.type === 'resize') {
-        detail = `${change.property}: ${change.modified}`;
+      if (change.type === 'batch') {
+        const count = change.changes ? change.changes.length : 0;
+        desc = `${change.batchAction || 'Batch'} (${count} items)`;
+        detail = `${count} items grouped`;
+      } else if (change.type === 'inject-css') {
+        desc = 'CSS Rule';
+        detail = change.cssText || '';
+      } else if (change.type === 'resize') {
+        detail = `${_escapeHtml(change.property)}: ${_escapeHtml(change.modified)}`;
       } else if (change.type === 'style') {
-        detail = `${change.property}: ${change.modified}`;
+        detail = `${_escapeHtml(change.property)}: ${_escapeHtml(change.modified)}`;
       } else if (change.type === 'hide') {
         detail = `display: none`;
       }
@@ -165,11 +181,14 @@
       else if (diff >= 3600 && diff < 86400) timeStr = Math.floor(diff/3600) + 'h ago';
       else if (diff >= 86400) timeStr = Math.floor(diff/86400) + 'd ago';
 
+      const safeDesc = _escapeHtml(desc);
+      const safeSel = _escapeHtml(sel);
+
       el.innerHTML = `
         <span class="history-item__icon">${info.icon}</span>
         <div class="history-item__body">
-          <div class="history-item__desc" title="${sel}">${desc}</div>
-          ${detail ? `<div class="history-item__detail">${detail}</div>` : ''}
+          <div class="history-item__desc" title="${safeSel}">${safeDesc}</div>
+          ${detail ? `<div class="history-item__detail">${_escapeHtml(detail)}</div>` : ''}
         </div>
         <span class="history-item__time">${timeStr}</span>
         <button class="history-item__undo" title="Undo this change">
@@ -436,11 +455,13 @@
           const selectors = Array.from(checked).map(cb => cb.value);
           if (selectors.length === 0) return;
 
+          const toClean = (this._lastSuggestions || []).filter(s => selectors.includes(s.selector));
+
           qcCleanBtn.classList.add('action-btn--pressed');
           qcCleanBtn.querySelector('span').textContent = 'Cleaning...';
 
           if (DS.SmartSuggestions) {
-            await DS.SmartSuggestions.clean(selectors);
+            await DS.SmartSuggestions.clean(toClean);
           }
 
           qcCleanBtn.querySelector('span').textContent = 'Clean Selected';

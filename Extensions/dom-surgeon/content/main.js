@@ -15,6 +15,9 @@
     _previewOriginalStyle: null,
     _previewChange: null,
 
+    _pendingChanges: [],
+    _observer: null,
+
     /** Create a semantic fingerprint to ensure a selector matches the correct element across pages */
     _fingerprint(el) {
       if (!el) return null;
@@ -291,7 +294,13 @@
     async undo() {
       this.clearPreview();
       const url = this._pageKey();
-      const change = await DS.History.undo(url);
+      // Try local history first, then global
+      let change = await DS.History.undo(url, false);
+      let isGlobal = false;
+      if (!change) {
+        change = await DS.History.undo(url, true);
+        isGlobal = true;
+      }
       if (!change) {
         DS.Toast.show('Nothing to undo', 'warning');
         return;
@@ -308,30 +317,14 @@
       }
     },
 
-    async undoSpecific(id) {
-      this.clearPreview();
-      const url = this._pageKey();
-      
-      const changes = await DS.Storage.getChanges(url);
-      const change = changes.find(c => c.id === id);
-      if (!change) return;
-
-      const target = this._revert(change);
-      await DS.Storage.removeChange(url, id, change.isGlobal);
-      await DS.History.removeSpecific(url, id);
-      DS.Toast.show('Change undone', 'info');
-      this._afterChange();
-
-      if (target && DS.Selector.flashHighlight) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        DS.Selector.flashHighlight(target);
-      }
-    },
-
     async redo() {
       this.clearPreview();
       const url = this._pageKey();
-      const change = await DS.History.redo(url);
+      // Try local history first, then global
+      let change = await DS.History.redo(url, false);
+      if (!change) {
+        change = await DS.History.redo(url, true);
+      }
       if (!change) {
         DS.Toast.show('Nothing to redo', 'warning');
         return;
@@ -358,8 +351,11 @@
         this._revert(changes[i]);
       }
 
+      // Clear both local and global changes & history
       await DS.Storage.clearChanges(url);
-      await DS.History.reset(url);
+      await DS.Storage._deleteData(DS.Storage._domainKey(url));
+      await DS.History.reset(url, false);
+      await DS.History.reset(url, true);
 
       DS.Selector.deselect();
       DS.Toast.show('All changes reset', 'success');
@@ -419,8 +415,15 @@
         return;
       }
 
-
       switch (change.type) {
+        case 'inject-css': {
+          const styleEl = document.createElement('style');
+          styleEl.textContent = change.cssText;
+          document.head.appendChild(styleEl);
+          this._previewNodes.push({ el: document.head, change: change, isRestored: false, injectedStyle: styleEl });
+          break;
+        }
+
         case 'delete': {
           const parent = DS.SelectorEngine.find(change.parentSelector);
           if (!parent) return;
@@ -529,10 +532,12 @@
     clearPreview() {
       if (!this._previewNodes || this._previewNodes.length === 0) return;
 
-      for (const { el, change, originalStyle, isRestored } of this._previewNodes) {
+      for (const { el, change, originalStyle, isRestored, injectedStyle } of this._previewNodes) {
         if (!el) continue;
         
-        if (change.type === 'delete' && isRestored) {
+        if (change.type === 'inject-css' && injectedStyle) {
+          injectedStyle.remove();
+        } else if (change.type === 'delete' && isRestored) {
           el.remove();
         } else if (change.type === 'resize' || change.type === 'style') {
           if (change.styles && originalStyle && typeof originalStyle === 'object') {
@@ -569,22 +574,85 @@
       const url = this._pageKey();
       const changes = await DS.Storage.getChanges(url);
       let applied = 0;
+      this._pendingChanges = [];
 
       for (const ch of changes) {
-        if (this._apply(ch)) applied++;
+        if (ch.type === 'batch') {
+          let batchApplied = false;
+          for (const sub of ch.changes) {
+            if (this._apply(sub)) {
+              batchApplied = true;
+            } else if (sub.type !== 'inject-css') {
+              this._pendingChanges.push(sub);
+            }
+          }
+          if (batchApplied) applied++;
+        } else {
+          if (this._apply(ch)) {
+            applied++;
+          } else if (ch.type !== 'inject-css') {
+            this._pendingChanges.push(ch);
+          }
+        }
       }
 
       if (applied > 0) {
         console.log(`[DOM Surgeon] Replayed ${applied}/${changes.length} changes`);
       }
+
+      if (this._pendingChanges.length > 0) {
+        this._startObserver();
+      }
+    },
+
+    _startObserver() {
+      if (this._observer) return;
+      this._observer = new MutationObserver((mutations) => {
+        if (this._pendingChanges.length === 0) {
+          this._observer.disconnect();
+          this._observer = null;
+          return;
+        }
+
+        const hasAdded = mutations.some(m => m.addedNodes.length > 0);
+        if (!hasAdded) return;
+
+        const stillPending = [];
+        for (const ch of this._pendingChanges) {
+          if (this._apply(ch)) {
+            console.log(`[DOM Surgeon] Late-applied change: ${ch.selector}`);
+          } else {
+            stillPending.push(ch);
+          }
+        }
+        this._pendingChanges = stillPending;
+      });
+
+      this._observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+
+      // Auto-disconnect after 30s to prevent indefinite performance impact
+      this._observerTimeout = setTimeout(() => {
+        if (this._observer) {
+          console.log(`[DOM Surgeon] Observer timed out with ${this._pendingChanges.length} pending changes`);
+          this._observer.disconnect();
+          this._observer = null;
+          this._pendingChanges = [];
+        }
+      }, 30000);
     },
 
     // ── Apply / Revert a single change ─────────────────
 
     _apply(ch) {
       if (ch.type === 'batch') {
-        ch.changes.forEach(sub => this._apply(sub));
-        return null; // Not returning an element for batches
+        let anyApplied = false;
+        ch.changes.forEach(sub => {
+          if (this._apply(sub)) anyApplied = true;
+        });
+        return anyApplied ? true : null;
       }
 
       const el = DS.SelectorEngine.find(ch.selector);
@@ -597,6 +665,17 @@
       }
 
       switch (ch.type) {
+        case 'inject-css': {
+          let styleEl = document.head.querySelector(`style[data-ds-id="${ch.id}"]`);
+          if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.dataset.dsId = ch.id;
+            document.head.appendChild(styleEl);
+          }
+          styleEl.textContent = ch.cssText;
+          return document.head;
+        }
+
         case 'delete':
           if (el) { el.remove(); return el; }
           console.warn('[DOM Surgeon] Delete target not found:', ch.selector);
@@ -668,6 +747,12 @@
       }
 
       switch (ch.type) {
+        case 'inject-css': {
+          const styleEl = document.head.querySelector(`style[data-ds-id="${ch.id}"]`);
+          if (styleEl) styleEl.remove();
+          return document.head;
+        }
+
         case 'delete': {
           // Re-insert from stored outerHTML
           const parent = DS.SelectorEngine.find(ch.parentSelector);

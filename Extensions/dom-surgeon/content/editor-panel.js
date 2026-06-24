@@ -285,9 +285,8 @@
           const prop = e.target.dataset.style;
           const textInput = p.querySelector(`.ds-ep__input--color-text[data-style="${prop}"]`);
           if (this._currentEl) {
-            this._currentEl.style[prop] = e.target.value;
+            this._applyLivePreview(prop, e.target.value);
             if (textInput) textInput.value = e.target.value;
-            this._stageStyle(prop, e.target.value);
           }
         });
         // 'change' just syncs text field — staging already done on 'input'
@@ -298,8 +297,7 @@
         inp.addEventListener('input', (e) => {
           const prop = e.target.dataset.style;
           if (this._currentEl) {
-            this._currentEl.style[prop] = e.target.value;
-            this._stageStyle(prop, e.target.value);
+            this._applyLivePreview(prop, e.target.value);
           }
         });
         inp.addEventListener('click', (e) => e.stopPropagation());
@@ -313,8 +311,7 @@
         const v = (e.target.value / 100).toString();
         opacityVal.textContent = e.target.value + '%';
         if (this._currentEl) {
-          this._currentEl.style.opacity = v;
-          this._stageStyle('opacity', v);
+          this._applyLivePreview('opacity', v);
         }
       });
 
@@ -324,8 +321,7 @@
         const filterVal = e.target.value > 0 ? `blur(${e.target.value}px)` : '';
         blurVal.textContent = e.target.value + 'px';
         if (this._currentEl) {
-          this._currentEl.style.filter = filterVal;
-          this._stageStyle('filter', filterVal);
+          this._applyLivePreview('filter', filterVal);
         }
       });
 
@@ -335,8 +331,7 @@
       const stageFontSize = () => {
         if (!this._currentEl || !fontSizeInp.value) return;
         const val = fontSizeInp.value + fontUnitSel.value;
-        this._currentEl.style.fontSize = val;
-        this._stageStyle('fontSize', val);
+        this._applyLivePreview('fontSize', val);
       };
       fontSizeInp.addEventListener('input', stageFontSize);
       fontUnitSel.addEventListener('change', stageFontSize);
@@ -348,16 +343,14 @@
       weightSlider.addEventListener('input', (e) => {
         weightVal.textContent = e.target.value;
         if (this._currentEl) {
-          this._currentEl.style.fontWeight = e.target.value;
-          this._stageStyle('fontWeight', e.target.value);
+          this._applyLivePreview('fontWeight', e.target.value);
         }
       });
 
       const lineHeightInp = p.querySelector('#ds-ep-line-height');
       lineHeightInp.addEventListener('input', (e) => {
         if (this._currentEl) {
-          this._currentEl.style.lineHeight = e.target.value;
-          this._stageStyle('lineHeight', e.target.value);
+          this._applyLivePreview('lineHeight', e.target.value);
         }
       });
       lineHeightInp.addEventListener('click', (e) => e.stopPropagation());
@@ -369,8 +362,7 @@
           e.stopPropagation();
           const align = btn.dataset.align;
           if (!this._currentEl) return;
-          this._currentEl.style.textAlign = align;
-          this._stageStyle('textAlign', align);
+          this._applyLivePreview('textAlign', align);
           p.querySelectorAll('.ds-ep__align-btn').forEach(b => b.classList.remove('ds-ep__align-btn--active'));
           btn.classList.add('ds-ep__align-btn--active');
         });
@@ -628,7 +620,8 @@
     // ── Apply & Preview ───────────────────────────────
 
     _previewDimensions() {
-      if (!this._currentEl) return;
+      const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
+      if (elements.length === 0) return;
 
       for (const prop of ['width', 'height']) {
         const input = this._panel.querySelector(`.ds-ep__input[data-prop="${prop}"]`);
@@ -636,7 +629,7 @@
         const newVal = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
         
         if (input.value !== '' || unit.value === 'auto') {
-          this._currentEl.style[prop] = newVal;
+          elements.forEach(el => el.style[prop] = newVal);
         }
       }
       DS.Selector?.refreshSelection();
@@ -704,7 +697,7 @@
           const unit = this._panel.querySelector(`.ds-ep__unit[data-prop="${prop}"]`);
 
           const newVal = unit.value === 'auto' ? 'auto' : (input.value + unit.value);
-          const oldVal = element.style[prop] || '';
+          const oldVal = this._originalStyles[prop] || '';
 
           if (newVal !== oldVal && (input.value !== '' || unit.value === 'auto')) {
             changesMap[prop] = { original: oldVal, modified: newVal };
@@ -818,6 +811,16 @@
       } else {
         this._pendingStyles[cssProp].current = value;
       }
+    },
+
+    /**
+     * Applies a style change immediately to all selected elements for live preview,
+     * and stages it in _pendingStyles for the final Apply.
+     */
+    _applyLivePreview(cssProp, value) {
+      const elements = this._isBatchMode ? DS.MultiSelect.getSelection() : (this._currentEl ? [this._currentEl] : []);
+      elements.forEach(el => el.style[cssProp] = value);
+      this._stageStyle(cssProp, value);
     },
 
     /** Convert rgb/rgba computed color to hex string */

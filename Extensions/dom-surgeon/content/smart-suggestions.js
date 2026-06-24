@@ -77,6 +77,43 @@
     return rect.width > 0 && rect.height > 0;
   }
 
+  function _expandToWrapper(el) {
+    let current = el;
+    let depth = 0;
+    const MAX_DEPTH = 20;
+    while (current.parentElement && current.parentElement !== document.body && current.parentElement !== document.documentElement && depth < MAX_DEPTH) {
+      depth++;
+      const parent = current.parentElement;
+      const tag = parent.tagName.toLowerCase();
+      if (tag === 'header' || tag === 'main' || tag === 'nav' || tag === 'article') break;
+      
+      const children = Array.from(parent.children).filter(c => 
+        c.tagName !== 'SCRIPT' && c.tagName !== 'STYLE' && c.tagName !== 'NOSCRIPT' && _isVisible(c)
+      );
+      
+      if (children.length > 1) {
+        const id = parent.id || '';
+        const cls = typeof parent.className === 'string' ? parent.className : '';
+        const adRegex = /(^|[-_])(ad|ads|banner|popup|sponsored|cookie|adsbygoogle)([-_]|$)/i;
+        
+        if (adRegex.test(id) || adRegex.test(cls)) {
+           current = parent;
+           continue;
+        }
+        break;
+      }
+      
+      const directTextLength = Array.from(parent.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .reduce((acc, n) => acc + n.textContent.trim().length, 0);
+          
+      if (directTextLength > 50) break;
+
+      current = parent;
+    }
+    return current;
+  }
+
   function _shortSelector(el) {
     const tag = el.tagName.toLowerCase();
     if (el.id) return tag + '#' + el.id;
@@ -121,7 +158,11 @@
   function _detectBySelectors(selectors) {
     const results = [];
     for (const sel of selectors) {
-      results.push(..._safeQueryAll(sel));
+      const els = _safeQueryAll(sel);
+      els.forEach(el => {
+        const wrapper = _expandToWrapper(el);
+        results.push({ el: wrapper, rule: wrapper === el ? sel : null });
+      });
     }
     return results;
   }
@@ -140,7 +181,7 @@
       const rect = el.getBoundingClientRect();
       // Must be near top, tall (> 80px), and span at least half the viewport
       if (rect.top <= 10 && rect.height > 80 && rect.width >= vw * 0.5) {
-        results.push(el);
+        results.push({ el, rule: null });
       }
     }
     return results;
@@ -168,7 +209,7 @@
       // Check for dark/semi-transparent background (backdrop-like)
       const bg = style.backgroundColor;
       if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-        results.push(el);
+        results.push({ el, rule: null });
       }
     }
     return results;
@@ -186,8 +227,9 @@
       const suggestions = [];
       const seen = new Set();
 
-      const addCategory = (category, elements) => {
-        const deduped = _dedup(elements.filter(el => {
+      const addCategory = (category, items) => {
+        const els = items.map(i => i.el);
+        const deduped = _dedup(els.filter(el => {
           if (!el || _isOwn(el) || !_isVisible(el)) return false;
           if (el === document.body || el === document.documentElement) return false;
           if (el.dataset.dsHidden === 'true') return false;
@@ -204,6 +246,8 @@
 
           const rect = el.getBoundingClientRect();
           const meta = CATEGORIES[category];
+          const originalItem = items.find(i => i.el === el);
+          const rule = originalItem ? originalItem.rule : null;
 
           suggestions.push({
             category,
@@ -211,6 +255,7 @@
             label: meta.label,
             shortLabel: _shortSelector(el),
             selector,
+            matchedRule: rule,
             dimensions: `${Math.round(rect.width)} × ${Math.round(rect.height)}`,
           });
         }
@@ -235,18 +280,42 @@
     },
 
     /**
-     * Clean the given selectors by creating proper change records
+     * Clean the given suggestions by creating proper change records
      * through the standard DS infrastructure.
-     * @param {string[]} selectors — array of CSS selectors to remove
+     * @param {Object[]} suggestions — array of suggestion objects to remove
      */
-    async clean(selectors) {
-      if (!selectors || selectors.length === 0) return;
+    async clean(suggestions) {
+      if (!suggestions || suggestions.length === 0) return;
 
       const url = window.location.origin + window.location.pathname;
       const batchChanges = [];
+      let shouldRestoreScroll = false;
 
-      for (const selector of selectors) {
-        const el = DS.SelectorEngine.find(selector);
+      for (const suggestion of suggestions) {
+        // Check if we need to restore scroll for overlays/sticky
+        if (suggestion.category === 'overlay' || suggestion.category === 'sticky') {
+          shouldRestoreScroll = true;
+        }
+
+        // Robust Removal via Global CSS Injection (if a generic rule exists)
+        if (suggestion.matchedRule) {
+          const change = {
+            id: _uid(),
+            type: 'inject-css',
+            cssText: `${suggestion.matchedRule} { display: none !important; }`,
+            isGlobal: true,
+            timestamp: Date.now()
+          };
+          batchChanges.push(change);
+
+          // Visually remove them immediately
+          const matchingElements = _safeQueryAll(suggestion.matchedRule);
+          matchingElements.forEach(el => el.remove());
+          continue;
+        }
+
+        // Standard DOM removal for others
+        const el = DS.SelectorEngine.find(suggestion.selector);
         if (!el || !document.body.contains(el)) continue;
 
         const parent = el.parentElement;
@@ -255,12 +324,12 @@
 
         const change = {
           id: _uid(),
-          selector,
+          selector: suggestion.selector,
           type: 'delete',
           outerHTML: el.outerHTML,
           parentSelector,
           childIndex,
-          isGlobal: false,
+          isGlobal: true,
           fingerprint: DS.Main?._fingerprint(el),
           timestamp: Date.now()
         };
@@ -269,25 +338,67 @@
         el.remove();
       }
 
+      // Auto-Restore Scrolling if a modal/overlay was removed
+      if (shouldRestoreScroll) {
+        const candidates = [
+          { el: document.documentElement, sel: 'html' },
+          { el: document.body, sel: 'body' },
+          { el: document.getElementById('root'), sel: '#root' },
+          { el: document.getElementById('app'), sel: '#app' },
+          { el: document.getElementById('__next'), sel: '#__next' }
+        ];
+
+        for (const { el, sel } of candidates) {
+          if (!el) continue;
+          const style = getComputedStyle(el);
+          let modified = false;
+
+          let cssText = '';
+
+          if (style.overflow === 'hidden' || style.overflowY === 'hidden') {
+            cssText += 'overflow: auto !important; ';
+            el.style.setProperty('overflow', 'auto', 'important');
+            modified = true;
+          }
+
+          if (style.position === 'fixed') {
+            cssText += 'position: static !important; ';
+            el.style.setProperty('position', 'static', 'important');
+            modified = true;
+          }
+
+          if (cssText) {
+            batchChanges.push({
+              id: _uid(),
+              type: 'inject-css',
+              cssText: `${sel} { ${cssText} }`,
+              isGlobal: true,
+              timestamp: Date.now()
+            });
+          }
+        }
+      }
+
       if (batchChanges.length === 0) return;
 
       // Group as a batch if multiple, single change if one
       let finalChange;
       if (batchChanges.length === 1) {
         finalChange = batchChanges[0];
+        finalChange.isGlobal = true;
       } else {
         finalChange = {
           id: _uid(),
           type: 'batch',
           batchAction: 'Quick Clean',
           changes: batchChanges,
-          isGlobal: false,
+          isGlobal: true,
           timestamp: Date.now()
         };
       }
 
       await DS.Storage.saveChange(url, finalChange, false);
-      await DS.History.push(url, finalChange);
+      await DS.History.push(url, finalChange, finalChange.isGlobal);
 
       DS.Toast?.show(
         `Cleaned ${batchChanges.length} element${batchChanges.length > 1 ? 's' : ''}`,

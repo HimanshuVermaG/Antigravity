@@ -19,7 +19,7 @@
       if (element === document.documentElement) return 'html';
 
       // Fast path: element has a unique ID
-      if (element.id) {
+      if (element.id && !this._isDynamic(element.id)) {
         const escaped = CSS.escape(element.id);
         try {
           if (document.querySelectorAll('#' + escaped).length === 1) {
@@ -36,7 +36,7 @@
         let segment = this._buildSegment(current);
 
         // If this segment alone is unique, anchor here and stop
-        if (segment.startsWith('#') || segment.startsWith('[data-testid')) {
+        if (segment.startsWith('#') || segment.startsWith('[data-testid') || segment.startsWith('.')) {
           path.unshift(segment);
           break;
         }
@@ -45,8 +45,8 @@
         current = current.parentElement;
       }
 
-      // Prepend body if we didn't anchor on an ID / data-testid
-      if (path.length > 0 && !path[0].startsWith('#') && !path[0].startsWith('[data-testid')) {
+      // Prepend body if we didn't anchor on an ID / data-testid / class
+      if (path.length > 0 && !path[0].startsWith('#') && !path[0].startsWith('[data-testid') && !path[0].startsWith('.')) {
         path.unshift('body');
       }
 
@@ -76,9 +76,22 @@
 
     // ── Private ──────────────────────────────────────────
 
+    _isDynamic(str) {
+      if (!str) return false;
+      // Common dynamic ad/tracking prefixes
+      if (/^(aswift|google_ads|goog_|snige)/i.test(str)) return true;
+      // Modern framework auto-generated prefixes
+      if (/^(css-|styled-|mui-|radix-|headlessui-)/i.test(str)) return true;
+      // Long numeric hashes (6+ consecutive digits suggest auto-generated)
+      if (/\d{6,}/.test(str)) return true;
+      // Trailing numeric suffix with 3+ digits (e.g., `_host_123`, `-container-456`)
+      if (/[-_]\d{3,}$/.test(str)) return true;
+      return false;
+    },
+
     _buildSegment(el) {
       // Try unique ID
-      if (el.id) {
+      if (el.id && !this._isDynamic(el.id)) {
         const escaped = CSS.escape(el.id);
         try {
           if (document.querySelectorAll('#' + escaped).length === 1) {
@@ -98,21 +111,41 @@
         } catch (e) { /* fall through */ }
       }
 
+      // Try unique class
+      if (typeof el.className === 'string' && el.className.trim()) {
+        const classes = el.className.trim().split(/\s+/).filter(c => c && !this._isDynamic(c));
+        for (const cls of classes) {
+          try {
+            const escaped = '.' + CSS.escape(cls);
+            if (document.querySelectorAll(escaped).length === 1) {
+              return escaped;
+            }
+          } catch (e) { /* fall through */ }
+        }
+        
+        if (classes.length > 1) {
+          try {
+            const combined = classes.map(c => '.' + CSS.escape(c)).join('');
+            if (document.querySelectorAll(combined).length === 1) {
+              return combined;
+            }
+          } catch (e) { /* fall through */ }
+        }
+      }
+
       // Tag + nth-child for disambiguation
-      let tag = el.tagName.toLowerCase();
+      let segment = el.tagName.toLowerCase();
       const parent = el.parentElement;
 
       if (parent) {
         const siblings = Array.from(parent.children);
-        const sameTag = siblings.filter(s => s.tagName === el.tagName);
-
-        if (sameTag.length > 1) {
-          const index = siblings.indexOf(el) + 1;
-          tag += ':nth-child(' + index + ')';
-        }
+        // Instead of filtering by tag, we just use the absolute child index.
+        // This makes the selector immune to the element's tag changing dynamically.
+        const index = siblings.indexOf(el) + 1;
+        segment = `:nth-child(${index})`;
       }
 
-      return tag;
+      return segment;
     },
 
     _buildAbsolutePath(element) {
@@ -124,7 +157,7 @@
         if (!parent) break;
 
         const index = Array.from(parent.children).indexOf(current) + 1;
-        path.unshift(current.tagName.toLowerCase() + ':nth-child(' + index + ')');
+        path.unshift(`:nth-child(${index})`);
         current = parent;
       }
 
