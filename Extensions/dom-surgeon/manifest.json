@@ -39,6 +39,14 @@
         "content/main.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "lib/storage.js",
+        "content/early-hider.js"
+      ],
+      "run_at": "document_start"
     }
   ],
   "icons": {

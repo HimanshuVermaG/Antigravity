@@ -25,8 +25,9 @@
       this._bindDrag();
     },
 
-    show(element) {
+    show(element, editChange = null) {
       this._currentEl = element;
+      this._editChange = editChange;
       this._isBatchMode = DS.MultiSelect?.isActive() || false;
       this._pendingStyles = {}; // reset staged changes on each new selection
       this._populate(element);
@@ -40,6 +41,7 @@
       this._revertPreview();
       this._panel.classList.remove('ds-ep--open');
       this._currentEl = null;
+      this._editChange = null;
       this._originalStyles = null;
       this._pendingStyles = {};
       this._resetDelete();
@@ -615,6 +617,15 @@
           hideBtn.style.color = '#fff';
         }
       }
+      
+      const applyBtn = this._panel.querySelector('[data-action="apply"]');
+      if (applyBtn) {
+        applyBtn.textContent = this._editChange ? 'Update' : 'Apply';
+      }
+      const scopeSel = this._panel.querySelector('#ds-ep-scope');
+      if (scopeSel && this._editChange) {
+        scopeSel.value = this._editChange.isGlobal ? 'domain' : 'page';
+      }
     },
 
     _stageBoxModelChange(cssProp, val) {
@@ -802,8 +813,13 @@
            }
         }
         
-        await DS.Storage.saveChange(url, finalChange, isGlobal);
-        await DS.History.push(url, finalChange);
+        if (this._editChange) {
+          finalChange.id = this._editChange.id;
+          await DS.Storage.updateChange(url, finalChange.id, finalChange, this._editChange.isGlobal);
+        } else {
+          await DS.Storage.saveChange(url, finalChange);
+          await DS.History.push(url, finalChange);
+        }
         madeChange = true;
       }
 
@@ -882,8 +898,13 @@
         timestamp: Date.now()
       };
 
-      await DS.Storage.saveChange(url, change, isGlobal);
-      await DS.History.push(url, change);
+      if (this._editChange) {
+        change.id = this._editChange.id;
+        await DS.Storage.updateChange(url, change.id, change, this._editChange.isGlobal);
+      } else {
+        await DS.Storage.saveChange(url, change);
+        await DS.History.push(url, change);
+      }
 
       DS.Toast?.show(`${cssProp} updated`, 'success', {
         undoCallback: () => DS.Main?.undo()
@@ -949,12 +970,17 @@
          finalChange = batchChanges[0];
       }
 
-      await DS.Storage.saveChange(url, finalChange, isGlobal);
-      await DS.Storage.getHistory(url, isGlobal).then(hist => {
-         hist.undoStack.push(finalChange);
-         hist.redoStack = [];
-         DS.Storage.saveHistory(url, hist, isGlobal);
-      });
+      if (this._editChange) {
+         finalChange.id = this._editChange.id;
+         await DS.Storage.updateChange(url, finalChange.id, finalChange, this._editChange.isGlobal);
+      } else {
+         await DS.Storage.saveChange(url, finalChange);
+         await DS.Storage.getHistory(url, isGlobal).then(hist => {
+            hist.undoStack.push(finalChange);
+            hist.redoStack = [];
+            DS.Storage.saveHistory(url, hist, isGlobal);
+         });
+      }
 
       DS.Selector?.deselect();
       DS.Toast?.show(`${elements.length > 1 ? elements.length + ' elements' : 'Element'} deleted`, 'danger', {
@@ -1027,8 +1053,13 @@
          finalChange = batchChanges[0];
       }
 
-      await DS.Storage.saveChange(url, finalChange, isGlobal);
-      await DS.History.push(url, finalChange);
+      if (this._editChange) {
+         finalChange.id = this._editChange.id;
+         await DS.Storage.updateChange(url, finalChange.id, finalChange, this._editChange.isGlobal);
+      } else {
+         await DS.Storage.saveChange(url, finalChange);
+         await DS.History.push(url, finalChange);
+      }
 
       DS.Toast?.show(`${elements.length > 1 ? elements.length + ' elements' : 'Element'} updated`, 'success', { undoCallback: () => DS.Main?.undo() });
       DS.Main?._afterChange();

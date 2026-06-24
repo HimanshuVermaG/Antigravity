@@ -214,8 +214,16 @@
           return true;
 
         case 'dashboard-preview':
-          this.previewChange(msg.changeId);
-          sendResponse({ ok: true });
+          this.previewChange(msg.changeId).then(() => {
+             const nodes = this._previewNodes || [];
+             if (nodes.length > 0 && DS.EditorPanel) {
+                nodes.forEach(n => {
+                   if (n.el && n.el.style) n.el.style.pointerEvents = 'auto';
+                });
+                DS.EditorPanel.show(nodes[0].el, nodes[0].change);
+             }
+             sendResponse({ ok: true });
+          });
           return true;
 
         case 'dashboard-revert':
@@ -646,9 +654,9 @@
 
     _startObserver() {
       if (this._observer) {
-        // If already running, just reset the 30s timeout
+        // If already running, just reset the 15s timeout
         if (this._observerTimeout) clearTimeout(this._observerTimeout);
-        this._observerTimeout = setTimeout(() => this._stopObserver(), 30000);
+        this._observerTimeout = setTimeout(() => this._stopObserver(), 15000);
         return;
       }
       
@@ -678,12 +686,12 @@
         subtree: true
       });
       
-      // Auto-disconnect after 30s to save CPU
+      // Auto-disconnect after 15s to save CPU
       if (this._observerTimeout) clearTimeout(this._observerTimeout);
       this._observerTimeout = setTimeout(() => {
-        console.log('[DOM Surgeon] Observer timed out after 30s to save CPU.');
+        console.log('[DOM Surgeon] Observer timed out after 15s to save CPU.');
         this._stopObserver();
-      }, 30000);
+      }, 15000);
     },
 
     _checkDynamicElements() {
@@ -896,6 +904,8 @@
       const url = this._pageKey();
       const changes = await DS.Storage.getChanges(url);
       this._activeChanges = changes;
+      
+      if (DS.EarlyHider) DS.EarlyHider.apply(changes);
       
       if (changes.length > 0) {
         this._startObserver();

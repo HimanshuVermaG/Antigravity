@@ -391,9 +391,18 @@
 
         if (isPreviewing) {
           DS.Main?.clearPreview();
+          DS.EditorPanel?.hide();
         } else {
           el.classList.add('ds-sidebar-item--previewing');
-          DS.Main?.previewChange(change.id);
+          DS.Main?.previewChange(change.id).then(() => {
+             const nodes = DS.Main?._previewNodes || [];
+             if (nodes.length > 0 && DS.EditorPanel) {
+                nodes.forEach(n => {
+                   if (n.el && n.el.style) n.el.style.pointerEvents = 'auto'; // ensure we can interact
+                });
+                DS.EditorPanel.show(nodes[0].el, change);
+             }
+          });
         }
       });
 

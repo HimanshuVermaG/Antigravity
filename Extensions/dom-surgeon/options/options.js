@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   </div>
                 </div>
                 <div class="change-item__actions">
-                  <button class="btn btn--secondary btn-preview-change" style="background: rgba(255,255,255,0.05); color:#fff;" data-url="${ch.urlContext}" data-id="${ch.id}">Preview</button>
+                  <button class="btn btn--secondary btn-preview-change" style="background: rgba(255,255,255,0.05); color:#fff;" data-url="${ch.urlContext}" data-id="${ch.id}">Edit in Page</button>
                   <button class="btn btn--danger btn-undo-change" data-key="${ch.storageKey}" data-id="${ch.id}">Undo</button>
                 </div>
               </div>

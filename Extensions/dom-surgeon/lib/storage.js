@@ -42,6 +42,25 @@
       this._emitBadgeUpdate(url);
     },
 
+    /** Update an existing change (e.g. editing properties or changing scope). */
+    async updateChange(url, changeId, newChange, oldIsGlobal) {
+      // 1. Remove from old location
+      const oldStorageKey = oldIsGlobal ? this._domainKey(url) : this._key(url);
+      const oldSite = await this._loadData(oldStorageKey, url);
+      oldSite.changes = oldSite.changes.filter(c => c.id !== changeId);
+      await this._saveData(oldStorageKey, oldSite);
+
+      // 2. Add to new location
+      const newStorageKey = newChange.isGlobal ? this._domainKey(url) : this._key(url);
+      const newSite = await this._loadData(newStorageKey, url);
+      
+      // Preserve timestamp or other meta if needed, but newChange should have it
+      newSite.changes.push(newChange);
+      await this._saveData(newStorageKey, newSite);
+      
+      this._emitBadgeUpdate(url);
+    },
+
     /** Clear all changes and history for a URL. */
     async clearChanges(url) {
       await this._deleteData(this._key(url));
