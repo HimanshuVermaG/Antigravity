@@ -351,7 +351,10 @@
 
         case 'Delete':
         case 'Backspace':
-          // Handled by editor panel if visible
+          if (DS.EditorPanel?.isVisible()) {
+            e.preventDefault();
+            DS.EditorPanel._handleDelete();
+          }
           break;
       }
     },
@@ -474,7 +477,10 @@
 
       // Position above element (or below if too close to top)
       let top = r.top - 26;
-      if (top < 4) top = r.bottom + 4;
+      if (top < 4) {
+        // If placing below, avoid the new bottom breadcrumb bar (34px)
+        top = Math.min(r.bottom + 4, window.innerHeight - 64);
+      }
 
       let left = r.left;
       const w = this._infoTag.offsetWidth;

@@ -107,6 +107,10 @@
                   <div class="ds-so-keys"><kbd>Esc</kbd></div>
                   <span>Close Panel / Exit</span>
                 </div>
+                <div class="ds-so-item">
+                  <div class="ds-so-keys"><kbd>Del</kbd> / <kbd>⌫</kbd></div>
+                  <span>Delete selected element(s)</span>
+                </div>
               </div>
             </div>
             

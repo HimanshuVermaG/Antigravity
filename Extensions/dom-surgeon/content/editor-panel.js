@@ -27,7 +27,12 @@
     },
 
     show(element, editChange = null) {
+      if (this._currentEl) {
+        this._currentEl.style.removeProperty('anchor-name');
+      }
       this._currentEl = element;
+      this._currentEl.style.setProperty('anchor-name', '--ds-target', 'important');
+      
       this._editChange = editChange;
       this._isBatchMode = DS.MultiSelect?.isActive() || false;
       this._pendingStyles = {}; // reset staged changes on each new selection
@@ -35,18 +40,24 @@
       this._populate(element);
       this._resetDelete();
       
-      // Temporarily set display block to calculate actual height
-      this._panel.style.display = 'block';
-      this._position(element);
-      this._panel.style.display = '';
+      // Force the popover to the top of the Top Layer stack by re-showing it
+      if (this._panel.matches(':popover-open')) {
+        this._panel.hidePopover();
+      }
+      this._panel.showPopover();
       
-      this._panel.classList.add('ds-ep--open');
+      this._position(element);
     },
 
     hide() {
       if (!this._panel) return;
       this._revertPreview();
-      this._panel.classList.remove('ds-ep--open');
+      if (this._panel.matches(':popover-open')) {
+        this._panel.hidePopover();
+      }
+      if (this._currentEl) {
+        this._currentEl.style.removeProperty('anchor-name');
+      }
       this._currentEl = null;
       this._editChange = null;
       this._originalStyles = null;
@@ -56,7 +67,7 @@
     },
 
     isVisible() {
-      return this._panel.classList.contains('ds-ep--open');
+      return this._panel && this._panel.matches(':popover-open');
     },
 
     // ── Build ──────────────────────────────────────────
@@ -64,6 +75,7 @@
     _build() {
       const p = document.createElement('div');
       p.className = 'ds-ep';
+      p.setAttribute('popover', 'manual');
       p.innerHTML = `
         <!-- Header -->
         <div class="ds-ep__head">
@@ -531,19 +543,28 @@
     // ── Position ───────────────────────────────────────
 
     _position(el) {
+      if (!el || !this._panel) return;
       const r = el.getBoundingClientRect();
-      const pw = 284; // panel width (280 + borders)
-      const ph = this._panel.offsetHeight || 400; // actual panel height
+      const pw = 300; // panel width
+      const ph = this._panel.offsetHeight || 400; // estimated panel height
 
-      let left = r.right + 12;
-      let top = r.top;
+      // User request: "default to bottom left"
+      // Position below the element, aligned to its left edge.
+      let left = r.left;
+      let top = r.bottom + 12;
 
-      if (left + pw > window.innerWidth - 16) left = r.left - pw - 12;
+      // Keep within horizontal bounds
+      if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
       if (left < 16) left = 16;
-      if (top + ph > window.innerHeight - 16) top = window.innerHeight - ph - 16;
+
+      // Keep within vertical bounds (avoid bottom edge)
+      if (top + ph > window.innerHeight - 16) {
+        // If it goes off the bottom, flip it ABOVE the element
+        top = r.top - ph - 12;
+      }
       
-      // Breadcrumb bar is ~40px at the top, avoid overlapping it
-      if (top < 56) top = 56;
+      // Keep within top bounds (avoid Breadcrumb which is ~34px)
+      if (top < 44) top = 44;
 
       this._panel.style.left = left + 'px';
       this._panel.style.top = top + 'px';
@@ -1336,7 +1357,9 @@
 /* ── Editor Panel ─────────────────────────────────── */
 .ds-ep {
   position: fixed;
+  margin: 12px;
   width: 300px;
+  z-index: 2147483647 !important;
   background: #0F0F12;
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 12px;
@@ -1345,25 +1368,31 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #EDEDEF;
   font-size: 13px;
-  z-index: 2147483646;
   overflow: hidden;
   pointer-events: auto;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
 
-  /* Closed state */
-  display: none;
+  /* Animation */
   opacity: 0;
   transform: scale(0.96) translateY(6px);
   transition: opacity 200ms cubic-bezier(0.34,1.56,0.64,1),
-              transform 200ms cubic-bezier(0.34,1.56,0.64,1);
+              transform 200ms cubic-bezier(0.34,1.56,0.64,1),
+              display 200ms allow-discrete;
 }
 .ds-ep::-webkit-scrollbar { width: 4px; }
 .ds-ep::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-.ds-ep--open {
-  display: block;
+
+.ds-ep:popover-open {
   opacity: 1;
   transform: scale(1) translateY(0);
+}
+
+@starting-style {
+  .ds-ep:popover-open {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
 }
 
 /* ── Header ──── */

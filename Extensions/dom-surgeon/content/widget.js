@@ -51,7 +51,6 @@
     },
 
     show() {
-      this._container.classList.add('ds-widget--open');
       this._isMinimized = false;
       this._container.classList.remove('ds-widget--minimized');
       
@@ -60,13 +59,21 @@
       if (!this._container.style.left || rect.left > window.innerWidth || rect.top > window.innerHeight) {
         // Place in top-right corner by default (320px widget width + 24px margin)
         this._container.style.left = Math.max(24, window.innerWidth - 320 - 24) + 'px';
-        this._container.style.top = '24px';
+        this._container.style.top = '50px'; // Account for breadcrumb bar (34px)
+      }
+      
+      this._container.classList.add('ds-widget--open');
+      if (!this._container.matches(':popover-open')) {
+        this._container.showPopover();
       }
       this.refresh();
     },
 
     hide() {
       this._container.classList.remove('ds-widget--open');
+      if (this._container.matches(':popover-open')) {
+        this._container.hidePopover();
+      }
     },
 
     async refresh() {
@@ -231,6 +238,7 @@
     _build() {
       const w = document.createElement('div');
       w.className = 'ds-widget';
+      w.setAttribute('popover', 'manual');
       w.innerHTML = `
         <!-- Minimized State -->
         <div class="ds-widget__min" title="Click to expand DOM Surgeon">
@@ -652,23 +660,27 @@
   box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #EDEDEF;
-  z-index: 2147483647;
   pointer-events: auto;
   overflow: hidden;
   font-size: 13px;
   line-height: 1.5;
 
-  /* Closed state */
-  display: none;
+  /* Animation */
   opacity: 0;
   transform: scale(0.96) translateY(10px);
-  transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 400ms ease, width 400ms ease;
+  transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 400ms ease, width 400ms ease, display 400ms allow-discrete;
 }
 
-.ds-widget--open {
-  display: block;
+.ds-widget:popover-open {
   opacity: 1;
   transform: scale(1) translateY(0);
+}
+
+@starting-style {
+  .ds-widget:popover-open {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
 }
 
 .ds-widget--minimized {

@@ -21,21 +21,25 @@
 
     // ── Public API ─────────────────────────────────────
 
-    /** Show breadcrumb path for `el`. Called by Selector.selectElement(). */
     show(el) {
       if (!el || !this._bar) return;
       this._renderPath(el);
       if (!this._visible) {
         this._visible = true;
         this._bar.classList.add('ds-bc--visible');
+        if (!this._bar.matches(':popover-open')) {
+          this._bar.showPopover();
+        }
       }
     },
 
-    /** Hide the breadcrumb bar. Called by Selector.deselect(). */
     hide() {
       if (!this._bar || !this._visible) return;
       this._visible = false;
       this._bar.classList.remove('ds-bc--visible');
+      if (this._bar.matches(':popover-open')) {
+        this._bar.hidePopover();
+      }
     },
 
     // ── Internal ───────────────────────────────────────
@@ -43,6 +47,7 @@
     _build() {
       const bar = document.createElement('div');
       bar.className = 'ds-bc';
+      bar.setAttribute('popover', 'manual');
       bar.innerHTML = `
         <div class="ds-bc__inner">
           <div class="ds-bc__scroll" id="ds-bc-scroll"></div>
@@ -120,19 +125,31 @@
 /* ── Breadcrumb Bar ───────────────────────────────── */
 .ds-bc {
   position: fixed;
-  top: 0;
+  bottom: 0;
+  top: auto;
   left: 0;
   right: 0;
-  z-index: 2147483646;
   pointer-events: none;
+  background: transparent;
+  border: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  z-index: 2147483645 !important;
 
-  /* Slide-down animation */
-  transform: translateY(-100%);
-  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Slide-up animation */
+  transform: translateY(100%);
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), display 280ms allow-discrete;
 }
 
-.ds-bc--visible {
+.ds-bc:popover-open {
   transform: translateY(0);
+}
+
+@starting-style {
+  .ds-bc:popover-open {
+    transform: translateY(100%);
+  }
 }
 
 .ds-bc__inner {
