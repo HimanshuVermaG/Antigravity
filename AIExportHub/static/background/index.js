@@ -5394,7 +5394,7 @@ var e, t;
               assistant: "blue_background",
               system: "gray_background",
               tool: "yellow_background",
-              user: "default",
+              user: "green_background",
             },
             u = {
               chatgpt: "https://chatgpt.com/",
@@ -5499,9 +5499,9 @@ var e, t;
               }
               return n.length ? n : [w("No content captured.")];
             },
-            I = (e, t) => ({
+            I = (e, t, r = "default") => ({
               object: "block",
-              [e]: { rich_text: [{ text: { content: t }, type: "text" }] },
+              [e]: { color: r, rich_text: [{ text: { content: t }, type: "text" }] },
               type: e,
             }),
             S = ({ children: e, color: t, content: r }) => ({
@@ -5575,7 +5575,7 @@ var e, t;
                 r = e.authorName?.trim(),
                 n =
                   r && r.toLowerCase() !== t.toLowerCase() ? `${t} (${r})` : t;
-              return e.createdAt ? `${n} - ${e.createdAt}` : n;
+              return e.createdAt ? `${n} (${e.createdAt}):` : `${n}:`;
             },
             R = (e) => {
               if (!e.attachments.length) return "";
@@ -5883,12 +5883,24 @@ ${r.join("\n")}`;
                 a = t.summary.url || u[r];
               for (let [r, o] of t.messages.entries()) {
                 let i = o.content.trim() || "No content captured.",
-                  s = T(o),
                   l = H(i, { baseUrl: a });
-                (n.push(I("heading_1", s)),
-                  n.push(...(l.length ? l : [w("No content captured.")])),
-                  n.push(...Q({ artifactPageLinks: e, messageId: o.id })),
-                  r < t.messages.length - 1 && n.push(C()));
+                  
+                if (o.role === "user") {
+                  let headingText = i.length > 1950 ? i.slice(0, 1950) + "..." : i;
+                  n.push(I("heading_1", headingText, c[o.role] ?? "default"));
+                } else if (o.role === "assistant") {
+                  n.push(...(l.length ? l : [w("No content captured.")]));
+                  n.push(...Q({ artifactPageLinks: e, messageId: o.id }));
+                } else {
+                  let s = T(o);
+                  n.push(I("heading_1", s, c[o.role] ?? "default"));
+                  n.push(...(l.length ? l : [w("No content captured.")]));
+                  n.push(...Q({ artifactPageLinks: e, messageId: o.id }));
+                }
+                
+                if (r < t.messages.length - 1 && o.role !== "user") {
+                   n.push(C());
+                }
               }
               return n;
             },
@@ -5918,19 +5930,26 @@ ${r.join("\n")}`;
             Z = ({ artifactPageLinks: e, conversation: t }) => {
               if (!t.messages.length) return [w("No transcript captured.")];
               let r = [];
-              for (let n of t.messages) {
-                let a = n.content.trim() || "No content captured.",
-                  o = T(n),
-                  i = L(a),
-                  s = H(a, { baseUrl: t.summary.url });
-                (r.push(
-                  S({
-                    children: s.length ? s : [w("No content captured.")],
-                    color: c[n.role] ?? "default",
-                    content: `${o}: ${i}`,
-                  }),
-                ),
-                  r.push(...Q({ artifactPageLinks: e, messageId: n.id })));
+              for (let [n, a] of t.messages.entries()) {
+                let o = a.content.trim() || "No content captured.",
+                  s = H(o, { baseUrl: t.summary.url });
+                  
+                if (a.role === "user") {
+                  let headingText = o.length > 1950 ? o.slice(0, 1950) + "..." : o;
+                  r.push(I("heading_1", headingText, c[a.role] ?? "default"));
+                } else if (a.role === "assistant") {
+                  r.push(...(s.length ? s : [w("No content captured.")]));
+                  r.push(...Q({ artifactPageLinks: e, messageId: a.id }));
+                } else {
+                  let i = T(a);
+                  r.push(I("heading_1", i, c[a.role] ?? "default"));
+                  r.push(...(s.length ? s : [w("No content captured.")]));
+                  r.push(...Q({ artifactPageLinks: e, messageId: a.id }));
+                }
+                
+                if (n < t.messages.length - 1 && a.role !== "user") {
+                   r.push(C());
+                }
               }
               return r;
             },
