@@ -1,0 +1,14 @@
+{
+    "extensionName": {
+        "message": "AIExportHub: Bulk Export AI Chats",
+        "description": "Nombre de la extensión"
+    },
+    "extensionDescription": {
+        "message": "Bulk export ChatGPT, Claude, Gemini and Perplexity chats to Notion, Obsidian, PDF and Markdown.",
+        "description": "Descripción de la extensión"
+    },
+    "popup": {
+        "message": "AIExportHub",
+        "description": "Título del popup"
+    }
+}

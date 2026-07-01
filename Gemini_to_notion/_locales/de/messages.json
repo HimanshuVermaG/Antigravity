@@ -1,0 +1,10 @@
+{
+    "extensionName": {
+        "message": "Export Gemini Chats to Notion",
+        "description": "Short and readable extension name"
+    },
+    "extensionDescription": {
+        "message": "Exportieren Sie Ihre Gemini AI-Konversationen einfach in Massen in Notion-Datenbanken. Sparen Sie Zeit mit schneller Stapelverarbeitung und automatischer Synchronisierung.",
+        "description": "Description including SEO keywords like bulk, AI, and batch."
+    }
+}

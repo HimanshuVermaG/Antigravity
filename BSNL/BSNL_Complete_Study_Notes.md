@@ -76,6 +76,7 @@ This document contains the complete, detailed study notes for all 7 modules of t
 | **Circuitry** | Complex filters required | Digital switches/memory buffers required |
 
 **5. Additional Related Information**
+
 *   **Statistical TDM (STDM)**: A more efficient version of TDM that dynamically allocates time slots on demand rather than statically assigning them, meaning bandwidth isn't wasted on silent channels.
 *   **Expanded Detail - WDM Components**: WDM systems rely heavily on *EDFA (Erbium-Doped Fiber Amplifiers)* to boost all optical wavelengths simultaneously without needing to convert the light back to electrical signals.
 *   **Expanded Detail - CDMA Mechanics**: CDMA works on the principle of *Spread Spectrum*. The narrowband message signal is multiplied by a very wideband pseudo-random noise (PN) code. This makes the signal look like background noise to anyone without the exact PN code, offering inherent security and jam-resistance.
